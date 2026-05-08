@@ -142,7 +142,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
 
       map.on('error', (e) => {
         console.error('Mapbox error:', e)
-        if (e.error?.message?.includes('401') || e.error?.message?.includes('Unauthorized') || e.error?.status === 401) {
+        if (e.error?.message?.includes('401') || e.error?.message?.includes('Unauthorized')) {
           setMapError('Invalid Mapbox token. Check NEXT_PUBLIC_MAPBOX_TOKEN in Vercel environment variables.')
         }
       })
