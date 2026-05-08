@@ -81,6 +81,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map())
   const [ghostPos, setGhostPos] = useState<{ x: number; y: number } | null>(null)
   const [project, setProject] = useState<Project | null>(null)
+  const [mapError, setMapError] = useState<string | null>(null)
   const [tool, setTool] = useState<ToolId>('select')
   const [night, setNight] = useState(false)
   const [popup, setPopup] = useState<Marker | null>(null)
@@ -138,6 +139,13 @@ export default function MapClient({ projectId }: { projectId: string }) {
         antialias: true,
       })
       mapRef.current = map
+
+      map.on('error', (e) => {
+        console.error('Mapbox error:', e)
+        if (e.error?.message?.includes('401') || e.error?.message?.includes('Unauthorized') || e.error?.status === 401) {
+          setMapError('Invalid Mapbox token. Check NEXT_PUBLIC_MAPBOX_TOKEN in Vercel environment variables.')
+        }
+      })
 
       map.on('load', () => {
         addTerrain(map)
@@ -336,6 +344,17 @@ export default function MapClient({ projectId }: { projectId: string }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
             }} dangerouslySetInnerHTML={{ __html: markerSVG(tool) }} />
+          </div>
+        </div>
+      )}
+
+      {/* map error overlay */}
+      {mapError && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ textAlign: 'center', color: '#f0f0f0', maxWidth: 340 }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+            <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Map failed to load</p>
+            <p style={{ color: '#888', fontSize: 13, lineHeight: 1.6 }}>{mapError}</p>
           </div>
         </div>
       )}
