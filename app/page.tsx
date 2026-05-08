@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
@@ -9,6 +9,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Skip login if already authenticated
+  useEffect(() => { router.replace('/dashboard') }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

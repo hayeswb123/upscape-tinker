@@ -13,10 +13,7 @@ export default function DashboardPage() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) { router.replace('/'); return }
-      fetchProjects()
-    })
+    fetchProjects()
   }, [])
 
   async function fetchProjects() {
