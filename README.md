@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Upscape Field Designer
 
-## Getting Started
+Tablet-optimized landscape lighting design tool. Place fixtures on a satellite map, route wire runs, and send tiered quotes to homeowners.
 
-First, run the development server:
+## Stack
+- **Next.js 16** (App Router)
+- **Supabase** — auth + PostgreSQL
+- **Mapbox GL JS** — satellite map
+- **SendGrid** — quote emails
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Setup
+
+### 1. Supabase
+In your Supabase project, open the SQL editor and run `supabase-schema.sql`. Then grab your **anon key** from Project Settings → API.
+
+### 2. Environment variables
+Fill in `.env.local`:
+```
+NEXT_PUBLIC_SUPABASE_URL=https://pufuwsmcodymmclezkig.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your anon key>
+NEXT_PUBLIC_MAPBOX_TOKEN=<your mapbox token>
+SENDGRID_API_KEY=<your sendgrid key>
+SENDGRID_FROM=notifications@getupscaped.com
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Create users
+In Supabase → Authentication → Users, create an account for each field rep.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. Run locally
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 5. Deploy to Vercel
+Push to GitHub, connect the repo in Vercel, add env vars in project settings, set domain to `field.getupscaped.com`.
 
-## Learn More
+## Pages
+| Route | Description |
+|-------|-------------|
+| `/` | Login |
+| `/dashboard` | Project list |
+| `/projects/new` | New project form with address geocoding |
+| `/projects/[id]/map` | Map designer |
+| `/projects/[id]/quote` | 3-tier quote calculator |
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Features
+- 7 fixture types: Uplight, Path, Flood, Well, Downlight, Hardscape/Step, Transformer
+- 3 product tiers: Sunvie (budget), VOLT (mid), AMP (premium)
+- Wire routing with auto footage calculation
+- Night mode (dark map style)
+- Quote emails via SendGrid
+- Draggable markers
