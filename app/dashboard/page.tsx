@@ -10,6 +10,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -22,6 +23,12 @@ export default function DashboardPage() {
     const { data } = await supabase.from('projects').select('*').order('created_at', { ascending: false })
     setProjects(data || [])
     setLoading(false)
+  }
+
+  async function deleteProject(id: string) {
+    setProjects(prev => prev.filter(p => p.id !== id))
+    setConfirmDelete(null)
+    await supabase.from('projects').delete().eq('id', id)
   }
 
   async function logout() {
@@ -75,7 +82,28 @@ export default function DashboardPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
                 <span style={{ background: STATUS_COLOR[p.status] + '22', color: STATUS_COLOR[p.status], borderRadius: 6, fontSize: 12, fontWeight: 600, padding: '3px 8px' }}>{STATUS_LABEL[p.status] || 'Draft'}</span>
-                <span style={{ color: 'var(--muted)', fontSize: 20, lineHeight: 1 }}>›</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {confirmDelete === p.id ? (
+                    <>
+                      <button
+                        onClick={e => { e.stopPropagation(); deleteProject(p.id) }}
+                        style={{ background: '#ef444422', border: '1px solid #ef4444', borderRadius: 6, color: '#ef4444', fontSize: 12, fontWeight: 600, padding: '3px 10px', cursor: 'pointer' }}
+                      >Delete</button>
+                      <button
+                        onClick={e => { e.stopPropagation(); setConfirmDelete(null) }}
+                        style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--muted)', fontSize: 12, padding: '3px 8px', cursor: 'pointer' }}
+                      >Cancel</button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={e => { e.stopPropagation(); setConfirmDelete(p.id) }}
+                        style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 17, cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}
+                      >🗑</button>
+                      <span style={{ color: 'var(--muted)', fontSize: 20, lineHeight: 1 }}>›</span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           )

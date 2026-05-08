@@ -284,6 +284,16 @@ export default function MapClient({ projectId }: { projectId: string }) {
     })
   }
 
+  if (!process.env.NEXT_PUBLIC_MAPBOX_TOKEN) return (
+    <div style={{ background: '#0f0f0f', height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{ textAlign: 'center', color: '#f0f0f0', maxWidth: 340 }}>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+        <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Mapbox token missing</p>
+        <p style={{ color: '#888', fontSize: 13, lineHeight: 1.5 }}>Add <code style={{ background: '#222', padding: '1px 6px', borderRadius: 4 }}>NEXT_PUBLIC_MAPBOX_TOKEN</code> to your Vercel environment variables, then redeploy.</p>
+      </div>
+    </div>
+  )
+
   if (!project) return (
     <div style={{ background: '#0f0f0f', height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ textAlign: 'center', color: '#888' }}>
