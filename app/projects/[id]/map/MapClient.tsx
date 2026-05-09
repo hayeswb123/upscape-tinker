@@ -160,7 +160,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const [project, setProject] = useState<Project | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
   const [tool, setTool] = useState<ToolId>('select')
-  const [mapMode, setMapMode] = useState<'sat-day' | 'sat-night' | '3d-day' | '3d-night'>('sat-day')
+  const [mapMode, setMapMode] = useState<'sat-day' | 'sat-night' | '3d-day' | '3d-dawn' | '3d-dusk' | '3d-night'>('sat-day')
   const [popup, setPopup] = useState<Marker | null>(null)
   const [wirePoints, setWirePoints] = useState<[number, number][]>([])
   const wireRef = useRef<[number, number][]>([])
@@ -370,31 +370,44 @@ export default function MapClient({ projectId }: { projectId: string }) {
 
   useEffect(() => { (window as any).__upscapeTool = tool }, [tool])
 
+  const TERRAIN_STYLE = 'mapbox://styles/hayesb123/cmoyv06sv001801qweuh6hjob'
   const MAP_STYLES: Record<string, string> = {
     'sat-day':   'mapbox://styles/mapbox/satellite-streets-v12',
     'sat-night': 'mapbox://styles/mapbox/dark-v11',
-    '3d-day':    'mapbox://styles/hayesb123/cmoyv06sv001801qweuh6hjob',
-    '3d-night':  'mapbox://styles/hayesb123/cmoyv06sv001801qweuh6hjob',
+    '3d-day':    TERRAIN_STYLE,
+    '3d-dawn':   TERRAIN_STYLE,
+    '3d-dusk':   TERRAIN_STYLE,
+    '3d-night':  TERRAIN_STYLE,
   }
+  const LIGHT_PRESETS: Record<string, string> = {
+    '3d-day': 'day', '3d-dawn': 'dawn', '3d-dusk': 'dusk', '3d-night': 'night',
+  }
+  const D3_CYCLE = ['3d-day', '3d-dawn', '3d-dusk', '3d-night'] as const
 
-  function switchMode(mode: 'sat-day' | 'sat-night' | '3d-day' | '3d-night') {
+  function switchMode(mode: '3d-day' | '3d-dawn' | '3d-dusk' | '3d-night' | 'sat-day' | 'sat-night') {
     const map = mapRef.current
-    if (!map || mode === mapMode) return
+    if (!map) return
+    const prevStyle = MAP_STYLES[mapMode]
+    const nextStyle = MAP_STYLES[mode]
     setMapMode(mode)
-    map.setStyle(MAP_STYLES[mode])
-    map.once('style.load', () => {
-      if (mode === 'sat-day' || mode === 'sat-night') { addTerrain(map); add3DBuildings(map) }
-      if (mode === '3d-day') (map as any).setConfigProperty('basemap', 'lightPreset', 'day')
-      if (mode === '3d-night') (map as any).setConfigProperty('basemap', 'lightPreset', 'dusk')
-      const p = project
-      if (!p) return
-      map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
-      map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#facc15', 'line-width': 2.5, 'line-dasharray': [5, 3] } })
-      map.addSource('zones', { type: 'geojson', data: zonesToGeoJSON(p.zones || []) })
-      map.addLayer({ id: 'zones-fill', type: 'fill', source: 'zones', paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.12 } })
-      map.addLayer({ id: 'zones-line', type: 'line', source: 'zones', paint: { 'line-color': '#3b82f6', 'line-width': 1.5 } })
-      markersRef.current.forEach(mb => mb.addTo(map))
-    })
+    if (nextStyle !== prevStyle) {
+      map.setStyle(nextStyle)
+      map.once('style.load', () => {
+        if (mode === 'sat-day' || mode === 'sat-night') { addTerrain(map); add3DBuildings(map) }
+        if (LIGHT_PRESETS[mode]) (map as any).setConfigProperty('basemap', 'lightPreset', LIGHT_PRESETS[mode])
+        const p = project
+        if (!p) return
+        map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
+        map.addLayer({ id: 'wires-glow', type: 'line', source: 'wires', paint: { 'line-color': '#e8a030', 'line-width': 8, 'line-opacity': 0.18, 'line-blur': 4 } })
+        map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#e8c060', 'line-width': 2.5, 'line-dasharray': [6, 3] } })
+        map.addSource('zones', { type: 'geojson', data: zonesToGeoJSON(p.zones || []) })
+        map.addLayer({ id: 'zones-fill', type: 'fill', source: 'zones', paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.12 } })
+        map.addLayer({ id: 'zones-line', type: 'line', source: 'zones', paint: { 'line-color': '#3b82f6', 'line-width': 1.5 } })
+        markersRef.current.forEach(mb => mb.addTo(map))
+      })
+    } else {
+      if (LIGHT_PRESETS[mode]) (map as any).setConfigProperty('basemap', 'lightPreset', LIGHT_PRESETS[mode])
+    }
   }
 
 
@@ -491,26 +504,37 @@ export default function MapClient({ projectId }: { projectId: string }) {
         {/* map mode switcher */}
         <div style={{ display: 'flex', gap: 3, background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(12px)', borderRadius: 8, padding: 3, boxShadow: '0 2px 12px rgba(0,0,0,0.3)', flexShrink: 0 }}>
           {([
-            { mode: 'sat-day',   icon: '◉', title: 'Satellite' },
-            { mode: '3d-day',    icon: '⬡', title: '3D' },
-            { mode: 'sat-night', icon: '☽', title: 'Night' },
-          ] as const).map(({ mode, icon, title }) => {
-            const isActive = mapMode === mode || (mode === 'sat-night' && (mapMode === 'sat-night' || mapMode === '3d-night'))
+            { key: 'sat', icon: '◉', title: 'Satellite' },
+            { key: '3d',  icon: '⬡', title: '3D' },
+            { key: 'night', icon: '☽', title: 'Night' },
+          ] as const).map(({ key, icon, title }) => {
+            const is3D = mapMode.startsWith('3d')
+            const isNight = mapMode === 'sat-night' || mapMode === '3d-night' || mapMode === '3d-dusk'
+            const isActive = (key === 'sat' && !is3D) || (key === '3d' && is3D) || (key === 'night' && isNight)
+            const d3Labels: Record<string, string> = { '3d-day': 'day', '3d-dawn': 'dawn', '3d-dusk': 'dusk', '3d-night': 'night' }
+            const label = key === '3d' && is3D ? (d3Labels[mapMode] ?? '3D') : title
             return (
               <button
-                key={mode}
+                key={key}
+                title={label}
                 onClick={() => {
-                if (mode === 'sat-night') {
-                  // toggle night within current sat/3d context
-                  if (mapMode === 'sat-day') switchMode('sat-night')
-                  else if (mapMode === 'sat-night') switchMode('sat-day')
-                  else if (mapMode === '3d-day') switchMode('3d-night')
-                  else if (mapMode === '3d-night') switchMode('3d-day')
-                } else {
-                  switchMode(mode)
-                }
-              }}
-                title={title}
+                  if (key === 'sat') {
+                    switchMode(mapMode === 'sat-night' ? 'sat-night' : 'sat-day')
+                    if (is3D) switchMode('sat-day')
+                  } else if (key === '3d') {
+                    if (!is3D) { switchMode('3d-day') }
+                    else {
+                      const idx = D3_CYCLE.indexOf(mapMode as typeof D3_CYCLE[number])
+                      switchMode(D3_CYCLE[(idx + 1) % D3_CYCLE.length])
+                    }
+                  } else if (key === 'night') {
+                    if (mapMode === 'sat-day') switchMode('sat-night')
+                    else if (mapMode === 'sat-night') switchMode('sat-day')
+                    else if (mapMode === '3d-day' || mapMode === '3d-dawn') switchMode('3d-dusk')
+                    else if (mapMode === '3d-dusk') switchMode('3d-night')
+                    else if (mapMode === '3d-night') switchMode('3d-day')
+                  }
+                }}
                 style={{
                   background: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
                   border: 'none', borderRadius: 6,
