@@ -392,7 +392,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
     if (nextStyle !== prevStyle) {
       map.setStyle(nextStyle)
       map.once('style.load', () => {
-        if (mode === 'sat-day' || mode === 'sat-night') { addTerrain(map); add3DBuildings(map) }
+        if (mode === 'sat-day' || mode === 'sat-night') addTerrain(map)
         if (LIGHT_PRESETS[mode]) (map as any).setConfigProperty('basemap', 'lightPreset', LIGHT_PRESETS[mode])
         const p = project
         if (!p) return
@@ -502,40 +502,42 @@ export default function MapClient({ projectId }: { projectId: string }) {
         </div>
         {/* map mode switcher */}
         <div style={{ display: 'flex', gap: 3, background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(12px)', borderRadius: 8, padding: 3, boxShadow: '0 2px 12px rgba(0,0,0,0.3)', flexShrink: 0 }}>
-          {([
-            { key: 'sat', icon: '◉', title: 'Satellite' },
-            { key: '3d',  icon: '⬡', title: '3D' },
-          ] as const).map(({ key, icon }) => {
-            const is3D = mapMode.startsWith('3d')
-            const isActive = (key === 'sat' && !is3D) || (key === '3d' && is3D)
-            const d3Labels: Record<string, string> = { '3d-dawn': 'Dawn', '3d-day': 'Day', '3d-dusk': 'Dusk', '3d-night': 'Night' }
-            const label = key === '3d' && is3D ? d3Labels[mapMode] : key === 'sat' ? 'Satellite' : '3D'
-            return (
-              <button
-                key={key}
-                title={label}
-                onClick={() => {
-                  if (key === 'sat') {
-                    switchMode('sat-day')
-                  } else {
-                    if (!is3D) { switchMode('3d-dawn') }
-                    else {
-                      const idx = D3_CYCLE.indexOf(mapMode as typeof D3_CYCLE[number])
-                      switchMode(D3_CYCLE[(idx + 1) % D3_CYCLE.length])
-                    }
+          {/* satellite */}
+          {[
+            { key: 'sat', icon: '◉', label: 'Satellite', active: !mapMode.startsWith('3d') },
+            { key: '3d',  icon: '⬡', label: ({'3d-dawn':'Dawn','3d-day':'Day','3d-dusk':'Dusk','3d-night':'Night'} as Record<string,string>)[mapMode] ?? '3D', active: mapMode.startsWith('3d') },
+            { key: 'time', icon: '◐', label: ({'sat-day':'Day','sat-night':'Night','3d-dawn':'Dawn','3d-day':'Day','3d-dusk':'Dusk','3d-night':'Night'} as Record<string,string>)[mapMode] ?? 'Day', active: false },
+          ].map(({ key, icon, label, active }) => (
+            <button
+              key={key}
+              title={label}
+              onClick={() => {
+                if (key === 'sat') { switchMode('sat-day') }
+                else if (key === '3d') {
+                  if (!mapMode.startsWith('3d')) switchMode('3d-dawn')
+                  else {
+                    const idx = D3_CYCLE.indexOf(mapMode as typeof D3_CYCLE[number])
+                    switchMode(D3_CYCLE[(idx + 1) % D3_CYCLE.length])
                   }
-                }}
-                style={{
-                  background: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
-                  border: 'none', borderRadius: 6,
-                  color: isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)',
-                  fontSize: 14, cursor: 'pointer', width: 28, height: 28,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.15s',
-                }}
-              >{icon}</button>
-            )
-          })}
+                } else if (key === 'time') {
+                  if (mapMode === 'sat-day') switchMode('sat-night')
+                  else if (mapMode === 'sat-night') switchMode('sat-day')
+                  else {
+                    const idx = D3_CYCLE.indexOf(mapMode as typeof D3_CYCLE[number])
+                    switchMode(D3_CYCLE[(idx + 1) % D3_CYCLE.length])
+                  }
+                }
+              }}
+              style={{
+                background: active ? 'rgba(255,255,255,0.15)' : 'transparent',
+                border: 'none', borderRadius: 6,
+                color: active ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)',
+                fontSize: 14, cursor: 'pointer', width: 28, height: 28,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.15s',
+              }}
+            >{icon}</button>
+          ))}
         </div>
         <button className="upscape-quote" onClick={() => router.push(`/projects/${projectId}/quote`)} style={{
           background: '#9a7040', border: 'none', borderRadius: 8,
