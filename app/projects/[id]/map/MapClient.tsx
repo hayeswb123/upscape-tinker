@@ -300,18 +300,16 @@ export default function MapClient({ projectId }: { projectId: string }) {
     markersRef.current.set(m.id, mb)
   }
 
-  function placeMarker(map: mapboxgl.Map, type: FixtureType, lat: number, lng: number) {
+  async function placeMarker(map: mapboxgl.Map, type: FixtureType, lat: number, lng: number) {
     const id = crypto.randomUUID()
     const marker: Marker = { id, type, lat, lng, qty: 1, label: '', notes: '' }
-    // Instant: add to map and state immediately
     addMarkerToMap(map, marker)
-    setProject(p => {
-      if (!p) return p
-      const markers = [...p.markers, marker]
-      // Persist in background — no await
-      supabase.from('projects').update({ markers }).eq('id', projectId)
-      return { ...p, markers }
-    })
+    setProject(p => p ? { ...p, markers: [...p.markers, marker] } : p)
+    // Fetch latest then append to avoid race conditions with rapid placement
+    const { data: proj } = await supabase.from('projects').select('markers').eq('id', projectId).single()
+    if (!proj) return
+    const markers = [...(proj.markers as Marker[] || []).filter((m: Marker) => m.id !== id), marker]
+    await supabase.from('projects').update({ markers }).eq('id', projectId)
   }
 
   function clearWireMarkers() {
