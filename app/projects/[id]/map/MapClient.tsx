@@ -83,7 +83,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const [project, setProject] = useState<Project | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
   const [tool, setTool] = useState<ToolId>('select')
-  const [night, setNight] = useState(false)
+  const [mapMode, setMapMode] = useState<'sat-day' | 'sat-night' | '3d-day' | '3d-night'>('sat-day')
   const [popup, setPopup] = useState<Marker | null>(null)
   const [wirePoints, setWirePoints] = useState<[number, number][]>([])
   const wireRef = useRef<[number, number][]>([])
@@ -272,14 +272,20 @@ export default function MapClient({ projectId }: { projectId: string }) {
 
   useEffect(() => { (window as any).__upscapeTool = tool }, [tool])
 
-  function toggleNight() {
+  const MAP_STYLES: Record<string, string> = {
+    'sat-day':   'mapbox://styles/mapbox/satellite-streets-v12',
+    'sat-night': 'mapbox://styles/mapbox/dark-v11',
+    '3d-day':    'mapbox://styles/mapbox/light-v11',
+    '3d-night':  'mapbox://styles/mapbox/dark-v11',
+  }
+
+  function switchMode(mode: 'sat-day' | 'sat-night' | '3d-day' | '3d-night') {
     const map = mapRef.current
-    if (!map) return
-    const next = !night
-    setNight(next)
-    map.setStyle(next ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/satellite-streets-v12')
+    if (!map || mode === mapMode) return
+    setMapMode(mode)
+    map.setStyle(MAP_STYLES[mode])
     map.once('style.load', () => {
-      addTerrain(map)
+      if (mode === 'sat-day' || mode === 'sat-night') addTerrain(map)
       const p = project
       if (!p) return
       map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
@@ -381,13 +387,41 @@ export default function MapClient({ projectId }: { projectId: string }) {
           <div style={{ fontWeight: 500, fontSize: 13, letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'rgba(255,255,255,0.92)' }}>{project?.homeowner || project?.name}</div>
           <div style={{ color: 'rgba(255,255,255,0.38)', fontSize: 10, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{project?.address}</div>
         </div>
-        <button className="upscape-night" onClick={toggleNight} style={{
-          opacity: night ? 0.9 : 0.45, background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(12px)',
-          border: 'none', borderRadius: 8, color: night ? '#e8c97a' : 'rgba(255,255,255,0.8)',
-          fontSize: 15, cursor: 'pointer', width: 34, height: 34,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
-        }}>☽</button>
+        {/* map mode switcher */}
+        <div style={{ display: 'flex', gap: 3, background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(12px)', borderRadius: 8, padding: 3, boxShadow: '0 2px 12px rgba(0,0,0,0.3)', flexShrink: 0 }}>
+          {([
+            { mode: 'sat-day',   icon: '◉', title: 'Satellite' },
+            { mode: '3d-day',    icon: '⬡', title: '3D' },
+            { mode: 'sat-night', icon: '☽', title: 'Night' },
+          ] as const).map(({ mode, icon, title }) => {
+            const isActive = mapMode === mode || (mode === 'sat-night' && (mapMode === 'sat-night' || mapMode === '3d-night'))
+            return (
+              <button
+                key={mode}
+                onClick={() => {
+                if (mode === 'sat-night') {
+                  // toggle night within current sat/3d context
+                  if (mapMode === 'sat-day') switchMode('sat-night')
+                  else if (mapMode === 'sat-night') switchMode('sat-day')
+                  else if (mapMode === '3d-day') switchMode('3d-night')
+                  else if (mapMode === '3d-night') switchMode('3d-day')
+                } else {
+                  switchMode(mode)
+                }
+              }}
+                title={title}
+                style={{
+                  background: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
+                  border: 'none', borderRadius: 6,
+                  color: isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)',
+                  fontSize: 14, cursor: 'pointer', width: 28, height: 28,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.15s',
+                }}
+              >{icon}</button>
+            )
+          })}
+        </div>
         <button className="upscape-quote" onClick={() => router.push(`/projects/${projectId}/quote`)} style={{
           background: '#9a7040', border: 'none', borderRadius: 8,
           color: 'rgba(255,255,255,0.92)', fontWeight: 500, fontSize: 12,
