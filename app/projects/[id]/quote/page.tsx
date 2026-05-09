@@ -77,9 +77,17 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
                 <tbody>
                   {q.lines.map((l, i) => (
                     <tr key={i} style={{ borderTop: '1px solid var(--border)' }}>
-                      <td style={{ padding: '7px 16px', color: 'var(--muted)' }}>{l.label}</td>
-                      <td style={{ padding: '7px 4px', color: 'var(--muted)', textAlign: 'right' }}>×{l.qty}</td>
-                      <td style={{ padding: '7px 16px', textAlign: 'right', fontWeight: 500 }}>{fmt(l.total)}</td>
+                      <td style={{ padding: '7px 16px', color: 'var(--muted)' }}>
+                        <div>{l.label}</div>
+                        {l.sku && <div style={{ fontSize: 11, color: 'var(--muted)', opacity: 0.6, marginTop: 1 }}>
+                          {l.url ? <a href={l.url} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ color: 'var(--accent)', textDecoration: 'none' }}>{l.sku}</a> : l.sku}
+                        </div>}
+                      </td>
+                      <td style={{ padding: '7px 4px', color: 'var(--muted)', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <div>×{l.qty}</div>
+                        <div style={{ fontSize: 11, opacity: 0.6 }}>{fmt(l.unitPrice)} ea</div>
+                      </td>
+                      <td style={{ padding: '7px 16px', textAlign: 'right', fontWeight: 500, whiteSpace: 'nowrap' }}>{fmt(l.total)}</td>
                     </tr>
                   ))}
                 </tbody>

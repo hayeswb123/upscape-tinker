@@ -22,9 +22,14 @@ export async function POST(req: NextRequest) {
 
   const lineRows = q.lines.map(l => `
     <tr>
-      <td style="padding:8px 16px;border-bottom:1px solid #2e2e2e;color:#ccc">${l.label}</td>
-      <td style="padding:8px 4px;border-bottom:1px solid #2e2e2e;color:#888;text-align:right">×${l.qty}</td>
-      <td style="padding:8px 16px;border-bottom:1px solid #2e2e2e;text-align:right;font-weight:600">${fmt(l.total)}</td>
+      <td style="padding:8px 16px;border-bottom:1px solid #2e2e2e;color:#ccc">
+        ${l.label}
+        ${l.sku ? `<div style="font-size:11px;color:#666;margin-top:2px">${l.url ? `<a href="${l.url}" style="color:#F4884A;text-decoration:none">${l.sku}</a>` : l.sku}</div>` : ''}
+      </td>
+      <td style="padding:8px 4px;border-bottom:1px solid #2e2e2e;color:#888;text-align:right;white-space:nowrap">
+        ×${l.qty}<div style="font-size:11px;color:#666">${fmt(l.unitPrice)} ea</div>
+      </td>
+      <td style="padding:8px 16px;border-bottom:1px solid #2e2e2e;text-align:right;font-weight:600;white-space:nowrap">${fmt(l.total)}</td>
     </tr>
   `).join('')
 
@@ -47,8 +52,11 @@ export async function POST(req: NextRequest) {
       <table style="width:100%;border-collapse:collapse;font-size:14px">
         <tbody>${lineRows}</tbody>
       </table>
-      <div style="padding:12px 16px;background:#242424;display:flex;justify-content:space-between;font-size:13px;color:#888">
+      <div style="padding:8px 16px;background:#242424;display:flex;justify-content:space-between;font-size:13px;color:#888">
         <span>Labor</span><span>${fmt(q.labor)}</span>
+      </div>
+      <div style="padding:8px 16px;background:#242424;display:flex;justify-content:space-between;font-size:13px;color:#888;border-top:1px solid #2e2e2e">
+        <span>Wire</span><span>${fmt(q.wire)}</span>
       </div>
       <div style="padding:14px 16px;background:#1a1a1a;display:flex;justify-content:space-between;align-items:center">
         <span style="font-weight:700;font-size:16px">Total</span>
