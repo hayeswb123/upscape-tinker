@@ -373,7 +373,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const TERRAIN_STYLE = 'mapbox://styles/hayesb123/cmoyv06sv001801qweuh6hjob'
   const MAP_STYLES: Record<string, string> = {
     'sat-day':   'mapbox://styles/mapbox/satellite-streets-v12',
-    'sat-night': 'mapbox://styles/mapbox/dark-v11',
+    'sat-night': 'mapbox://styles/hayesb123/cmoyw9edf001901qw4mud4wcv',
     '3d-day':    TERRAIN_STYLE,
     '3d-dawn':   TERRAIN_STYLE,
     '3d-dusk':   TERRAIN_STYLE,
