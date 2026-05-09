@@ -1,12 +1,12 @@
 'use client'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
+import mapboxgl from 'maplibre-gl'
+import 'maplibre-gl/dist/maplibre-gl.css'
 import { supabase, type Project, type Marker, type Wire, type Zone } from '@/lib/supabase'
 import { FIXTURES, type FixtureType } from '@/lib/catalog'
 
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!
+// maplibre-gl does not require an access token
 
 const TOOLS = [
   { id: 'uplight', label: 'Uplight', icon: UpIcon    },
@@ -61,17 +61,8 @@ function markerSVG(type: string) {
   return svgs[type] || svgs.uplight
 }
 
-function addTerrain(map: mapboxgl.Map) {
-  if (!map.getSource('mapbox-dem')) {
-    map.addSource('mapbox-dem', {
-      type: 'raster-dem',
-      url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-      tileSize: 512,
-      maxzoom: 14,
-    })
-  }
-  map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 })
-  map.setFog({ color: '#0f0f0f', 'high-color': '#1a1a2e', 'horizon-blend': 0.04 })
+function addTerrain(_map: mapboxgl.Map) {
+  // terrain disabled when using free tile providers
 }
 
 export default function MapClient({ projectId }: { projectId: string }) {
@@ -131,12 +122,22 @@ export default function MapClient({ projectId }: { projectId: string }) {
       if (!p || !mapDiv.current) return
       const map = new mapboxgl.Map({
         container: mapDiv.current,
-        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        style: {
+            version: 8,
+            sources: {
+              'esri-satellite': {
+                type: 'raster',
+                tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+                tileSize: 256,
+                attribution: 'Esri, Maxar, Earthstar Geographics',
+              },
+            },
+            layers: [{ id: 'esri-satellite', type: 'raster', source: 'esri-satellite' }],
+          } as any,
         center: p.lng && p.lat ? [p.lng, p.lat] : [-73.9857, 40.7484],
         zoom: p.lng ? 18.5 : 13,
         pitch: 45,
         bearing: -10,
-        antialias: true,
       })
       mapRef.current = map
 
@@ -278,7 +279,10 @@ export default function MapClient({ projectId }: { projectId: string }) {
     if (!map) return
     const next = !night
     setNight(next)
-    map.setStyle(next ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/satellite-streets-v12')
+    map.setStyle(next
+      ? { version: 8, sources: { 'carto-dark': { type: 'raster', tiles: ['https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'], tileSize: 256, attribution: '© CartoDB' } }, layers: [{ id: 'carto-dark', type: 'raster', source: 'carto-dark' }] } as any
+      : { version: 8, sources: { 'esri-satellite': { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, attribution: 'Esri' } }, layers: [{ id: 'esri-satellite', type: 'raster', source: 'esri-satellite' }] } as any
+    )
     map.once('style.load', () => {
       addTerrain(map)
       const p = project
@@ -292,15 +296,6 @@ export default function MapClient({ projectId }: { projectId: string }) {
     })
   }
 
-  if (!process.env.NEXT_PUBLIC_MAPBOX_TOKEN) return (
-    <div style={{ background: '#0f0f0f', height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ textAlign: 'center', color: '#f0f0f0', maxWidth: 340 }}>
-        <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
-        <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Mapbox token missing</p>
-        <p style={{ color: '#888', fontSize: 13, lineHeight: 1.5 }}>Add <code style={{ background: '#222', padding: '1px 6px', borderRadius: 4 }}>NEXT_PUBLIC_MAPBOX_TOKEN</code> to your Vercel environment variables, then redeploy.</p>
-      </div>
-    </div>
-  )
 
   if (!project) return (
     <div style={{ background: '#0f0f0f', height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
