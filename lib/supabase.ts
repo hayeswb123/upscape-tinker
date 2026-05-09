@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://jusgscanbgeglqtolcov.supabase.co'
-const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1c2dzY2FuYmdlZ2xxdG9sY292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjgxNjUsImV4cCI6MjA5Mzg0NDE2NX0.V4NYUY3kykjc9t0mjnsjHIuHDiXokusFlUI_EEpJ6KI'
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://staaborqwrjsbapzkpuv.supabase.co'
+const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0YWFib3Jxd3Jqc2JhcHprcHV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDIzNTUsImV4cCI6MjA5MzkxODM1NX0.fjBUQDzmfZ_Vs0kL_jqYe7zci6QLEg3TtHkozUs3O2I'
 
 export const supabase = createClient(url, anon)
 
