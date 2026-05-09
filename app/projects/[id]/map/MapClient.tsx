@@ -1,12 +1,12 @@
 'use client'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import mapboxgl from 'maplibre-gl'
-import 'maplibre-gl/dist/maplibre-gl.css'
+import mapboxgl from 'mapbox-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
 import { supabase, type Project, type Marker, type Wire, type Zone } from '@/lib/supabase'
 import { FIXTURES, type FixtureType } from '@/lib/catalog'
 
-// maplibre-gl does not require an access token
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!
 
 const TOOLS = [
   { id: 'uplight', label: 'Uplight', icon: UpIcon    },
@@ -61,8 +61,17 @@ function markerSVG(type: string) {
   return svgs[type] || svgs.uplight
 }
 
-function addTerrain(_map: mapboxgl.Map) {
-  // terrain disabled when using free tile providers
+function addTerrain(map: mapboxgl.Map) {
+  if (!map.getSource('mapbox-dem')) {
+    map.addSource('mapbox-dem', {
+      type: 'raster-dem',
+      url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+      tileSize: 512,
+      maxzoom: 14,
+    })
+  }
+  map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 })
+  map.setFog({ color: '#0f0f0f', 'high-color': '#1a1a2e', 'horizon-blend': 0.04 })
 }
 
 export default function MapClient({ projectId }: { projectId: string }) {
@@ -122,18 +131,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
       if (!p || !mapDiv.current) return
       const map = new mapboxgl.Map({
         container: mapDiv.current,
-        style: {
-            version: 8,
-            sources: {
-              'esri-satellite': {
-                type: 'raster',
-                tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-                tileSize: 256,
-                attribution: 'Esri, Maxar, Earthstar Geographics',
-              },
-            },
-            layers: [{ id: 'esri-satellite', type: 'raster', source: 'esri-satellite' }],
-          } as any,
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
         center: p.lng && p.lat ? [p.lng, p.lat] : [-73.9857, 40.7484],
         zoom: p.lng ? 18.5 : 13,
         pitch: 45,
@@ -279,10 +277,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
     if (!map) return
     const next = !night
     setNight(next)
-    map.setStyle(next
-      ? { version: 8, sources: { 'carto-dark': { type: 'raster', tiles: ['https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'], tileSize: 256, attribution: '© CartoDB' } }, layers: [{ id: 'carto-dark', type: 'raster', source: 'carto-dark' }] } as any
-      : { version: 8, sources: { 'esri-satellite': { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, attribution: 'Esri' } }, layers: [{ id: 'esri-satellite', type: 'raster', source: 'esri-satellite' }] } as any
-    )
+    map.setStyle(next ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/satellite-streets-v12')
     map.once('style.load', () => {
       addTerrain(map)
       const p = project
