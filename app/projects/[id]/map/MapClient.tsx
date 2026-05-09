@@ -61,6 +61,24 @@ function markerSVG(type: string) {
   return svgs[type] || svgs.uplight
 }
 
+function add3DBuildings(map: mapboxgl.Map) {
+  if (map.getLayer('3d-buildings')) return
+  map.addLayer({
+    id: '3d-buildings',
+    source: 'composite',
+    'source-layer': 'building',
+    filter: ['==', 'extrude', 'true'],
+    type: 'fill-extrusion',
+    minzoom: 14,
+    paint: {
+      'fill-extrusion-color': ['interpolate', ['linear'], ['get', 'height'], 0, '#e8e0d4', 50, '#d4ccc0', 100, '#c0b8ac'],
+      'fill-extrusion-height': ['get', 'height'],
+      'fill-extrusion-base': ['get', 'min_height'],
+      'fill-extrusion-opacity': 0.85,
+    },
+  })
+}
+
 function addTerrain(map: mapboxgl.Map) {
   if (!map.getSource('mapbox-dem')) {
     map.addSource('mapbox-dem', {
@@ -136,6 +154,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
         zoom: p.lng ? 18.5 : 13,
         pitch: 45,
         bearing: -10,
+        antialias: true,
       })
       mapRef.current = map
 
@@ -148,6 +167,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
 
       map.on('load', () => {
         addTerrain(map)
+        add3DBuildings(map)
 
         map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
         map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#facc15', 'line-width': 2.5, 'line-dasharray': [5, 3] } })
@@ -286,6 +306,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
     map.setStyle(MAP_STYLES[mode])
     map.once('style.load', () => {
       if (mode === 'sat-day' || mode === 'sat-night') addTerrain(map)
+      add3DBuildings(map)
       const p = project
       if (!p) return
       map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
