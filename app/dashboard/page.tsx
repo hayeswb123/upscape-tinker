@@ -37,8 +37,8 @@ export default function DashboardPage() {
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100dvh' }}>
-      <header style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '0 20px', height: 52, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontWeight: 700, letterSpacing: '0.1em', fontSize: 16 }}>UPSCAPE</span>
+      <header style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <img src="/upscape-logo.svg" alt="Upscape" style={{ height: 24, color: 'var(--text)', filter: 'invert(1)' }} />
         <span style={{ flex: 1 }} />
         <button onClick={logout} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 13 }}>Sign out</button>
       </header>

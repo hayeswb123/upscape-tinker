@@ -492,7 +492,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
           .upscape-back { transition: opacity 0.2s, transform 0.2s; }
           .upscape-night:hover { opacity: 1 !important; }
           .upscape-night { transition: opacity 0.2s; }
-          .upscape-quote:hover { background: #b8864a !important; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important; }
+          .upscape-quote:hover { background: #e07030 !important; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important; }
           .upscape-quote { transition: background 0.2s, transform 0.2s, box-shadow 0.2s; }
           .upscape-tool:hover { opacity: 1 !important; transform: translateY(-1px); }
         `}</style>
@@ -558,7 +558,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
           })}
         </div>
         <button className="upscape-quote" onClick={() => router.push(`/projects/${projectId}/quote`)} style={{
-          background: '#9a7040', border: 'none', borderRadius: 8,
+          background: '#F4884A', border: 'none', borderRadius: 8,
           color: 'rgba(255,255,255,0.92)', fontWeight: 500, fontSize: 12,
           letterSpacing: '-0.01em', padding: '0 13px', height: 34,
           cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
@@ -578,7 +578,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
           <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.55)' }}>
             {wirePoints.length < 2 ? 'tap to place wire points' : `${wirePoints.length} pts · ${calcWireFeet(wirePoints).toFixed(0)} ft`}
           </span>
-          <button onClick={finishWire} style={{ background: '#9a7040', border: 'none', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 500, padding: '5px 11px', cursor: 'pointer', letterSpacing: '-0.01em' }}>Done</button>
+          <button onClick={finishWire} style={{ background: '#F4884A', border: 'none', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 500, padding: '5px 11px', cursor: 'pointer', letterSpacing: '-0.01em' }}>Done</button>
           <button onClick={() => { clearWireMarkers(); setWirePoints([]); wireRef.current = []; setToolAndSync('select') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 11, padding: '5px 4px', cursor: 'pointer' }}>cancel</button>
         </div>
       )}
@@ -647,7 +647,7 @@ function MarkerPopup({ marker, onChange, onSave, onDelete }: {
   onSave: (m: Marker) => void
   onDelete: (id: string) => void
 }) {
-  const color = FIXTURE_COLORS[marker.type] || '#9a7040'
+  const color = FIXTURE_COLORS[marker.type] || '#F4884A'
   const fix = FIXTURES[marker.type as FixtureType]
 
   return (
@@ -684,7 +684,7 @@ function MarkerPopup({ marker, onChange, onSave, onDelete }: {
       </div>
       <div style={{ padding: '0 16px 14px', display: 'flex', gap: 8 }}>
         <button onClick={() => onDelete(marker.id)} style={{ flex: 1, background: 'transparent', border: 'none', borderRadius: 8, color: 'rgba(239,68,68,0.6)', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer', letterSpacing: '-0.01em' }}>Remove</button>
-        <button onClick={() => onSave(marker)} style={{ flex: 2, background: '#9a7040', border: 'none', borderRadius: 8, color: 'rgba(255,255,255,0.92)', fontSize: 12, fontWeight: 500, letterSpacing: '-0.01em', padding: 11, cursor: 'pointer' }}>Save</button>
+        <button onClick={() => onSave(marker)} style={{ flex: 2, background: '#F4884A', border: 'none', borderRadius: 8, color: 'rgba(255,255,255,0.92)', fontSize: 12, fontWeight: 500, letterSpacing: '-0.01em', padding: 11, cursor: 'pointer' }}>Save</button>
       </div>
     </div>
   )
