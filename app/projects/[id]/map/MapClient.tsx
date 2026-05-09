@@ -61,6 +61,65 @@ function markerSVG(type: string) {
   return svgs[type] || svgs.uplight
 }
 
+const WIRE_NODE_CSS = `
+  @keyframes wire-pop {
+    0%   { transform: scale(0.5); opacity: 0; }
+    60%  { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1);   opacity: 1; }
+  }
+  @keyframes wire-ripple {
+    0%   { transform: scale(1);   opacity: 0.6; }
+    100% { transform: scale(2.8); opacity: 0; }
+  }
+  @keyframes wire-pulse {
+    0%, 100% { box-shadow: 0 0 0 2px #e8a030, 0 0 10px #e8a03088; }
+    50%       { box-shadow: 0 0 0 4px #e8a030, 0 0 20px #e8a030cc; }
+  }
+  @keyframes wire-pulse-fade {
+    0%   { box-shadow: 0 0 0 4px #e8a030, 0 0 20px #e8a030cc; }
+    100% { box-shadow: 0 0 0 2px #c8882288, 0 0 6px #c8882244; }
+  }
+`
+
+function wireNodeEl(isNewest: boolean) {
+  const wrap = document.createElement('div')
+  wrap.style.cssText = `position:relative;width:14px;height:14px;cursor:crosshair;`
+
+  // ripple
+  const ripple = document.createElement('div')
+  ripple.style.cssText = `
+    position:absolute;inset:-4px;border-radius:50%;
+    background:rgba(232,160,48,0.35);
+    animation:wire-ripple 0.35s ease-out forwards;
+    pointer-events:none;
+  `
+  wrap.appendChild(ripple)
+  setTimeout(() => ripple.remove(), 350)
+
+  // node
+  const node = document.createElement('div')
+  node.style.cssText = `
+    width:14px;height:14px;border-radius:50%;
+    background:#e8a030;border:2px solid rgba(255,255,255,0.9);
+    box-shadow:0 0 0 2px #e8a03088, 0 0 10px #e8a03088;
+    animation:wire-pop 0.25s cubic-bezier(0.34,1.56,0.64,1) forwards,
+              ${isNewest ? 'wire-pulse 0.8s ease-in-out 0.25s 3, wire-pulse-fade 0.4s ease-out 2.65s forwards' : ''};
+    transition:transform 0.12s, box-shadow 0.12s;
+  `
+  wrap.appendChild(node)
+
+  wrap.addEventListener('mouseenter', () => {
+    node.style.transform = 'scale(1.35)'
+    node.style.boxShadow = '0 0 0 3px #e8a030, 0 0 16px #e8a030cc'
+  })
+  wrap.addEventListener('mouseleave', () => {
+    node.style.transform = 'scale(1)'
+    node.style.boxShadow = '0 0 0 2px #e8a03088, 0 0 8px #e8a03066'
+  })
+
+  return wrap
+}
+
 function add3DBuildings(map: mapboxgl.Map) {
   if (map.getLayer('3d-buildings')) return
   map.addLayer({
@@ -105,6 +164,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const [popup, setPopup] = useState<Marker | null>(null)
   const [wirePoints, setWirePoints] = useState<[number, number][]>([])
   const wireRef = useRef<[number, number][]>([])
+  const wireMarkersRef = useRef<mapboxgl.Marker[]>([])
 
   useEffect(() => { wireRef.current = wirePoints }, [wirePoints])
 
@@ -170,11 +230,13 @@ export default function MapClient({ projectId }: { projectId: string }) {
         add3DBuildings(map)
 
         map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
-        map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#facc15', 'line-width': 2.5, 'line-dasharray': [5, 3] } })
+        map.addLayer({ id: 'wires-glow', type: 'line', source: 'wires', paint: { 'line-color': '#e8a030', 'line-width': 8, 'line-opacity': 0.18, 'line-blur': 4 } })
+        map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#e8c060', 'line-width': 2.5, 'line-dasharray': [6, 3] } })
 
         // Live wire preview while drawing
         map.addSource('wire-preview', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
-        map.addLayer({ id: 'wire-preview-line', type: 'line', source: 'wire-preview', paint: { 'line-color': '#facc15', 'line-width': 2, 'line-opacity': 0.6, 'line-dasharray': [3, 2] } })
+        map.addLayer({ id: 'wire-preview-glow', type: 'line', source: 'wire-preview', paint: { 'line-color': '#e8a030', 'line-width': 10, 'line-opacity': 0.22, 'line-blur': 5 } })
+        map.addLayer({ id: 'wire-preview-line', type: 'line', source: 'wire-preview', paint: { 'line-color': '#e8c060', 'line-width': 2.5, 'line-opacity': 0.85, 'line-dasharray': [4, 2] } })
 
         map.addSource('zones', { type: 'geojson', data: zonesToGeoJSON(p.zones || []) })
         map.addLayer({ id: 'zones-fill', type: 'fill', source: 'zones', paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.12 } })
@@ -207,6 +269,16 @@ export default function MapClient({ projectId }: { projectId: string }) {
             const next = [...wireRef.current, pt]
             wireRef.current = next
             setWirePoints([...next])
+            // dim previous newest node
+            const prev = wireMarkersRef.current[wireMarkersRef.current.length - 1]
+            if (prev) {
+              const inner = prev.getElement().querySelector('div:last-child') as HTMLElement
+              if (inner) { inner.style.animation = 'none'; inner.style.boxShadow = '0 0 0 2px #c8882288, 0 0 6px #c8882244' }
+            }
+            // add new glowing node
+            const marker = new mapboxgl.Marker({ element: wireNodeEl(true), anchor: 'center' })
+              .setLngLat(pt).addTo(map)
+            wireMarkersRef.current.push(marker)
             return
           }
           placeMarker(map, currentTool as FixtureType, e.lngLat.lat, e.lngLat.lng)
@@ -250,8 +322,14 @@ export default function MapClient({ projectId }: { projectId: string }) {
     })
   }
 
+  function clearWireMarkers() {
+    wireMarkersRef.current.forEach(m => m.remove())
+    wireMarkersRef.current = []
+  }
+
   async function finishWire() {
     const pts = wireRef.current
+    clearWireMarkers()
     if (pts.length < 2) { setWirePoints([]); wireRef.current = []; return }
     const feet = calcWireFeet(pts)
     const wire: Wire = { id: crypto.randomUUID(), points: pts, feet }
@@ -287,7 +365,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
   function setToolAndSync(t: ToolId) {
     setTool(t)
     ;(window as any).__upscapeTool = t
-    if (t !== 'wire') { setWirePoints([]); wireRef.current = [] }
+    if (t !== 'wire') { clearWireMarkers(); setWirePoints([]); wireRef.current = [] }
   }
 
   useEffect(() => { (window as any).__upscapeTool = tool }, [tool])
@@ -387,6 +465,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
       }}>
         <style>{`
           @keyframes spin { to { transform: rotate(360deg) } }
+          ${WIRE_NODE_CSS}
           .upscape-back:hover { opacity: 1 !important; transform: translateY(-1px); }
           .upscape-back { transition: opacity 0.2s, transform 0.2s; }
           .upscape-night:hover { opacity: 1 !important; }
@@ -466,7 +545,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
             {wirePoints.length < 2 ? 'tap to place wire points' : `${wirePoints.length} pts · ${calcWireFeet(wirePoints).toFixed(0)} ft`}
           </span>
           <button onClick={finishWire} style={{ background: '#9a7040', border: 'none', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 500, padding: '5px 11px', cursor: 'pointer', letterSpacing: '-0.01em' }}>Done</button>
-          <button onClick={() => { setWirePoints([]); wireRef.current = []; setToolAndSync('select') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 11, padding: '5px 4px', cursor: 'pointer' }}>cancel</button>
+          <button onClick={() => { clearWireMarkers(); setWirePoints([]); wireRef.current = []; setToolAndSync('select') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 11, padding: '5px 4px', cursor: 'pointer' }}>cancel</button>
         </div>
       )}
 
