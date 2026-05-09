@@ -61,63 +61,17 @@ function markerSVG(type: string) {
   return svgs[type] || svgs.uplight
 }
 
-const WIRE_NODE_CSS = `
-  @keyframes wire-pop {
-    0%   { transform: scale(0.5); opacity: 0; }
-    60%  { transform: scale(1.2); opacity: 1; }
-    100% { transform: scale(1);   opacity: 1; }
-  }
-  @keyframes wire-ripple {
-    0%   { transform: scale(1);   opacity: 0.6; }
-    100% { transform: scale(2.8); opacity: 0; }
-  }
-  @keyframes wire-pulse {
-    0%, 100% { box-shadow: 0 0 0 2px #e8a030, 0 0 10px #e8a03088; }
-    50%       { box-shadow: 0 0 0 4px #e8a030, 0 0 20px #e8a030cc; }
-  }
-  @keyframes wire-pulse-fade {
-    0%   { box-shadow: 0 0 0 4px #e8a030, 0 0 20px #e8a030cc; }
-    100% { box-shadow: 0 0 0 2px #c8882288, 0 0 6px #c8882244; }
-  }
-`
+const WIRE_NODE_CSS = ``
 
-function wireNodeEl(isNewest: boolean) {
-  const wrap = document.createElement('div')
-  wrap.style.cssText = `position:relative;width:14px;height:14px;cursor:crosshair;`
-
-  // ripple
-  const ripple = document.createElement('div')
-  ripple.style.cssText = `
-    position:absolute;inset:-4px;border-radius:50%;
-    background:rgba(232,160,48,0.35);
-    animation:wire-ripple 0.35s ease-out forwards;
-    pointer-events:none;
+function wireNodeEl(_isNewest: boolean) {
+  const el = document.createElement('div')
+  el.style.cssText = `
+    width:10px;height:10px;border-radius:50%;
+    background:#e8a030;border:2px solid rgba(255,255,255,0.85);
+    box-shadow:0 0 6px #e8a03099;
+    cursor:crosshair;
   `
-  wrap.appendChild(ripple)
-  setTimeout(() => ripple.remove(), 350)
-
-  // node
-  const node = document.createElement('div')
-  node.style.cssText = `
-    width:14px;height:14px;border-radius:50%;
-    background:#e8a030;border:2px solid rgba(255,255,255,0.9);
-    box-shadow:0 0 0 2px #e8a03088, 0 0 10px #e8a03088;
-    animation:wire-pop 0.25s cubic-bezier(0.34,1.56,0.64,1) forwards,
-              ${isNewest ? 'wire-pulse 0.8s ease-in-out 0.25s 3, wire-pulse-fade 0.4s ease-out 2.65s forwards' : ''};
-    transition:transform 0.12s, box-shadow 0.12s;
-  `
-  wrap.appendChild(node)
-
-  wrap.addEventListener('mouseenter', () => {
-    node.style.transform = 'scale(1.35)'
-    node.style.boxShadow = '0 0 0 3px #e8a030, 0 0 16px #e8a030cc'
-  })
-  wrap.addEventListener('mouseleave', () => {
-    node.style.transform = 'scale(1)'
-    node.style.boxShadow = '0 0 0 2px #e8a03088, 0 0 8px #e8a03066'
-  })
-
-  return wrap
+  return el
 }
 
 function add3DBuildings(map: mapboxgl.Map) {
@@ -163,11 +117,14 @@ export default function MapClient({ projectId }: { projectId: string }) {
   type MapMode = 'sat-day' | 'sat-night' | '3d-dawn' | '3d-day' | '3d-dusk' | '3d-night'
   const [mapMode, setMapMode] = useState<MapMode>('sat-day')
   const [popup, setPopup] = useState<Marker | null>(null)
+  const [wirePopup, setWirePopup] = useState<{ id: string; feet: number } | null>(null)
   const [wirePoints, setWirePoints] = useState<[number, number][]>([])
   const wireRef = useRef<[number, number][]>([])
   const wireMarkersRef = useRef<mapboxgl.Marker[]>([])
+  const projectRef = useRef<Project | null>(null)
 
   useEffect(() => { wireRef.current = wirePoints }, [wirePoints])
+  useEffect(() => { projectRef.current = project }, [project])
 
   // Ghost cursor — scoped to the Mapbox canvas element only
   useEffect(() => {
@@ -210,7 +167,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
       if (!p || !mapDiv.current) return
       const map = new mapboxgl.Map({
         container: mapDiv.current,
-        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        style: 'mapbox://styles/mapbox/standard-satellite',
         center: p.lng && p.lat ? [p.lng, p.lat] : [-73.9857, 40.7484],
         zoom: p.lng ? 18.5 : 13,
         pitch: 45,
@@ -228,15 +185,15 @@ export default function MapClient({ projectId }: { projectId: string }) {
 
       map.on('load', () => {
         addTerrain(map)
+        ;(map as any).setConfigProperty('basemap', 'lightPreset', 'day')
 
         map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
-        map.addLayer({ id: 'wires-glow', type: 'line', source: 'wires', paint: { 'line-color': '#e8a030', 'line-width': 8, 'line-opacity': 0.18, 'line-blur': 4 } })
-        map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#e8c060', 'line-width': 2.5, 'line-dasharray': [6, 3] } })
+        map.addLayer({ id: 'wires-glow', type: 'line', source: 'wires', paint: { 'line-color': '#e8a030', 'line-width': 10, 'line-opacity': 0.3, 'line-blur': 4 } })
+        map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#f0c060', 'line-width': 2.5, 'line-opacity': 1 } })
 
         // Live wire preview while drawing
         map.addSource('wire-preview', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
-        map.addLayer({ id: 'wire-preview-glow', type: 'line', source: 'wire-preview', paint: { 'line-color': '#e8a030', 'line-width': 10, 'line-opacity': 0.22, 'line-blur': 5 } })
-        map.addLayer({ id: 'wire-preview-line', type: 'line', source: 'wire-preview', paint: { 'line-color': '#e8c060', 'line-width': 2.5, 'line-opacity': 0.85, 'line-dasharray': [4, 2] } })
+        map.addLayer({ id: 'wire-preview-line', type: 'line', source: 'wire-preview', paint: { 'line-color': '#e8a030', 'line-width': 1.5, 'line-opacity': 0.45, 'line-dasharray': [5, 4] } })
 
         map.addSource('zones', { type: 'geojson', data: zonesToGeoJSON(p.zones || []) })
         map.addLayer({ id: 'zones-fill', type: 'fill', source: 'zones', paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.12 } })
@@ -261,9 +218,26 @@ export default function MapClient({ projectId }: { projectId: string }) {
           })
         })
 
+        map.on('mousemove', e => {
+          const currentTool = (window as any).__upscapeTool as ToolId
+          if (!currentTool || currentTool === 'select') {
+            const hit = map.queryRenderedFeatures(e.point, { layers: ['wires-line'] })
+            map.getCanvas().style.cursor = hit.length > 0 ? 'pointer' : ''
+          }
+        })
+
         map.on('click', e => {
           const currentTool = (window as any).__upscapeTool as ToolId
-          if (!currentTool || currentTool === 'select') return
+          // In select mode, check for wire clicks
+          if (!currentTool || currentTool === 'select') {
+            const features = map.queryRenderedFeatures(e.point, { layers: ['wires-line'] })
+            if (features.length > 0) {
+              const wireId = features[0].properties?.wireId as string
+              const wireData = projectRef.current?.wires?.find((w: Wire) => w.id === wireId)
+              if (wireId && wireData) setWirePopup({ id: wireId, feet: wireData.feet })
+            }
+            return
+          }
           if (currentTool === 'wire') {
             const pt: [number, number] = [e.lngLat.lng, e.lngLat.lat]
             const next = [...wireRef.current, pt]
@@ -294,7 +268,11 @@ export default function MapClient({ projectId }: { projectId: string }) {
       .setLngLat([m.lng, m.lat])
       .addTo(map)
 
-    el.addEventListener('click', (e) => { e.stopPropagation(); setPopup({ ...m }) })
+    el.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const current = projectRef.current?.markers.find(x => x.id === m.id) ?? m
+      setPopup({ ...current })
+    })
 
     mb.on('dragend', async () => {
       const ll = mb.getLngLat()
@@ -362,6 +340,16 @@ export default function MapClient({ projectId }: { projectId: string }) {
     setPopup(null)
   }
 
+  async function deleteWire(id: string) {
+    const { data: proj } = await supabase.from('projects').select('wires').eq('id', projectId).single()
+    if (!proj) return
+    const wires = (proj.wires as Wire[]).filter(w => w.id !== id)
+    await supabase.from('projects').update({ wires }).eq('id', projectId)
+    ;(mapRef.current?.getSource('wires') as mapboxgl.GeoJSONSource)?.setData(wiresToGeoJSON(wires))
+    setProject(p => p ? { ...p, wires } : p)
+    setWirePopup(null)
+  }
+
   function setToolAndSync(t: ToolId) {
     setTool(t)
     ;(window as any).__upscapeTool = t
@@ -371,15 +359,17 @@ export default function MapClient({ projectId }: { projectId: string }) {
   useEffect(() => { (window as any).__upscapeTool = tool }, [tool])
 
   const TERRAIN_STYLE = 'mapbox://styles/hayesb123/cmoyv06sv001801qweuh6hjob'
+  const SAT_STYLE = 'mapbox://styles/mapbox/standard-satellite'
   const MAP_STYLES: Record<string, string> = {
-    'sat-day':   'mapbox://styles/mapbox/satellite-streets-v12',
-    'sat-night': 'mapbox://styles/hayesb123/cmoyw9edf001901qw4mud4wcv',
+    'sat-day':   SAT_STYLE,
+    'sat-night': SAT_STYLE,
     '3d-day':    TERRAIN_STYLE,
     '3d-dawn':   TERRAIN_STYLE,
     '3d-dusk':   TERRAIN_STYLE,
     '3d-night':  TERRAIN_STYLE,
   }
   const LIGHT_PRESETS: Record<string, string> = {
+    'sat-day': 'day', 'sat-night': 'night',
     '3d-day': 'day', '3d-dawn': 'dawn', '3d-dusk': 'dusk', '3d-night': 'night',
   }
   const SAT_CYCLE  = ['sat-day', 'sat-night'] as const
@@ -401,8 +391,10 @@ export default function MapClient({ projectId }: { projectId: string }) {
         const p = project
         if (!p) return
         map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
-        map.addLayer({ id: 'wires-glow', type: 'line', source: 'wires', paint: { 'line-color': '#e8a030', 'line-width': 8, 'line-opacity': 0.18, 'line-blur': 4 } })
-        map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#e8c060', 'line-width': 2.5, 'line-dasharray': [6, 3] } })
+        map.addLayer({ id: 'wires-glow', type: 'line', source: 'wires', paint: { 'line-color': '#e8a030', 'line-width': 10, 'line-opacity': 0.3, 'line-blur': 4 } })
+        map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#f0c060', 'line-width': 2.5, 'line-opacity': 1 } })
+        map.addSource('wire-preview', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
+        map.addLayer({ id: 'wire-preview-line', type: 'line', source: 'wire-preview', paint: { 'line-color': '#e8a030', 'line-width': 1.5, 'line-opacity': 0.45, 'line-dasharray': [5, 4] } })
         map.addSource('zones', { type: 'geojson', data: zonesToGeoJSON(p.zones || []) })
         map.addLayer({ id: 'zones-fill', type: 'fill', source: 'zones', paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.12 } })
         map.addLayer({ id: 'zones-line', type: 'line', source: 'zones', paint: { 'line-color': '#3b82f6', 'line-width': 1.5 } })
@@ -615,6 +607,20 @@ export default function MapClient({ projectId }: { projectId: string }) {
         </div>
       </div>
 
+      {/* wire popup */}
+      {wirePopup && (
+        <div style={{ position: 'absolute', bottom: 96, left: 14, right: 14, zIndex: 30, background: 'rgba(12,12,12,0.96)', backdropFilter: 'blur(24px)', borderRadius: 12, boxShadow: '0 12px 48px rgba(0,0,0,0.65)', overflow: 'hidden' }}>
+          <div style={{ padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ color: '#e8a030', fontSize: 16, lineHeight: 1 }}>—</div>
+            <span style={{ fontWeight: 500, fontSize: 13, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.88)' }}>Wire · {wirePopup.feet.toFixed(0)} ft</span>
+            <button onClick={() => setWirePopup(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', cursor: 'pointer', fontSize: 18, padding: 4 }}>✕</button>
+          </div>
+          <div style={{ padding: '0 16px 14px', display: 'flex', gap: 8 }}>
+            <button onClick={() => deleteWire(wirePopup.id)} style={{ flex: 1, background: 'transparent', border: 'none', borderRadius: 8, color: 'rgba(239,68,68,0.7)', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer' }}>Remove wire</button>
+          </div>
+        </div>
+      )}
+
       {/* marker popup */}
       {popup && <MarkerPopup marker={popup} onChange={setPopup} onSave={savePopup} onDelete={deleteMarker} />}
     </div>
@@ -681,7 +687,7 @@ function SelectIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" f
 
 // helpers
 function wiresToGeoJSON(wires: Wire[]) {
-  return { type: 'FeatureCollection' as const, features: wires.map(w => ({ type: 'Feature' as const, geometry: { type: 'LineString' as const, coordinates: w.points }, properties: {} })) }
+  return { type: 'FeatureCollection' as const, features: wires.map(w => ({ type: 'Feature' as const, geometry: { type: 'LineString' as const, coordinates: w.points }, properties: { wireId: w.id, feet: w.feet } })) }
 }
 function zonesToGeoJSON(zones: Zone[]) {
   return { type: 'FeatureCollection' as const, features: zones.map(z => ({ type: 'Feature' as const, geometry: { type: 'Polygon' as const, coordinates: [z.points] }, properties: {} })) }
