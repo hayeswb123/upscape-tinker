@@ -160,7 +160,8 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const [project, setProject] = useState<Project | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
   const [tool, setTool] = useState<ToolId>('select')
-  const [mapMode, setMapMode] = useState<'sat-day' | 'sat-night' | '3d-day' | '3d-dawn' | '3d-dusk' | '3d-night'>('sat-day')
+  type MapMode = 'sat-day' | 'sat-night' | '3d-dawn' | '3d-day' | '3d-dusk' | '3d-night'
+  const [mapMode, setMapMode] = useState<MapMode>('sat-day')
   const [popup, setPopup] = useState<Marker | null>(null)
   const [wirePoints, setWirePoints] = useState<[number, number][]>([])
   const wireRef = useRef<[number, number][]>([])
@@ -381,9 +382,12 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const LIGHT_PRESETS: Record<string, string> = {
     '3d-day': 'day', '3d-dawn': 'dawn', '3d-dusk': 'dusk', '3d-night': 'night',
   }
-  const D3_CYCLE = ['3d-day', '3d-dawn', '3d-dusk', '3d-night'] as const
+  const SAT_CYCLE  = ['sat-day', 'sat-night'] as const
+  const D3_CYCLE   = ['3d-dawn', '3d-day', '3d-dusk', '3d-night'] as const
+  // map a time-of-day to its closest equivalent in each mode
+  const TIME_RANK: Record<string, number> = { 'sat-day':0,'sat-night':2,'3d-dawn':0,'3d-day':1,'3d-dusk':2,'3d-night':3 }
 
-  function switchMode(mode: '3d-day' | '3d-dawn' | '3d-dusk' | '3d-night' | 'sat-day' | 'sat-night') {
+  function switchMode(mode: MapMode) {
     const map = mapRef.current
     if (!map) return
     const prevStyle = MAP_STYLES[mapMode]
@@ -503,41 +507,49 @@ export default function MapClient({ projectId }: { projectId: string }) {
         {/* map mode switcher */}
         <div style={{ display: 'flex', gap: 3, background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(12px)', borderRadius: 8, padding: 3, boxShadow: '0 2px 12px rgba(0,0,0,0.3)', flexShrink: 0 }}>
           {/* satellite */}
-          {[
-            { key: 'sat', icon: '◉', label: 'Satellite', active: !mapMode.startsWith('3d') },
-            { key: '3d',  icon: '⬡', label: ({'3d-dawn':'Dawn','3d-day':'Day','3d-dusk':'Dusk','3d-night':'Night'} as Record<string,string>)[mapMode] ?? '3D', active: mapMode.startsWith('3d') },
-            { key: 'time', icon: '◐', label: ({'sat-day':'Day','sat-night':'Night','3d-dawn':'Dawn','3d-day':'Day','3d-dusk':'Dusk','3d-night':'Night'} as Record<string,string>)[mapMode] ?? 'Day', active: false },
-          ].map(({ key, icon, label, active }) => (
-            <button
-              key={key}
-              title={label}
-              onClick={() => {
-                if (key === 'sat') { switchMode('sat-day') }
-                else if (key === '3d') {
-                  if (!mapMode.startsWith('3d')) switchMode('3d-dawn')
-                  else {
-                    const idx = D3_CYCLE.indexOf(mapMode as typeof D3_CYCLE[number])
-                    switchMode(D3_CYCLE[(idx + 1) % D3_CYCLE.length])
+          {([
+            { key: 'sat', icon: '◉' },
+            { key: '3d',  icon: '⬡' },
+          ] as const).map(({ key, icon }) => {
+            const isSat = !mapMode.startsWith('3d')
+            const isActive = key === 'sat' ? isSat : !isSat
+            const timeLabels: Record<string, string> = { 'sat-day':'Day','sat-night':'Night','3d-dawn':'Dawn','3d-day':'Day','3d-dusk':'Dusk','3d-night':'Night' }
+            const label = `${key === 'sat' ? 'Satellite' : '3D'} · ${timeLabels[mapMode]}`
+            return (
+              <button key={key} title={label}
+                onClick={() => {
+                  if (key === 'sat') {
+                    if (isSat) {
+                      // already sat — cycle day/night
+                      switchMode(mapMode === 'sat-day' ? 'sat-night' : 'sat-day')
+                    } else {
+                      // switch from 3D to sat, match time
+                      const rank = TIME_RANK[mapMode]
+                      switchMode(rank >= 2 ? 'sat-night' : 'sat-day')
+                    }
+                  } else {
+                    if (isSat) {
+                      // switch to 3D, match time of day
+                      const rank = TIME_RANK[mapMode]
+                      switchMode(rank === 0 ? '3d-dawn' : rank === 1 ? '3d-day' : rank === 2 ? '3d-dusk' : '3d-night')
+                    } else {
+                      // already 3D — cycle to next time
+                      const idx = D3_CYCLE.indexOf(mapMode as typeof D3_CYCLE[number])
+                      switchMode(D3_CYCLE[(idx + 1) % D3_CYCLE.length])
+                    }
                   }
-                } else if (key === 'time') {
-                  if (mapMode === 'sat-day') switchMode('sat-night')
-                  else if (mapMode === 'sat-night') switchMode('sat-day')
-                  else {
-                    const idx = D3_CYCLE.indexOf(mapMode as typeof D3_CYCLE[number])
-                    switchMode(D3_CYCLE[(idx + 1) % D3_CYCLE.length])
-                  }
-                }
-              }}
-              style={{
-                background: active ? 'rgba(255,255,255,0.15)' : 'transparent',
-                border: 'none', borderRadius: 6,
-                color: active ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)',
-                fontSize: 14, cursor: 'pointer', width: 28, height: 28,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.15s',
-              }}
-            >{icon}</button>
-          ))}
+                }}
+                style={{
+                  background: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
+                  border: 'none', borderRadius: 6,
+                  color: isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)',
+                  fontSize: 14, cursor: 'pointer', width: 28, height: 28,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.15s',
+                }}
+              >{icon}</button>
+            )
+          })}
         </div>
         <button className="upscape-quote" onClick={() => router.push(`/projects/${projectId}/quote`)} style={{
           background: '#9a7040', border: 'none', borderRadius: 8,
