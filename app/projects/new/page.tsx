@@ -32,9 +32,7 @@ export default function NewProjectPage() {
     e.preventDefault()
     if (!form.address || !form.homeowner) return
     setSaving(true)
-    const { data: { user } } = await supabase.auth.getUser()
     const { data, error } = await supabase.from('projects').insert({
-      user_id: user?.id ?? '00000000-0000-0000-0000-000000000000',
       name: form.name || form.homeowner,
       address: form.address,
       homeowner: form.homeowner,
