@@ -505,33 +505,24 @@ export default function MapClient({ projectId }: { projectId: string }) {
           {([
             { key: 'sat', icon: '◉', title: 'Satellite' },
             { key: '3d',  icon: '⬡', title: '3D' },
-            { key: 'night', icon: '☽', title: 'Night' },
-          ] as const).map(({ key, icon, title }) => {
+          ] as const).map(({ key, icon }) => {
             const is3D = mapMode.startsWith('3d')
-            const isNight = mapMode === 'sat-night' || mapMode === '3d-night' || mapMode === '3d-dusk'
-            const isActive = (key === 'sat' && !is3D) || (key === '3d' && is3D) || (key === 'night' && isNight)
-            const d3Labels: Record<string, string> = { '3d-day': 'day', '3d-dawn': 'dawn', '3d-dusk': 'dusk', '3d-night': 'night' }
-            const label = key === '3d' && is3D ? (d3Labels[mapMode] ?? '3D') : title
+            const isActive = (key === 'sat' && !is3D) || (key === '3d' && is3D)
+            const d3Labels: Record<string, string> = { '3d-dawn': 'Dawn', '3d-day': 'Day', '3d-dusk': 'Dusk', '3d-night': 'Night' }
+            const label = key === '3d' && is3D ? d3Labels[mapMode] : key === 'sat' ? 'Satellite' : '3D'
             return (
               <button
                 key={key}
                 title={label}
                 onClick={() => {
                   if (key === 'sat') {
-                    switchMode(mapMode === 'sat-night' ? 'sat-night' : 'sat-day')
-                    if (is3D) switchMode('sat-day')
-                  } else if (key === '3d') {
-                    if (!is3D) { switchMode('3d-day') }
+                    switchMode('sat-day')
+                  } else {
+                    if (!is3D) { switchMode('3d-dawn') }
                     else {
                       const idx = D3_CYCLE.indexOf(mapMode as typeof D3_CYCLE[number])
                       switchMode(D3_CYCLE[(idx + 1) % D3_CYCLE.length])
                     }
-                  } else if (key === 'night') {
-                    if (mapMode === 'sat-day') switchMode('sat-night')
-                    else if (mapMode === 'sat-night') switchMode('sat-day')
-                    else if (mapMode === '3d-day' || mapMode === '3d-dawn') switchMode('3d-dusk')
-                    else if (mapMode === '3d-dusk') switchMode('3d-night')
-                    else if (mapMode === '3d-night') switchMode('3d-day')
                   }
                 }}
                 style={{
