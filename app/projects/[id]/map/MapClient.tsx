@@ -272,6 +272,18 @@ export default function MapClient({ projectId }: { projectId: string }) {
 
     el.addEventListener('click', (e) => {
       e.stopPropagation()
+      const currentTool = (window as any).__upscapeTool as ToolId
+      if (currentTool === 'wire') {
+        const ll = mb.getLngLat()
+        const pt: [number, number] = [ll.lng, ll.lat]
+        const next = [...wireRef.current, pt]
+        wireRef.current = next
+        setWirePoints([...next])
+        const node = new mapboxgl.Marker({ element: wireNodeEl(true), anchor: 'center' })
+          .setLngLat(pt).addTo(map)
+        wireMarkersRef.current.push(node)
+        return
+      }
       const current = projectRef.current?.markers.find(x => x.id === m.id) ?? m
       setPopup({ ...current })
     })
