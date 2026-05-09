@@ -29,15 +29,15 @@ function markerEl(type: string) {
   const color = FIXTURE_COLORS[type] || '#F4884A'
   // Outer div: Mapbox owns the transform on this element — never touch it
   const el = document.createElement('div')
-  el.style.cssText = `width:34px;height:34px;cursor:pointer;`
+  el.style.cssText = `width:22px;height:22px;cursor:pointer;`
 
   // Inner div: we animate this one only
   const inner = document.createElement('div')
   inner.style.cssText = `
-    width:34px;height:34px;border-radius:50%;
-    background:${color};border:2.5px solid rgba(255,255,255,0.9);
+    width:22px;height:22px;border-radius:50%;
+    background:${color};border:2px solid rgba(255,255,255,0.9);
     display:flex;align-items:center;justify-content:center;
-    box-shadow:0 0 0 3px ${color}44, 0 3px 10px rgba(0,0,0,0.6);
+    box-shadow:0 0 0 2px ${color}44, 0 2px 6px rgba(0,0,0,0.6);
     transition:transform 0.15s;
   `
   inner.innerHTML = markerSVG(type)
