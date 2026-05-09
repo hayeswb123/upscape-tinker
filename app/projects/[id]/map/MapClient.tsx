@@ -295,8 +295,8 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const MAP_STYLES: Record<string, string> = {
     'sat-day':   'mapbox://styles/mapbox/satellite-streets-v12',
     'sat-night': 'mapbox://styles/mapbox/dark-v11',
-    '3d-day':    'mapbox://styles/mapbox/light-v11',
-    '3d-night':  'mapbox://styles/mapbox/dark-v11',
+    '3d-day':    'mapbox://styles/mapbox/standard',
+    '3d-night':  'mapbox://styles/mapbox/standard',
   }
 
   function switchMode(mode: 'sat-day' | 'sat-night' | '3d-day' | '3d-night') {
@@ -305,8 +305,9 @@ export default function MapClient({ projectId }: { projectId: string }) {
     setMapMode(mode)
     map.setStyle(MAP_STYLES[mode])
     map.once('style.load', () => {
-      if (mode === 'sat-day' || mode === 'sat-night') addTerrain(map)
-      add3DBuildings(map)
+      if (mode === 'sat-day' || mode === 'sat-night') { addTerrain(map); add3DBuildings(map) }
+      if (mode === '3d-day') (map as any).setConfigProperty('basemap', 'lightPreset', 'day')
+      if (mode === '3d-night') (map as any).setConfigProperty('basemap', 'lightPreset', 'dusk')
       const p = project
       if (!p) return
       map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
