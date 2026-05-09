@@ -188,8 +188,8 @@ export default function MapClient({ projectId }: { projectId: string }) {
         ;(map as any).setConfigProperty('basemap', 'lightPreset', 'day')
 
         map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
-        map.addLayer({ id: 'wires-glow', type: 'line', source: 'wires', paint: { 'line-color': '#e8a030', 'line-width': 10, 'line-opacity': 0.3, 'line-blur': 4 } })
-        map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#f0c060', 'line-width': 2.5, 'line-opacity': 1 } })
+        map.addLayer({ id: 'wires-glow', type: 'line', source: 'wires', paint: { 'line-color': '#ffb830', 'line-width': 14, 'line-opacity': 0.5, 'line-blur': 6 } })
+        map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#ffe580', 'line-width': 3.5, 'line-opacity': 1 } })
         // Wide invisible hit layer for easy finger tapping on iPad
         map.addLayer({ id: 'wires-hit', type: 'line', source: 'wires', paint: { 'line-color': 'transparent', 'line-width': 44, 'line-opacity': 0 } })
 
@@ -393,8 +393,8 @@ export default function MapClient({ projectId }: { projectId: string }) {
         const p = project
         if (!p) return
         map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
-        map.addLayer({ id: 'wires-glow', type: 'line', source: 'wires', paint: { 'line-color': '#e8a030', 'line-width': 10, 'line-opacity': 0.3, 'line-blur': 4 } })
-        map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#f0c060', 'line-width': 2.5, 'line-opacity': 1 } })
+        map.addLayer({ id: 'wires-glow', type: 'line', source: 'wires', paint: { 'line-color': '#ffb830', 'line-width': 14, 'line-opacity': 0.5, 'line-blur': 6 } })
+        map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#ffe580', 'line-width': 3.5, 'line-opacity': 1 } })
         // Wide invisible hit layer for easy finger tapping on iPad
         map.addLayer({ id: 'wires-hit', type: 'line', source: 'wires', paint: { 'line-color': 'transparent', 'line-width': 44, 'line-opacity': 0 } })
         map.addSource('wire-preview', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
