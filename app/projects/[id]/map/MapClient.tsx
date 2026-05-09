@@ -297,21 +297,22 @@ export default function MapClient({ projectId }: { projectId: string }) {
   }
 
 
-  if (!project) return (
-    <div style={{ background: '#0f0f0f', height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ textAlign: 'center', color: '#888' }}>
-        <div style={{ width: 36, height: 36, border: '3px solid #F4884A', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        Loading…
-      </div>
-    </div>
-  )
-
   const ghostColor = FIXTURE_COLORS[tool] || '#F4884A'
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden' }}>
       <div ref={mapDiv} style={{ position: 'absolute', inset: 0 }} />
+
+      {/* loading overlay — shown until project loads, sits above map */}
+      {!project && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 50, background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ textAlign: 'center', color: '#888' }}>
+            <div style={{ width: 36, height: 36, border: '3px solid #F4884A', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            Loading…
+          </div>
+        </div>
+      )}
 
       {/* ghost cursor overlay — lives outside the Mapbox container */}
       {ghostPos && tool !== 'select' && tool !== 'wire' && (
@@ -363,8 +364,8 @@ export default function MapClient({ projectId }: { projectId: string }) {
       }}>
         <button onClick={() => router.push('/dashboard')} style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#fff', fontSize: 18, cursor: 'pointer', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>‹</button>
         <div style={{ flex: 1, minWidth: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '6px 12px' }}>
-          <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>{project.homeowner || project.name}</div>
-          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1 }}>{project.address}</div>
+          <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>{project?.homeowner || project?.name}</div>
+          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1 }}>{project?.address}</div>
         </div>
         <button onClick={toggleNight} style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', border: `1px solid ${night ? '#facc15' : 'rgba(255,255,255,0.12)'}`, borderRadius: 10, color: night ? '#facc15' : 'rgba(255,255,255,0.6)', fontSize: 16, cursor: 'pointer', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>☽</button>
         <button onClick={() => router.push(`/projects/${projectId}/quote`)} style={{ background: '#F4884A', border: 'none', borderRadius: 10, color: '#fff', fontWeight: 700, fontSize: 13, padding: '0 14px', height: 36, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>Quote →</button>
