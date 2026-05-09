@@ -358,60 +358,99 @@ export default function MapClient({ projectId }: { projectId: string }) {
       {/* topbar */}
       <header style={{
         position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 100%)',
-        padding: '12px 14px 28px',
-        display: 'flex', alignItems: 'flex-start', gap: 10,
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0) 100%)',
+        padding: '14px 16px 32px 12px',
+        display: 'flex', alignItems: 'flex-start', gap: 8,
       }}>
-        <button onClick={() => router.push('/dashboard')} style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#fff', fontSize: 18, cursor: 'pointer', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>‹</button>
-        <div style={{ flex: 1, minWidth: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '6px 12px' }}>
-          <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#fff' }}>{project?.homeowner || project?.name}</div>
-          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1 }}>{project?.address}</div>
+        <style>{`
+          @keyframes spin { to { transform: rotate(360deg) } }
+          .upscape-back:hover { opacity: 1 !important; transform: translateY(-1px); }
+          .upscape-back { transition: opacity 0.2s, transform 0.2s; }
+          .upscape-night:hover { opacity: 1 !important; }
+          .upscape-night { transition: opacity 0.2s; }
+          .upscape-quote:hover { background: #b8864a !important; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important; }
+          .upscape-quote { transition: background 0.2s, transform 0.2s, box-shadow 0.2s; }
+          .upscape-tool:hover { opacity: 1 !important; transform: translateY(-1px); }
+        `}</style>
+        <button className="upscape-back" onClick={() => router.push('/dashboard')} style={{
+          opacity: 0.55, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(12px)',
+          border: 'none', borderRadius: 8, color: '#fff', fontSize: 17,
+          cursor: 'pointer', width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+        }}>‹</button>
+        <div style={{
+          flex: 1, minWidth: 0, background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(14px)',
+          borderRadius: 8, padding: '7px 13px',
+          boxShadow: '0 2px 16px rgba(0,0,0,0.25)',
+        }}>
+          <div style={{ fontWeight: 500, fontSize: 13, letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'rgba(255,255,255,0.92)' }}>{project?.homeowner || project?.name}</div>
+          <div style={{ color: 'rgba(255,255,255,0.38)', fontSize: 10, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{project?.address}</div>
         </div>
-        <button onClick={toggleNight} style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', border: `1px solid ${night ? '#facc15' : 'rgba(255,255,255,0.12)'}`, borderRadius: 10, color: night ? '#facc15' : 'rgba(255,255,255,0.6)', fontSize: 16, cursor: 'pointer', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>☽</button>
-        <button onClick={() => router.push(`/projects/${projectId}/quote`)} style={{ background: '#F4884A', border: 'none', borderRadius: 10, color: '#fff', fontWeight: 700, fontSize: 13, padding: '0 14px', height: 36, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>Quote →</button>
+        <button className="upscape-night" onClick={toggleNight} style={{
+          opacity: night ? 0.9 : 0.45, background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(12px)',
+          border: 'none', borderRadius: 8, color: night ? '#e8c97a' : 'rgba(255,255,255,0.8)',
+          fontSize: 15, cursor: 'pointer', width: 34, height: 34,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+        }}>☽</button>
+        <button className="upscape-quote" onClick={() => router.push(`/projects/${projectId}/quote`)} style={{
+          background: '#9a7040', border: 'none', borderRadius: 8,
+          color: 'rgba(255,255,255,0.92)', fontWeight: 500, fontSize: 12,
+          letterSpacing: '-0.01em', padding: '0 13px', height: 34,
+          cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+          boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
+        }}>Quote →</button>
       </header>
 
       {/* wire banner */}
       {tool === 'wire' && (
-        <div style={{ position: 'absolute', top: 64, left: '50%', transform: 'translateX(-50%)', zIndex: 20, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(250,204,21,0.3)', borderRadius: 12, padding: '9px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
-            {wirePoints.length < 2 ? '⚡ Tap to add wire points' : `${wirePoints.length} pts · ${calcWireFeet(wirePoints).toFixed(0)} ft`}
+        <div style={{
+          position: 'absolute', top: 62, left: 16, zIndex: 20,
+          background: 'rgba(8,8,8,0.82)', backdropFilter: 'blur(16px)',
+          borderRadius: 8, padding: '8px 14px',
+          display: 'flex', alignItems: 'center', gap: 12,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+        }}>
+          <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.55)' }}>
+            {wirePoints.length < 2 ? 'tap to place wire points' : `${wirePoints.length} pts · ${calcWireFeet(wirePoints).toFixed(0)} ft`}
           </span>
-          <button onClick={finishWire} style={{ background: '#F4884A', border: 'none', borderRadius: 7, color: '#fff', fontSize: 12, fontWeight: 700, padding: '5px 12px', cursor: 'pointer' }}>Done</button>
-          <button onClick={() => { setWirePoints([]); wireRef.current = []; setToolAndSync('select') }} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 7, color: 'rgba(255,255,255,0.6)', fontSize: 12, padding: '5px 12px', cursor: 'pointer' }}>Cancel</button>
+          <button onClick={finishWire} style={{ background: '#9a7040', border: 'none', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 500, padding: '5px 11px', cursor: 'pointer', letterSpacing: '-0.01em' }}>Done</button>
+          <button onClick={() => { setWirePoints([]); wireRef.current = []; setToolAndSync('select') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 11, padding: '5px 4px', cursor: 'pointer' }}>cancel</button>
         </div>
       )}
 
       {/* toolbar */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
-        background: 'linear-gradient(0deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.0) 100%)',
-        paddingBottom: 'env(safe-area-inset-bottom, 8px)',
+        background: 'linear-gradient(0deg, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0) 100%)',
+        paddingBottom: 'env(safe-area-inset-bottom, 6px)',
       }}>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${TOOLS.length}, 1fr)`, gap: 5, padding: '16px 8px 10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 4, padding: '18px 16px 8px' }}>
           {TOOLS.map(t => {
             const isActive = tool === t.id
-            const color = FIXTURE_COLORS[t.id] || '#888'
+            const color = FIXTURE_COLORS[t.id] || '#666'
             const Icon = t.icon
             return (
               <button
                 key={t.id}
+                className="upscape-tool"
                 onClick={() => setToolAndSync(t.id)}
                 style={{
-                  width: '100%',
-                  background: isActive ? color : 'rgba(20,20,20,0.85)',
-                  backdropFilter: 'blur(8px)',
-                  border: `1px solid ${isActive ? color : 'rgba(255,255,255,0.1)'}`,
-                  borderRadius: 14, padding: '10px 4px 8px',
-                  cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-                  boxShadow: isActive ? `0 0 16px ${color}66` : 'none',
-                  transition: 'all 0.15s',
+                  flex: 1, maxWidth: 52,
+                  opacity: isActive ? 1 : 0.38,
+                  background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+                  backdropFilter: isActive ? 'blur(12px)' : 'none',
+                  border: 'none',
+                  borderRadius: 8, padding: '8px 2px 6px',
+                  cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                  boxShadow: isActive ? `0 0 12px ${color}33` : 'none',
+                  transition: 'opacity 0.15s, transform 0.15s, background 0.15s',
                 }}
               >
-                <div style={{ color: isActive ? '#fff' : color, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22 }}>
+                <div style={{ color: isActive ? color : 'rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20 }}>
                   <Icon />
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 600, color: isActive ? '#fff' : 'rgba(255,255,255,0.5)', letterSpacing: '0.03em' }}>{t.label}</span>
+                <span style={{ fontSize: 9, fontWeight: 500, color: isActive ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.55)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{t.label}</span>
               </button>
             )
           })}
@@ -430,24 +469,30 @@ function MarkerPopup({ marker, onChange, onSave, onDelete }: {
   onSave: (m: Marker) => void
   onDelete: (id: string) => void
 }) {
-  const color = FIXTURE_COLORS[marker.type] || '#F4884A'
+  const color = FIXTURE_COLORS[marker.type] || '#9a7040'
   const fix = FIXTURES[marker.type as FixtureType]
 
   return (
-    <div style={{ position: 'absolute', bottom: 110, left: 12, right: 12, zIndex: 30, background: 'rgba(18,18,18,0.97)', backdropFilter: 'blur(20px)', border: `1px solid ${color}44`, borderRadius: 18, boxShadow: `0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px ${color}22`, overflow: 'hidden' }}>
-      <div style={{ background: `linear-gradient(135deg, ${color}22 0%, transparent 60%)`, padding: '14px 16px 12px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+    <div style={{
+      position: 'absolute', bottom: 96, left: 14, right: 14, zIndex: 30,
+      background: 'rgba(12,12,12,0.96)', backdropFilter: 'blur(24px)',
+      borderRadius: 12,
+      boxShadow: '0 12px 48px rgba(0,0,0,0.65), 0 1px 0 rgba(255,255,255,0.06) inset',
+      overflow: 'hidden',
+    }}>
+      <div style={{ padding: '13px 16px 11px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ width: 28, height: 28, borderRadius: 6, background: `${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
           dangerouslySetInnerHTML={{ __html: markerSVG(marker.type) }} />
-        <span style={{ fontWeight: 700, fontSize: 15, color: '#fff' }}>{fix?.label || marker.type}</span>
-        <button onClick={() => onSave(marker)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: 4 }}>✕</button>
+        <span style={{ fontWeight: 500, fontSize: 13, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.88)' }}>{fix?.label || marker.type}</span>
+        <button onClick={() => onSave(marker)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 4, transition: 'color 0.15s' }}>✕</button>
       </div>
-      <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ padding: '13px 16px', display: 'flex', flexDirection: 'column', gap: 11 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <label style={labelSt}>Qty</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 0, background: 'rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <button onClick={() => onChange({ ...marker, qty: Math.max(1, marker.qty - 1) })} style={{ width: 38, height: 38, background: 'none', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer' }}>−</button>
-            <span style={{ fontSize: 17, fontWeight: 700, color: color, minWidth: 30, textAlign: 'center' }}>{marker.qty}</span>
-            <button onClick={() => onChange({ ...marker, qty: marker.qty + 1 })} style={{ width: 38, height: 38, background: 'none', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer' }}>+</button>
+          <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: 7, overflow: 'hidden' }}>
+            <button onClick={() => onChange({ ...marker, qty: Math.max(1, marker.qty - 1) })} style={{ width: 36, height: 34, background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 18, cursor: 'pointer' }}>−</button>
+            <span style={{ fontSize: 15, fontWeight: 500, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.9)', minWidth: 28, textAlign: 'center' }}>{marker.qty}</span>
+            <button onClick={() => onChange({ ...marker, qty: marker.qty + 1 })} style={{ width: 36, height: 34, background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 18, cursor: 'pointer' }}>+</button>
           </div>
         </div>
         <div>
@@ -456,12 +501,12 @@ function MarkerPopup({ marker, onChange, onSave, onDelete }: {
         </div>
         <div>
           <label style={labelSt}>Notes</label>
-          <textarea style={{ ...inputSt, resize: 'none', height: 56 }} value={marker.notes} onChange={e => onChange({ ...marker, notes: e.target.value })} placeholder="Beam angle, color temp…" />
+          <textarea style={{ ...inputSt, resize: 'none', height: 52 }} value={marker.notes} onChange={e => onChange({ ...marker, notes: e.target.value })} placeholder="Beam angle, color temp…" />
         </div>
       </div>
-      <div style={{ padding: '0 16px 16px', display: 'flex', gap: 8 }}>
-        <button onClick={() => onDelete(marker.id)} style={{ flex: 1, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, color: '#f87171', fontSize: 13, fontWeight: 600, padding: 11, cursor: 'pointer' }}>Delete</button>
-        <button onClick={() => onSave(marker)} style={{ flex: 2, background: color, border: 'none', borderRadius: 10, color: '#fff', fontSize: 13, fontWeight: 700, padding: 11, cursor: 'pointer' }}>Save</button>
+      <div style={{ padding: '0 16px 14px', display: 'flex', gap: 8 }}>
+        <button onClick={() => onDelete(marker.id)} style={{ flex: 1, background: 'transparent', border: 'none', borderRadius: 8, color: 'rgba(239,68,68,0.6)', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer', letterSpacing: '-0.01em' }}>Remove</button>
+        <button onClick={() => onSave(marker)} style={{ flex: 2, background: '#9a7040', border: 'none', borderRadius: 8, color: 'rgba(255,255,255,0.92)', fontSize: 12, fontWeight: 500, letterSpacing: '-0.01em', padding: 11, cursor: 'pointer' }}>Save</button>
       </div>
     </div>
   )
@@ -496,5 +541,5 @@ function calcWireFeet(pts: [number, number][]) {
   return feet
 }
 
-const labelSt: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }
-const inputSt: React.CSSProperties = { width: '100%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#fff', fontSize: 14, padding: '9px 12px', outline: 'none' }
+const labelSt: React.CSSProperties = { display: 'block', fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.3)', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.07em' }
+const inputSt: React.CSSProperties = { width: '100%', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: 7, color: 'rgba(255,255,255,0.88)', fontSize: 13, letterSpacing: '-0.01em', padding: '9px 11px', outline: 'none' }
