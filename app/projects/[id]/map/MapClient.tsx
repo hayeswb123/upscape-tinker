@@ -373,8 +373,8 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const MAP_STYLES: Record<string, string> = {
     'sat-day':   'mapbox://styles/mapbox/satellite-streets-v12',
     'sat-night': 'mapbox://styles/mapbox/dark-v11',
-    '3d-day':    'mapbox://styles/mapbox/standard',
-    '3d-night':  'mapbox://styles/mapbox/standard',
+    '3d-day':    'mapbox://styles/hayesb123/cmoyv06sv001801qweuh6hjob',
+    '3d-night':  'mapbox://styles/hayesb123/cmoyv06sv001801qweuh6hjob',
   }
 
   function switchMode(mode: 'sat-day' | 'sat-night' | '3d-day' | '3d-night') {
