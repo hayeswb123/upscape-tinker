@@ -190,6 +190,8 @@ export default function MapClient({ projectId }: { projectId: string }) {
         map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
         map.addLayer({ id: 'wires-glow', type: 'line', source: 'wires', paint: { 'line-color': '#e8a030', 'line-width': 10, 'line-opacity': 0.3, 'line-blur': 4 } })
         map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#f0c060', 'line-width': 2.5, 'line-opacity': 1 } })
+        // Wide invisible hit layer for easy finger tapping on iPad
+        map.addLayer({ id: 'wires-hit', type: 'line', source: 'wires', paint: { 'line-color': 'transparent', 'line-width': 44, 'line-opacity': 0 } })
 
         // Live wire preview while drawing
         map.addSource('wire-preview', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
@@ -221,7 +223,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
         map.on('mousemove', e => {
           const currentTool = (window as any).__upscapeTool as ToolId
           if (!currentTool || currentTool === 'select') {
-            const hit = map.queryRenderedFeatures(e.point, { layers: ['wires-line'] })
+            const hit = map.queryRenderedFeatures(e.point, { layers: ['wires-hit'] })
             map.getCanvas().style.cursor = hit.length > 0 ? 'pointer' : ''
           }
         })
@@ -230,7 +232,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
           const currentTool = (window as any).__upscapeTool as ToolId
           // In select mode, check for wire clicks
           if (!currentTool || currentTool === 'select') {
-            const features = map.queryRenderedFeatures(e.point, { layers: ['wires-line'] })
+            const features = map.queryRenderedFeatures(e.point, { layers: ['wires-hit'] })
             if (features.length > 0) {
               const wireId = features[0].properties?.wireId as string
               const wireData = projectRef.current?.wires?.find((w: Wire) => w.id === wireId)
@@ -393,6 +395,8 @@ export default function MapClient({ projectId }: { projectId: string }) {
         map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
         map.addLayer({ id: 'wires-glow', type: 'line', source: 'wires', paint: { 'line-color': '#e8a030', 'line-width': 10, 'line-opacity': 0.3, 'line-blur': 4 } })
         map.addLayer({ id: 'wires-line', type: 'line', source: 'wires', paint: { 'line-color': '#f0c060', 'line-width': 2.5, 'line-opacity': 1 } })
+        // Wide invisible hit layer for easy finger tapping on iPad
+        map.addLayer({ id: 'wires-hit', type: 'line', source: 'wires', paint: { 'line-color': 'transparent', 'line-width': 44, 'line-opacity': 0 } })
         map.addSource('wire-preview', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
         map.addLayer({ id: 'wire-preview-line', type: 'line', source: 'wire-preview', paint: { 'line-color': '#e8a030', 'line-width': 1.5, 'line-opacity': 0.45, 'line-dasharray': [5, 4] } })
         map.addSource('zones', { type: 'geojson', data: zonesToGeoJSON(p.zones || []) })
