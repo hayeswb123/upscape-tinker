@@ -49,7 +49,8 @@ export default function NewProjectPage() {
       zones: [],
     }).select().single()
     setSaving(false)
-    if (!error && data) router.replace(`/projects/${data.id}/map`)
+    if (error) { alert('Error: ' + error.message); return }
+    if (data) router.replace(`/projects/${data.id}/map`)
   }
 
   return (
