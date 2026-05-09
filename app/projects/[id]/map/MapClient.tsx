@@ -366,6 +366,12 @@ export default function MapClient({ projectId }: { projectId: string }) {
     setTool(t)
     ;(window as any).__upscapeTool = t
     if (t !== 'wire') { clearWireMarkers(); setWirePoints([]); wireRef.current = [] }
+    // Disable marker dragging in wire mode so taps snap cleanly
+    const draggable = t !== 'wire'
+    markersRef.current.forEach(mb => mb.setDraggable(draggable))
+    // Set crosshair cursor for wire mode, reset otherwise
+    const canvas = mapRef.current?.getCanvas()
+    if (canvas) canvas.style.cursor = t === 'wire' ? 'crosshair' : ''
   }
 
   useEffect(() => { (window as any).__upscapeTool = tool }, [tool])
