@@ -227,7 +227,6 @@ export default function MapClient({ projectId }: { projectId: string }) {
 
       map.on('load', () => {
         addTerrain(map)
-        add3DBuildings(map)
 
         map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
         map.addLayer({ id: 'wires-glow', type: 'line', source: 'wires', paint: { 'line-color': '#e8a030', 'line-width': 8, 'line-opacity': 0.18, 'line-blur': 4 } })
