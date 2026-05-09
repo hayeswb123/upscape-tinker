@@ -15,13 +15,11 @@ export default function NewProjectPage() {
   async function geocode(address: string) {
     if (!address.trim()) return
     setGeocodeStatus('Locating…')
-    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${token}&limit=1`
-    const res = await fetch(url)
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`
+    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } })
     const data = await res.json()
-    if (data.features?.length) {
-      const [lng, lat] = data.features[0].center
-      setCoords({ lat, lng })
+    if (data?.length) {
+      setCoords({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) })
       setGeocodeStatus('✓ Located')
     } else {
       setGeocodeStatus('Address not found')
