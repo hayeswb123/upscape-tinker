@@ -185,9 +185,14 @@ export default function DashboardPage() {
         transition: 'background .3s, border-color .3s',
       }}>
         {/* logo */}
-        <div style={{ padding: '20px 20px 16px', borderBottom: L ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.04)' }}>
-          <img src="/upscape-logo.svg" alt="Upscape" className="sidebar-logo" style={{ height: 20, filter: L ? 'none' : 'invert(1)', opacity: .82, transition: 'opacity .2s, filter .3s' }} />
-          <p style={{ margin: '5px 0 0', fontSize: 10, color: L ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.2)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Field Designer</p>
+        <div style={{ padding: '18px 16px 14px', borderBottom: L ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <img src="/upscape-logo-mark.png" alt="" width={26} height={26} style={{ objectFit: 'contain', flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', color: L ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.88)', lineHeight: 1 }}>UPSCAPE</div>
+              <div style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.22)', marginTop: 3 }}>Field Designer</div>
+            </div>
+          </div>
         </div>
 
         {/* nav */}
@@ -378,6 +383,10 @@ function ProjectsSection({ projects, loading, router, installedCount }: any) {
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>Clients</h1>
           <p style={{ margin: '3px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>{clientCount} client{clientCount!==1?'s':''} · {projects.length} project{projects.length!==1?'s':''} · {installedCount} installed</p>
         </div>
+        <button className="new-btn" onClick={() => router.push('/projects/new')} style={{ background: 'linear-gradient(135deg,#F4884A,#df6f28)', border: 'none', borderRadius: 9, color: '#fff', fontWeight: 600, fontSize: 12, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, letterSpacing: '-0.02em', boxShadow: '0 2px 10px rgba(244,136,74,0.25), 0 1px 0 rgba(255,255,255,0.1) inset', flexShrink: 0 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          New client
+        </button>
       </div>
 
       {loading && <div style={{ textAlign:'center',paddingTop:50 }}><div style={{ width:24,height:24,border:'2px solid rgba(244,136,74,0.25)',borderTopColor:'#F4884A',borderRadius:'50%',animation:'spin .8s linear infinite',margin:'0 auto 10px' }} /><p style={{ color:'rgba(255,255,255,0.2)',fontSize:12 }}>Loading…</p></div>}
