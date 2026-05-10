@@ -605,7 +605,7 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlow, setAmbientGlow }: any) {
   const [active, setActive]         = useState('general')
   const [mapStyle, setMapStyle]     = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_style') || 'satellite') : 'satellite')
-  const [mapTime, setMapTime]       = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_time') || 'night') : 'night')
+  const [mapTime, setMapTime]       = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_time') || 'day') : 'day')
   const [animations, setAnimations] = useState(true)
   const [quoteAlerts, setQuoteAlerts]     = useState(true)
   const [projectUpdates, setProjectUpdates] = useState(true)

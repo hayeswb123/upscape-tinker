@@ -122,7 +122,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const [mapMode, setMapMode] = useState<MapMode>(() => {
     if (typeof window === 'undefined') return 'sat-night'
     const style = localStorage.getItem('upscape_map_style') || 'satellite'
-    const time  = localStorage.getItem('upscape_map_time') || 'night'
+    const time  = localStorage.getItem('upscape_map_time') || 'day'
     if (style === 'terrain') {
       return ({ dawn:'3d-dawn', day:'3d-day', dusk:'3d-dusk', night:'3d-night' }[time] || '3d-night') as MapMode
     }
@@ -191,7 +191,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
         ? 'mapbox://styles/mapbox/standard'
         : 'mapbox://styles/mapbox/standard-satellite'
       const _initPreset = _initStyle === 'terrain'
-        ? ({ dawn:'dawn', day:'day', dusk:'dusk', night:'night' }[_initTime] || 'night')
+        ? ({ dawn:'dawn', day:'day', dusk:'dusk', night:'night' }[_initTime] || 'day')
         : (_initTime === 'day' ? 'day' : 'night')
 
       const map = new mapboxgl.Map({
