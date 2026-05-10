@@ -52,6 +52,17 @@ export default function DashboardPage() {
   const [section, setSection] = useState<Section>('projects')
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState('')
+  const [lightMode, setLightMode] = useState(() => typeof window !== 'undefined' ? localStorage.getItem('upscape_theme') === 'light' : false)
+
+  function toggleTheme() {
+    setLightMode(v => {
+      const next = !v
+      localStorage.setItem('upscape_theme', next ? 'light' : 'dark')
+      return next
+    })
+  }
+
+  const L = lightMode
 
   useEffect(() => {
     fetchProjects()
@@ -83,7 +94,7 @@ export default function DashboardPage() {
   const installedCount = projects.filter(p => p.status === 'installed').length
 
   return (
-    <div style={{ display: 'flex', height: '100dvh', background: 'linear-gradient(145deg,#060504 0%,#0a0906 60%,#080604 100%)', overflow: 'hidden' }}>
+    <div className={L ? 'upscape-light' : 'upscape-dark'} style={{ display: 'flex', height: '100dvh', background: L ? '#f0ede7' : 'linear-gradient(145deg,#060504 0%,#0a0906 60%,#080604 100%)', overflow: 'hidden', transition: 'background .3s' }}>
       <style>{`
         @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         @keyframes spin   { to{transform:rotate(360deg)} }
@@ -101,6 +112,12 @@ export default function DashboardPage() {
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 2px; }
+        /* ── LIGHT MODE OVERRIDES ── */
+        .upscape-light .nav-item:hover { background: rgba(0,0,0,0.06) !important; }
+        .upscape-light .dash-card { background: rgba(255,255,255,0.85) !important; border-color: rgba(0,0,0,0.09) !important; }
+        .upscape-light .dash-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.12), 0 0 0 1px rgba(244,136,74,.25) !important; border-color: rgba(244,136,74,.3) !important; }
+        .upscape-light .dash-card:hover .card-name { color: rgba(0,0,0,.9) !important; }
+        .upscape-light .card-name { color: rgba(0,0,0,.8) !important; }
       `}</style>
 
       {/* ambient glows */}
@@ -111,15 +128,16 @@ export default function DashboardPage() {
       <aside style={{
         width: 220, flexShrink: 0,
         display: 'flex', flexDirection: 'column',
-        background: 'rgba(255,255,255,0.022)',
+        background: L ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.022)',
         backdropFilter: 'blur(24px)',
-        borderRight: '1px solid rgba(255,255,255,0.055)',
-        boxShadow: '1px 0 0 rgba(244,136,74,0.04), 4px 0 24px rgba(0,0,0,.25)',
+        borderRight: L ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.055)',
+        boxShadow: L ? '1px 0 0 rgba(0,0,0,0.04), 4px 0 16px rgba(0,0,0,.08)' : '1px 0 0 rgba(244,136,74,0.04), 4px 0 24px rgba(0,0,0,.25)',
+        transition: 'background .3s, border-color .3s',
       }}>
         {/* logo */}
-        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-          <img src="/upscape-logo.svg" alt="Upscape" className="sidebar-logo" style={{ height: 20, filter: 'invert(1)', opacity: .82, transition: 'opacity .2s' }} />
-          <p style={{ margin: '5px 0 0', fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Field Designer</p>
+        <div style={{ padding: '20px 20px 16px', borderBottom: L ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.04)' }}>
+          <img src="/upscape-logo.svg" alt="Upscape" className="sidebar-logo" style={{ height: 20, filter: L ? 'none' : 'invert(1)', opacity: .82, transition: 'opacity .2s, filter .3s' }} />
+          <p style={{ margin: '5px 0 0', fontSize: 10, color: L ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.2)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Field Designer</p>
         </div>
 
         {/* nav */}
@@ -136,7 +154,7 @@ export default function DashboardPage() {
                   padding: '9px 12px', borderRadius: 9, border: 'none',
                   cursor: 'pointer', textAlign: 'left', width: '100%',
                   background: active ? 'rgba(244,136,74,0.1)' : 'transparent',
-                  color: active ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.38)',
+                  color: active ? (L ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.92)') : (L ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.38)'),
                   fontSize: 13, fontWeight: active ? 500 : 400,
                   letterSpacing: '-0.01em',
                   boxShadow: active ? '0 0 0 1px rgba(244,136,74,0.18) inset, 0 0 12px rgba(244,136,74,0.06)' : 'none',
@@ -177,33 +195,34 @@ export default function DashboardPage() {
           height: 54, flexShrink: 0,
           display: 'flex', alignItems: 'center',
           padding: '0 24px', gap: 14,
-          background: 'rgba(8,7,6,0.6)', backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          background: L ? 'rgba(255,255,255,0.8)' : 'rgba(8,7,6,0.6)', backdropFilter: 'blur(20px)',
+          borderBottom: L ? '1px solid rgba(0,0,0,0.07)' : '1px solid rgba(255,255,255,0.05)',
           boxShadow: '0 1px 0 rgba(244,136,74,0.04)',
+          transition: 'background .3s',
         }}>
           {/* breadcrumb */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.22)', letterSpacing: '-0.01em' }}>Upscape</span>
-            <span style={{ color: 'rgba(255,255,255,0.14)', fontSize: 12 }}>›</span>
-            <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.7)', letterSpacing: '-0.02em' }}>{NAV.find(n => n.id === section)?.label}</span>
+            <span style={{ fontSize: 12, color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.22)', letterSpacing: '-0.01em' }}>Upscape</span>
+            <span style={{ color: L ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.14)', fontSize: 12 }}>›</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: L ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', letterSpacing: '-0.02em' }}>{NAV.find(n => n.id === section)?.label}</span>
           </div>
 
           <div style={{ flex: 1 }} />
 
           {/* notification bell */}
-          <button style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,0.35)', flexShrink: 0, transition: 'background .15s' }}>
+          <button style={{ width: 32, height: 32, borderRadius: 8, background: L ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)', border: L ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: L ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.35)', flexShrink: 0, transition: 'background .15s' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
           </button>
 
           {/* avatar dropdown */}
-          <AvatarMenu initials={initials} userEmail={userEmail} logout={logout} />
+          <AvatarMenu initials={initials} userEmail={userEmail} logout={logout} lightMode={L} />
         </header>
 
         {/* content */}
         <main style={{ flex: 1, overflowY: 'auto', padding: '28px 28px 60px' }}>
           {section === 'projects' && <ProjectsSection projects={projects} loading={loading} confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} hoveredId={hoveredId} setHoveredId={setHoveredId} deleteProject={deleteProject} router={router} fmt={fmt} installedCount={installedCount} />}
           {section === 'products' && <ProductsSection />}
-          {section === 'settings' && <SettingsSection userEmail={userEmail} logout={logout} />}
+          {section === 'settings' && <SettingsSection userEmail={userEmail} logout={logout} lightMode={L} toggleTheme={toggleTheme} />}
         </main>
       </div>
     </div>
@@ -211,12 +230,22 @@ export default function DashboardPage() {
 }
 
 // ── AVATAR MENU ───────────────────────────────────────
-function AvatarMenu({ initials, userEmail, logout }: { initials: string; userEmail: string; logout: () => void }) {
+function AvatarMenu({ initials, userEmail, logout, lightMode }: { initials: string; userEmail: string; logout: () => void; lightMode?: boolean }) {
   const [open, setOpen] = useState(false)
   const [showPass, setShowPass] = useState(false)
+  const ref = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div ref={ref} style={{ position: 'relative' }}>
       <div onClick={() => setOpen(v => !v)}
         style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 10px 5px 5px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', userSelect: 'none' }}>
         <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#F4884A,#c0520a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', boxShadow: '0 0 6px rgba(244,136,74,0.25)' }}>{initials}</div>
@@ -226,10 +255,8 @@ function AvatarMenu({ initials, userEmail, logout }: { initials: string; userEma
 
       {open && (
         <>
-          {/* backdrop */}
-          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 99 }} />
           {/* panel */}
-          <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 100, width: 240, background: 'rgba(18,16,12,0.97)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 16px 48px rgba(0,0,0,.6)', backdropFilter: 'blur(24px)' }}>
+          <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 100, width: 240, background: lightMode ? '#ffffff' : '#0d0d0d', border: lightMode ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.09)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 16px 48px rgba(0,0,0,.5)' }}>
             {/* header */}
             <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#F4884A,#c0520a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{initials}</div>
@@ -474,7 +501,7 @@ const MAP_STYLE_OPTIONS = [
   { id: 'terrain',   label: 'Terrain',   desc: 'Topographic map' },
 ]
 
-function SettingsSection({ userEmail, logout }: any) {
+function SettingsSection({ userEmail, logout, lightMode, toggleTheme }: any) {
   const [accentColor, setAccentColor]   = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_accent') || '#F4884A') : '#F4884A')
   const [mapStyle, setMapStyle]         = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_style') || 'satellite') : 'satellite')
   const [daytime, setDaytime]           = useState(() => typeof window !== 'undefined' ? localStorage.getItem('upscape_map_day') === '1' : false)
@@ -540,6 +567,12 @@ function SettingsSection({ userEmail, logout }: any) {
 
         {/* Appearance */}
         {card('Appearance', <>
+          {row('Appearance', (
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{lightMode ? 'Light' : 'Dark'}</span>
+              <Toggle on={lightMode} onToggle={toggleTheme} color={accentColor} />
+            </div>
+          ), 'System appearance')}
           {row('Tool icon color', (
             <div style={{ display:'flex', gap:6 }}>
               {ACCENT_OPTIONS.map(c => (
