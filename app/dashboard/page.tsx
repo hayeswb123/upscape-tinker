@@ -614,38 +614,162 @@ function EmptyState({ onNew }: { onNew: () => void }) {
 }
 
 // ── PRODUCTS ──────────────────────────────────────────
+const PRODUCT_CATALOG: Record<string, { name: string; brand: 'AMP' | 'Sunvie'; img: string; sku?: string }[]> = {
+  uplights: [
+    { name: 'PinnaclePro MR16 Spotlight',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/c/b/cb59530c-88f8-4893-8792-01f33d6aad55_cb59530c-88f8-4893-8792-01f33d6aad55.jpg' },
+    { name: 'G2 EcoPro MR16 Spotlight',          brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/e/c/ecopro-bbz_0006_pit_7733.png' },
+    { name: 'ONE G2 ControlPro™ 300 Spotlight',  brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/a/aal-3000-4-bbz_013_jpg_1.jpg' },
+    { name: 'ONE G2 ControlPro™ 500 Spotlight',  brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/a/aal-3001-4-bbz_010_jpg_1.jpg' },
+    { name: 'G5 ControlPro™ RF Spotlight',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/g/5/g5_cw_hero_1.png' },
+    { name: 'RGBW G5 ControlPro™ Spotlight',     brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/a/aal-3003ir-b-bz_hero-color__1_3.jpg' },
+    { name: 'Nano LED Spotlight',                brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/n/a/nano.8_1.png' },
+    { name: 'Mini PinnaclePro MR11 Spotlight',   brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/3/d/3d6e43e5-ad71-4fe6-ad90-65677e67f1fe_3d6e43e5-ad71-4fe6-ad90-65677e67f1fe.jpg' },
+    { name: 'Waterproof LED Spotlights 4-Pack',  brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/6_2.jpg' },
+    { name: '6W Anti-Glare Spotlights 8-Pack',   brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_a63910cb-1abc-491f-bd24-8558dc2317c3.jpg' },
+    { name: '5" Solid Brass Spotlights 4-Pack',  brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_1_50bf3f20-0d39-44cd-b202-ff3b2fd76924.jpg' },
+    { name: '12W RGB Color Changing Lights',     brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_895b8298-95ca-4652-ad0a-6e2440774442.jpg' },
+  ],
+  pathway: [
+    { name: 'MagnumPro™ Path Light',             brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/h/aht-3309-bbz_002_jpg_1_3.jpg' },
+    { name: 'SummitPro™ Path Light',             brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/h/aht-3206-bbz_002_jpg.jpg' },
+    { name: 'ConicaPro™ Path Light',             brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/i/m/image_34_.png' },
+    { name: 'StetsonPro Path Light',             brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/9/i/9in-stetson-hero_1.png' },
+    { name: 'Mini MagnumPro™ Path Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/m/i/mini_magnumpro_path_area_light_1_.png' },
+    { name: 'Mini SummitPro™ Path Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/m/i/mini-pathlight_0008_color-balance-1-copy-8.png' },
+    { name: 'NovellePro Wide Path Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/e/5/e5082a63-f831-48c8-9487-a5240d70d9a5_e5082a63-f831-48c8-9487-a5240d70d9a5_1_1.jpg' },
+    { name: '3W Cast-Aluminum Path Lights',      brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/61qRXzkJiYL._AC_SL1500.jpg' },
+    { name: 'Hollow Cuboid Path Lights',         brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/81l0q-eJUeL._AC_SL1500.jpg' },
+    { name: 'Anti-Glare LED Path Lights 12-Pack',brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_cd00835a-95d8-47ba-a3f6-8557366691aa.jpg' },
+    { name: 'Pathway Bollard Lights 12-Pack',    brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/2_9d946052-192e-4765-8be1-38bb231ea57d.jpg' },
+    { name: '5W Waterproof Path Lights 4-Pack',  brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/9_1.jpg' },
+  ],
+  flood: [
+    { name: 'DiffusePro Flood Light',            brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/0/6/06b29b82-5432-4824-b4a1-cc2744ff6642_06b29b82-5432-4824-b4a1-cc2744ff6642.jpg' },
+    { name: 'ParamountPro LED Flood Light',      brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/f/afl-4012-4-b-bz_4__1.jpg' },
+    { name: 'EquaPro Wall Wash',                 brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/v/a/val-1004-4-bbz_006_030819-3788x3389-602bee3_2_.jpg' },
+    { name: '12W LED Flood w/ Yoke Mount',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/f/afl-4018-b-bz_1_.jpg' },
+    { name: '27W LED Flood w/ Yoke Mount',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/v/f/vfl-4510-bbz-illuminated_1.jpg' },
+    { name: 'G2 Nano LED Flood Light',           brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/n/a/nano_led_flood_light_1_.png' },
+    { name: 'SpectrumPro R7S Flood Light',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/b/v/bvn-vfl-4007-bbz-illuminated-resized_1.png' },
+    { name: 'StoutPro PAR36 Flood Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/v/f/vfl-4501-4-bbz_3__1.png' },
+    { name: 'RGBCW LED Wall Wash Light Bar',     brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/r/g/rgbcw_led_light_bar_2.jpg' },
+  ],
+  downlights: [
+    { name: 'PinnaclePro MR16 Downlight',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/d/3/d359f3f4-6721-4693-953a-a3eee3f9620f_d359f3f4-6721-4693-953a-a3eee3f9620f.jpg' },
+    { name: 'ONE G2 ControlPro™ 200 Downlight',  brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/v/a/val-1813-40-bbz_003_jpg_-_copy_2.jpg' },
+    { name: 'AviatorPro Downlight',              brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/f/2/f2808223-53e9-4b3b-a94c-b1eedf88d2e9_f2808223-53e9-4b3b-a94c-b1eedf88d2e9.jpg' },
+    { name: 'G5 ControlPro™ RF Downlight',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/g/5/g5_cw_hero_1.png' },
+    { name: 'PinnaclePro MR16 Black Downlight',  brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/u/n/untitled-1_0005_pit_8401.png' },
+  ],
+  well: [
+    { name: 'HydraPro™ MR16 Well Light',         brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/0/0/00d06c8c-c6e7-45d1-822b-72c005271644_00d06c8c-c6e7-45d1-822b-72c005271644.jpg' },
+    { name: 'HydraPro™ MR16 In-Grade Light',     brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/w/awl-5004-b-bz-illuminated.jpg' },
+    { name: 'BurrowPro PAR36 Well Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/r/1/r1-awl-5000-guard_0007_pit_9117.png' },
+    { name: 'HydraPro™ MR11 Well Light',         brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/w/awl-5005-4-b-bz-illuminated.jpg' },
+    { name: 'Nano LED Well Light',               brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/n/a/nano-well-light_0003_pit_3167-3_1.png' },
+    { name: 'Core Drill MR11 Well Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/c/o/core-well-light_0006__mg_4967_1.png' },
+    { name: 'Smart RGBCW LED Well Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/b/r/bronze_hero_iq_well_ingrade.png' },
+    { name: 'In-Ground Well Lights 12-Pack',     brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_8d11c97d-4374-42cd-b48e-f99b14c5e143.jpg' },
+    { name: 'Shielded In-Ground Lights 12-Pack', brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/81JY2TXNeAL._AC_SL1500.jpg' },
+    { name: '12W Waterproof Well Lights 10-Pack',brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_69f19edb-415f-4ff8-b641-5d6d57472fef.jpg' },
+    { name: 'RGBW Color-Changing Well Lights',   brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/LowVoltage12WRGBWColorChangingLEDGratedTopInGroundLights8PackMDRG-12-08C_2_40aeecfd-f831-4d35-a003-15ddb4394443.jpg' },
+    { name: '5W Anti-Glare Well Lights 6-Pack',  brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/LowVoltage5WLEDAnti-GlareGroundLandscapeWellLights6PackMDWY-05-06C_1_1f45f200-1e04-4b1d-97a4-54cb9ddb9f43.jpg' },
+  ],
+  transformers: [
+    { name: '150W Slim Line Transformer',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/1/2/12f23399-79d0-470a-9651-a7a0722223bf_12f23399-79d0-470a-9651-a7a0722223bf.jpg' },
+    { name: '300W Slim Line Transformer',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/d/e/defa481b-6c99-400e-9b04-feec0a650d94_defa481b-6c99-400e-9b04-feec0a650d94.jpg' },
+    { name: '300W Multi-Tap Transformer',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/0/9/09b87dfc-5d55-497f-9897-5ec35ce54bcd_09b87dfc-5d55-497f-9897-5ec35ce54bcd.jpg' },
+    { name: '600W Multi-Tap Transformer',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/_/a.transformer.2.png' },
+    { name: '900W Multi-Tap Transformer',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/4/c/4c1a4717-6680-4846-b8d8-f3eebfc4177b_4c1a4717-6680-4846-b8d8-f3eebfc4177b_1.jpg' },
+    { name: '1200W Multi-Tap Transformer',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/1/2/1200-12-22.jpg' },
+    { name: '50W Nano Clamp-Connect',            brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/1/x/1x1_amp_transformer-min_1.png' },
+    { name: '100W Inline Power Converter',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/s/c/screen_shot_2023-03-27_at_2.11.45_pm.png' },
+    { name: '60W Transformer w/ Timer & Photocell', brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/Low_Voltage_Landscape_Transformer_with_Timer_and_Photocell_Sensor-1.jpg' },
+    { name: '120W Transformer w/ Timer & Photocell',brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/710eEqYWI9L._SL1500.jpg' },
+    { name: '200W Transformer w/ Timer & Photocell',brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/200W_Low_Voltage_Landscape_Lighting_Transformer-1.jpg' },
+    { name: '300W Transformer w/ Timer & Photocell',brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/300W_Low_Voltage_Landscape_Lighting_Transformer-1.jpg' },
+    { name: '300W 3-Zone Independent Control',   brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_-1_d0b7da8c-3815-4785-9b15-d3bed72db5cf.jpg' },
+    { name: '300W Waterproof Transformer',       brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_1497e56d-6a9d-4c1c-9ade-5b6d72a340e7.jpg' },
+  ],
+}
+
+const CAT_TABS = [
+  { id: 'uplights',     label: 'Uplights',     color: '#F4884A' },
+  { id: 'pathway',      label: 'Pathway',      color: '#F5C842' },
+  { id: 'flood',        label: 'Flood',        color: '#EF4444' },
+  { id: 'downlights',   label: 'Downlights',   color: '#8B5CF6' },
+  { id: 'well',         label: 'Well Lights',  color: '#3B82F6' },
+  { id: 'transformers', label: 'Transformers', color: '#9CA3AF' },
+]
+
 function ProductsSection() {
-  const products = [
-    { label: 'Uplight',      color: '#F4884A', img: 'https://www.amplighting.com/media/catalog/product/c/b/cb59530c-88f8-4893-8792-01f33d6aad55_cb59530c-88f8-4893-8792-01f33d6aad55.jpg',  brand: 'AMP Premium' },
-    { label: 'Path Light',   color: '#F5C842', img: 'https://www.amplighting.com/media/catalog/product/a/h/aht-3309-bbz_002_jpg_1_3.jpg',                                               brand: 'AMP Premium' },
-    { label: 'Flood Light',  color: '#EF4444', img: 'https://www.amplighting.com/media/catalog/product/e/c/ecopro-bbz_0006_pit_7733.png',                                               brand: 'AMP Premium' },
-    { label: 'Well Light',   color: '#3B82F6', img: 'https://www.amplighting.com/media/catalog/product/d/9/d9caee05-0d88-4b77-8c2a-e2dfaa9c5e7b_d9caee05-0d88-4b77-8c2a-e2dfaa9c5e7b.jpg', brand: 'AMP Premium' },
-    { label: 'Downlight',    color: '#8B5CF6', img: 'https://www.amplighting.com/media/catalog/product/a/f/afl-4010-b-bz_005_1.jpg',                                                    brand: 'AMP Premium' },
-    { label: 'Step Light',   color: '#F97316', img: 'https://www.amplighting.com/media/catalog/product/v/a/val-1813-40-bbz_003_jpg_-_copy_2.jpg',                                       brand: 'AMP Premium' },
-    { label: 'Transformer',  color: '#9CA3AF', img: 'https://www.amplighting.com/media/catalog/product/3/d/3d6e43e5-ad71-4fe6-ad90-65677e67f1fe_3d6e43e5-ad71-4fe6-ad90-65677e67f1fe.jpg', brand: 'AMP Premium' },
-  ]
+  const [cat, setCat] = useState('uplights')
+  const products = PRODUCT_CATALOG[cat] || []
 
   return (
-    <div style={{ maxWidth: 680, animation: 'fadeUp .3s ease both' }}>
-      <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>Products</h1>
-      <p style={{ margin: '0 0 22px', fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>Fixture catalog · AMP Lighting · Sunvie</p>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
-        {products.map(p => (
-          <div key={p.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, overflow: 'hidden', cursor: 'pointer', transition: 'border-color .18s, box-shadow .18s' }}>
-            <div style={{ height: 130, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', position: 'relative' }}>
+    <div style={{ maxWidth: 760, animation: 'fadeUp .3s ease both' }}>
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ margin: '0 0 3px', fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>Products</h1>
+        <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>AMP Lighting · Sunvie — full fixture catalog</p>
+      </div>
+
+      {/* category tabs */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+        {CAT_TABS.map(t => {
+          const active = cat === t.id
+          return (
+            <button key={t.id} onClick={() => setCat(t.id)} style={{
+              padding: '6px 14px', borderRadius: 8, border: active ? `1px solid ${t.color}40` : '1px solid rgba(255,255,255,0.07)',
+              background: active ? `${t.color}14` : 'rgba(255,255,255,0.03)',
+              color: active ? t.color : 'rgba(255,255,255,0.38)',
+              fontSize: 12, fontWeight: active ? 600 : 400, cursor: 'pointer', letterSpacing: '-0.01em',
+              transition: 'all .15s',
+              boxShadow: active ? `0 0 12px ${t.color}20` : 'none',
+            }}>
+              {t.label}
+              <span style={{ marginLeft: 5, fontSize: 10, opacity: .6 }}>{PRODUCT_CATALOG[t.id].length}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* brand legend */}
+      <div style={{ display: 'flex', gap: 14, marginBottom: 16 }}>
+        {(['AMP', 'Sunvie'] as const).map(b => (
+          <div key={b} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: b === 'AMP' ? '#F4884A' : '#22c55e', flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{b === 'AMP' ? 'AMP Lighting' : 'Sunvie'}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* product grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 10 }}>
+        {products.map((p, i) => (
+          <div key={i} className="product-card" style={{
+            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+            borderRadius: 14, overflow: 'hidden', cursor: 'pointer',
+            transition: 'border-color .18s, box-shadow .18s, transform .18s',
+            animation: 'fadeUp .25s ease both', animationDelay: `${i * 0.03}s`,
+          }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(244,136,74,0.18)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(244,136,74,0.2)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)' }}
+          >
+            {/* image */}
+            <div style={{ height: 130, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffffff', position: 'relative', padding: 8 }}>
               <img
                 src={p.img}
-                alt={p.label}
-                style={{ width: '85%', height: '85%', objectFit: 'contain' }}
-                onError={e => { (e.target as HTMLImageElement).style.opacity = '0' }}
+                alt={p.name}
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
               />
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 24, background: 'linear-gradient(to top, rgba(15,15,15,0.25), transparent)' }} />
             </div>
-            <div style={{ padding: '10px 12px' }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.82)', letterSpacing: '-0.02em' }}>{p.label}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: p.color, flexShrink: 0 }} />
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.28)' }}>{p.brand}</span>
+            {/* info */}
+            <div style={{ padding: '10px 11px 11px' }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.78)', letterSpacing: '-0.015em', lineHeight: 1.35, marginBottom: 6 }}>{p.name}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <div style={{ width: 7, height: 7, borderRadius: 2, background: p.brand === 'AMP' ? '#F4884A' : '#22c55e', flexShrink: 0 }} />
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.02em' }}>{p.brand === 'AMP' ? 'AMP Lighting' : 'Sunvie'}</span>
               </div>
             </div>
           </div>
