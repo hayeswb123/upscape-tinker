@@ -185,9 +185,18 @@ export default function MapClient({ projectId }: { projectId: string }) {
   useEffect(() => {
     loadProject().then(p => {
       if (!p || !mapDiv.current) return
+      const _initStyle = localStorage.getItem('upscape_map_style') || 'satellite'
+      const _initTime  = localStorage.getItem('upscape_map_time')  || 'night'
+      const _initMapboxStyle = _initStyle === 'terrain'
+        ? 'mapbox://styles/hayesb123/cmoyv06sv001801qweuh6hjob'
+        : 'mapbox://styles/mapbox/standard-satellite'
+      const _initPreset = _initStyle === 'terrain'
+        ? ({ dawn:'dawn', day:'day', dusk:'dusk', night:'night' }[_initTime] || 'night')
+        : (_initTime === 'day' ? 'day' : 'night')
+
       const map = new mapboxgl.Map({
         container: mapDiv.current,
-        style: 'mapbox://styles/mapbox/standard-satellite',
+        style: _initMapboxStyle,
         center: p.lng && p.lat ? [p.lng, p.lat] : [-73.9857, 40.7484],
         zoom: p.lng ? 18.5 : 13,
         pitch: 45,
@@ -205,7 +214,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
 
       map.on('load', () => {
         addTerrain(map)
-        ;(map as any).setConfigProperty('basemap', 'lightPreset', 'day')
+        ;(map as any).setConfigProperty('basemap', 'lightPreset', _initPreset)
 
         map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
         map.addLayer({ id: 'wires-glow', type: 'line', source: 'wires', paint: { 'line-color': '#ffb830', 'line-width': 14, 'line-opacity': 0.5, 'line-blur': 6 } })
