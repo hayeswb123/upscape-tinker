@@ -10,58 +10,58 @@ export const FIXTURES = {
   uplight: {
     label: 'Uplight', color: '#F4884A', laborEach: 45,
     tiers: {
-      budget:  { name: 'MR16 Spotlight',           sku: 'SV-SPOT-MR16',    price: 18.99, url: '' },
-      mid:     { name: 'Luminator MR16 Spot',      sku: 'VL-MR16-36',      price: 39.99, url: '' },
-      premium: { name: 'PinnaclePro MR16 Spotlight', sku: 'AAL-1017-B-BZ', price: 55.99, url: 'https://www.amplighting.com/pinnaclepro-mr16-spotlight-lamp-ready' },
+      budget:  { name: 'SUNVIE 12W Spotlight',        sku: 'B07FYF9XCC',      price: 7.00,  url: 'https://www.amazon.com/dp/B07FYF9XCC' },
+      mid:     { name: 'Luminator MR16 Spot',         sku: 'VL-MR16-36',      price: 39.99, url: '' },
+      premium: { name: 'PinnaclePro MR16 Spotlight',  sku: 'AAL-1017-B-BZ',   price: 55.99, url: 'https://www.amplighting.com/pinnaclepro-mr16-spotlight-lamp-ready' },
     },
   },
   path: {
     label: 'Path', color: '#F5C842', laborEach: 40,
     tiers: {
-      budget:  { name: 'Low Path Bollard',          sku: 'SV-PATH-01',      price: 14.99, url: '' },
-      mid:     { name: 'Bollard Path Light',        sku: 'VL-PATH-01',      price: 34.99, url: '' },
-      premium: { name: 'MagnumPro Path & Area Light', sku: 'AAR-3516-B-BZ', price: 74.99, url: 'https://www.amplighting.com/magnumpro-brass-path-area-light-lamp-ready' },
+      budget:  { name: 'SUNVIE 3W Bollard Path',      sku: 'B0CJ4HXMZX',      price: 13.33, url: 'https://www.amazon.com/dp/B0CJ4HXMZX' },
+      mid:     { name: 'Bollard Path Light',           sku: 'VL-PATH-01',      price: 34.99, url: '' },
+      premium: { name: 'MagnumPro Path & Area Light',  sku: 'AAR-3516-B-BZ',   price: 74.99, url: 'https://www.amplighting.com/magnumpro-brass-path-area-light-lamp-ready' },
     },
   },
   flood: {
     label: 'Flood', color: '#EF4444', laborEach: 50,
     tiers: {
-      budget:  { name: 'Area Flood',                sku: 'SV-FLOOD-01',     price: 24.99, url: '' },
-      mid:     { name: 'PAR36 Flood',               sku: 'VL-FLOOD-01',     price: 48.99, url: '' },
-      premium: { name: 'ParamountPro LED Flood',    sku: 'AFL-4013-B-BZ',   price: 94.99, url: 'https://www.amplighting.com/paramountpro-led-flood-light-constant-output' },
+      budget:  { name: 'SUNVIE 12W Flood Spot',        sku: 'B07ZKH3YSV',      price: 8.00,  url: 'https://www.amazon.com/dp/B07ZKH3YSV' },
+      mid:     { name: 'PAR36 Flood',                  sku: 'VL-FLOOD-01',     price: 48.99, url: '' },
+      premium: { name: 'ParamountPro LED Flood',        sku: 'AFL-4013-B-BZ',   price: 94.99, url: 'https://www.amplighting.com/paramountpro-led-flood-light-constant-output' },
     },
   },
   well: {
     label: 'Well', color: '#3B82F6', laborEach: 55,
     tiers: {
-      budget:  { name: 'In-Grade Spot',             sku: 'SV-WELL-01',      price: 22.99, url: '' },
-      mid:     { name: 'In-Grade MR16',             sku: 'VL-WELL-01',      price: 42.99, url: '' },
-      premium: { name: 'HydraPro MR16 In-Grade',   sku: 'AWL-5004-B-BZ',   price: 65.99, url: 'https://www.amplighting.com/hydrapro-mr16-in-grade-light' },
+      budget:  { name: 'SUNVIE 12W In-Ground Well',    sku: 'B09B74KVMP',      price: 9.17,  url: 'https://www.amazon.com/dp/B09B74KVMP' },
+      mid:     { name: 'In-Grade MR16',                sku: 'VL-WELL-01',      price: 42.99, url: '' },
+      premium: { name: 'HydraPro MR16 In-Grade',       sku: 'AWL-5004-B-BZ',   price: 65.99, url: 'https://www.amplighting.com/hydrapro-mr16-in-grade-light' },
     },
   },
   downlight: {
     label: 'Down', color: '#8B5CF6', laborEach: 55,
     tiers: {
-      budget:  { name: 'Downlight',                 sku: 'SV-DOWN-01',      price: 19.99, url: '' },
-      mid:     { name: 'Downlight',                 sku: 'VL-DOWN-01',      price: 44.99, url: '' },
-      premium: { name: 'DiffusePro Flood Light',    sku: 'AFL-4010-B-BZ',   price: 59.99, url: 'https://www.amplighting.com/diffusepro-flood-light-lamp-ready' },
+      budget:  { name: 'SUNVIE 12W Downlight',          sku: 'B07M5QJM3Z',      price: 10.00, url: 'https://www.amazon.com/dp/B07M5QJM3Z' },
+      mid:     { name: 'Downlight',                     sku: 'VL-DOWN-01',      price: 44.99, url: '' },
+      premium: { name: 'DiffusePro Flood Light',         sku: 'AFL-4010-B-BZ',   price: 59.99, url: 'https://www.amplighting.com/diffusepro-flood-light-lamp-ready' },
     },
   },
   hardscape: {
     label: 'Step', color: '#F97316', laborEach: 40,
     tiers: {
-      budget:  { name: 'Step Light',                sku: 'SV-HARD-01',      price: 18.99, url: '' },
-      mid:     { name: 'Hardscape Light',           sku: 'VL-HARD-01',      price: 36.99, url: '' },
-      premium: { name: 'DescentPro Hardscape Light', sku: 'AHS-7004-B-BZ',  price: 49.99, url: 'https://www.amplighting.com/descentpro-hardscape-light' },
+      budget:  { name: 'SUNVIE 5W Step Light',          sku: 'B09F6N9MPJ',      price: 9.75,  url: 'https://www.amazon.com/dp/B09F6N9MPJ' },
+      mid:     { name: 'Hardscape Light',               sku: 'VL-HARD-01',      price: 36.99, url: '' },
+      premium: { name: 'DescentPro Hardscape Light',     sku: 'AHS-7004-B-BZ',   price: 49.99, url: 'https://www.amplighting.com/descentpro-hardscape-light' },
     },
   },
   power: {
     label: 'Power', color: '#9CA3AF', laborEach: 60,
     tiers: {
-      budget:  { name: '150W Transformer',          sku: 'VL-TR-150',       price: 89.99,  url: '' },
-      mid:     { name: '300W Transformer',          sku: 'VL-TR-300',       price: 149.99, url: '' },
+      budget:  { name: 'SUNVIE 120W Transformer',       sku: 'B0DBH8SR83',      price: 64.99, url: 'https://www.amazon.com/dp/B0DBH8SR83' },
+      mid:     { name: 'SUNVIE 300W Transformer',       sku: 'B0B7XH7SW5',      price: 99.99, url: 'https://www.amazon.com/dp/B0B7XH7SW5' },
       // AMP transformer is selected dynamically by wattage in calcQuote
-      premium: { name: '300W Slim Line Transformer', sku: 'ATR-300SL-SS-R1-BUNDLE', price: 209.99, url: 'https://www.amplighting.com/300-watt-slim-line-led-transformer' },
+      premium: { name: '300W Slim Line Transformer',    sku: 'ATR-300SL-SS-R1-BUNDLE', price: 209.99, url: 'https://www.amplighting.com/300-watt-slim-line-led-transformer' },
     },
   },
 } as const
