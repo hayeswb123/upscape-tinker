@@ -10,7 +10,7 @@ function UpscapeMark({ size = 36 }: { size?: number }) {
   return <img src="/upscape-logo-mark.png" alt="Upscape" width={size} height={size} style={{ objectFit: 'contain', display: 'block' }} />
 }
 
-type Section = 'projects' | 'quotes' | 'products' | 'install' | 'settings'
+type Section = 'projects' | 'products' | 'settings'
 
 const NAV = [
   {
@@ -24,30 +24,11 @@ const NAV = [
     ),
   },
   {
-    id: 'quotes' as Section,
-    label: 'Quotes',
-    icon: (active: boolean) => (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.8 : 1.5}>
-        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
-        <rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/>
-      </svg>
-    ),
-  },
-  {
     id: 'products' as Section,
     label: 'Products',
     icon: (active: boolean) => (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.8 : 1.5}>
-        <path d="M12 3l9 18H3z"/><path d="M12 8v4M12 16h.01" strokeLinecap="round"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'install' as Section,
-    label: 'Install',
-    icon: (active: boolean) => (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.8 : 1.5}>
-        <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/>
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
       </svg>
     ),
   },
@@ -224,10 +205,8 @@ export default function DashboardPage() {
 
         {/* content */}
         <main style={{ flex: 1, overflowY: 'auto', padding: '28px 28px 60px' }}>
-          {section === 'projects' && <ProjectsSection projects={projects} loading={loading} confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} hoveredId={hoveredId} setHoveredId={setHoveredId} deleteProject={deleteProject} router={router} fmt={fmt} draftCount={draftCount} quotedCount={quotedCount} approvedCount={approvedCount} installedCount={installedCount} />}
-          {section === 'quotes'   && <QuotesSection   projects={projects} router={router} fmt={fmt} />}
+          {section === 'projects' && <ProjectsSection projects={projects} loading={loading} confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} hoveredId={hoveredId} setHoveredId={setHoveredId} deleteProject={deleteProject} router={router} fmt={fmt} installedCount={installedCount} />}
           {section === 'products' && <ProductsSection />}
-          {section === 'install'  && <InstallSection  projects={projects} />}
           {section === 'settings' && <SettingsSection userEmail={userEmail} logout={logout} />}
         </main>
       </div>
@@ -236,7 +215,7 @@ export default function DashboardPage() {
 }
 
 // ── PROJECTS ──────────────────────────────────────────
-function ProjectsSection({ projects, loading, confirmDelete, setConfirmDelete, hoveredId, setHoveredId, deleteProject, router, fmt, draftCount, quotedCount, approvedCount, installedCount }: any) {
+function ProjectsSection({ projects, loading, confirmDelete, setConfirmDelete, hoveredId, setHoveredId, deleteProject, router, fmt, installedCount }: any) {
   return (
     <div style={{ maxWidth: 640, animation: 'fadeUp .3s ease both' }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 22 }}>
@@ -342,76 +321,37 @@ function QuotesSection({ projects, router, fmt }: any) {
 
 // ── PRODUCTS ──────────────────────────────────────────
 function ProductsSection() {
-  const categories = [
-    {
-      label: 'Uplights', count: 6, color: '#F4884A',
-      sunvie: 'https://www.sunvie.com/cdn/shop/files/81S_wHUWU9L._AC_SL1500.jpg?v=1727514491',
-      amp: 'https://www.amplighting.com/media/catalog/product/c/b/cb59530c-88f8-4893-8792-01f33d6aad55_cb59530c-88f8-4893-8792-01f33d6aad55.jpg',
-    },
-    {
-      label: 'Path Lights', count: 4, color: '#F5C842',
-      sunvie: 'https://www.sunvie.com/cdn/shop/files/3W-12_60W_-__01.jpg?v=1744272663',
-      amp: 'https://www.amplighting.com/media/catalog/product/a/h/aht-3309-bbz_002_jpg_1_3.jpg',
-    },
-    {
-      label: 'Flood Lights', count: 3, color: '#EF4444',
-      sunvie: 'https://www.sunvie.com/cdn/shop/files/81ijDHm9QCL._AC_SL1500.jpg?v=1727494089',
-      amp: 'https://www.amplighting.com/media/catalog/product/e/c/ecopro-bbz_0006_pit_7733.png',
-    },
-    {
-      label: 'Well Lights', count: 4, color: '#F4884A',
-      sunvie: 'https://www.sunvie.com/cdn/shop/files/81boh8z1ZlL._AC_SL1500.jpg?v=1727494089',
-      amp: 'https://www.amplighting.com/media/catalog/product/d/9/d9caee05-0d88-4b77-8c2a-e2dfaa9c5e7b_d9caee05-0d88-4b77-8c2a-e2dfaa9c5e7b.jpg',
-    },
-    {
-      label: 'Step Lights', count: 3, color: '#F97316',
-      sunvie: 'https://www.sunvie.com/cdn/shop/files/71NNBgZuTXL._AC_SL1500.jpg?v=1728633281',
-      amp: 'https://www.amplighting.com/media/catalog/product/v/a/val-1813-40-bbz_003_jpg_-_copy_2.jpg',
-    },
-    {
-      label: 'Transformers', count: 6, color: '#9CA3AF',
-      sunvie: 'https://www.sunvie.com/cdn/shop/files/71lua3i5qsL._AC_SL1500.jpg?v=1727504110',
-      amp: 'https://www.amplighting.com/media/catalog/product/3/d/3d6e43e5-ad71-4fe6-ad90-65677e67f1fe_3d6e43e5-ad71-4fe6-ad90-65677e67f1fe.jpg',
-    },
-    {
-      label: 'Wire & Cable', count: 4, color: '#6B7280',
-      sunvie: 'https://www.sunvie.com/cdn/shop/files/1_a63910cb-1abc-491f-bd24-8558dc2317c3.jpg?v=1744270790',
-      amp: null,
-    },
-    {
-      label: 'Accessories', count: 8, color: '#A855F7',
-      sunvie: 'https://www.sunvie.com/cdn/shop/files/2_82dd0874-24c2-4262-95b9-efc0c7a77161.jpg?v=1744270790',
-      amp: null,
-    },
+  const products = [
+    { label: 'Uplight',      color: '#F4884A', img: 'https://www.amplighting.com/media/catalog/product/c/b/cb59530c-88f8-4893-8792-01f33d6aad55_cb59530c-88f8-4893-8792-01f33d6aad55.jpg',  brand: 'AMP Premium' },
+    { label: 'Path Light',   color: '#F5C842', img: 'https://www.amplighting.com/media/catalog/product/a/h/aht-3309-bbz_002_jpg_1_3.jpg',                                               brand: 'AMP Premium' },
+    { label: 'Flood Light',  color: '#EF4444', img: 'https://www.amplighting.com/media/catalog/product/e/c/ecopro-bbz_0006_pit_7733.png',                                               brand: 'AMP Premium' },
+    { label: 'Well Light',   color: '#3B82F6', img: 'https://www.amplighting.com/media/catalog/product/d/9/d9caee05-0d88-4b77-8c2a-e2dfaa9c5e7b_d9caee05-0d88-4b77-8c2a-e2dfaa9c5e7b.jpg', brand: 'AMP Premium' },
+    { label: 'Downlight',    color: '#8B5CF6', img: 'https://www.amplighting.com/media/catalog/product/a/f/afl-4010-b-bz_005_1.jpg',                                                    brand: 'AMP Premium' },
+    { label: 'Step Light',   color: '#F97316', img: 'https://www.amplighting.com/media/catalog/product/v/a/val-1813-40-bbz_003_jpg_-_copy_2.jpg',                                       brand: 'AMP Premium' },
+    { label: 'Transformer',  color: '#9CA3AF', img: 'https://www.amplighting.com/media/catalog/product/3/d/3d6e43e5-ad71-4fe6-ad90-65677e67f1fe_3d6e43e5-ad71-4fe6-ad90-65677e67f1fe.jpg', brand: 'AMP Premium' },
   ]
 
   return (
     <div style={{ maxWidth: 680, animation: 'fadeUp .3s ease both' }}>
       <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>Products</h1>
-      <p style={{ margin: '0 0 22px', fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>Fixture library · Sunvie · AMP Lighting</p>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }}>
-        {categories.map(c => (
-          <div key={c.label} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 13, overflow: 'hidden', cursor: 'pointer', transition: 'border-color .18s, box-shadow .18s' }}>
-            {/* product images strip */}
-            <div style={{ height: 90, display: 'flex', gap: 0, background: 'rgba(0,0,0,0.3)', overflow: 'hidden' }}>
-              <div style={{ flex: 1, overflow: 'hidden', borderRight: c.amp ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                <img src={c.sunvie} alt={c.label} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.82, filter: 'brightness(0.9)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-              </div>
-              {c.amp && (
-                <div style={{ flex: 1, overflow: 'hidden' }}>
-                  <img src={c.amp} alt={`${c.label} AMP`} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.82, filter: 'brightness(0.9)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                </div>
-              )}
+      <p style={{ margin: '0 0 22px', fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>Fixture catalog · AMP Lighting · Sunvie</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+        {products.map(p => (
+          <div key={p.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, overflow: 'hidden', cursor: 'pointer', transition: 'border-color .18s, box-shadow .18s' }}>
+            <div style={{ height: 130, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', position: 'relative' }}>
+              <img
+                src={p.img}
+                alt={p.label}
+                style={{ width: '85%', height: '85%', objectFit: 'contain' }}
+                onError={e => { (e.target as HTMLImageElement).style.opacity = '0' }}
+              />
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 24, background: 'linear-gradient(to top, rgba(15,15,15,0.25), transparent)' }} />
             </div>
-            {/* info */}
-            <div style={{ padding: '12px 14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.78)', letterSpacing: '-0.02em' }}>{c.label}</span>
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.03em' }}>{c.count} products</span>
-              </div>
-              <div style={{ display: 'flex', gap: 5, marginTop: 8 }}>
-                <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 4, padding: '2px 7px', color: 'rgba(255,255,255,0.35)' }}>Sunvie</span>
-                {c.amp && <span style={{ fontSize: 10, background: `${c.color}12`, borderRadius: 4, padding: '2px 7px', color: c.color }}>AMP</span>}
+            <div style={{ padding: '10px 12px' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.82)', letterSpacing: '-0.02em' }}>{p.label}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: p.color, flexShrink: 0 }} />
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.28)' }}>{p.brand}</span>
               </div>
             </div>
           </div>
