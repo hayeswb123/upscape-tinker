@@ -477,58 +477,99 @@ function QuotesSection({ projects, router, fmt }: any) {
 // ── EMPTY STATE ───────────────────────────────────────
 function EmptyState({ onNew }: { onNew: () => void }) {
   return (
-    <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none', zIndex:0 }}>
-      {/* deep bg glow */}
-      <div style={{ position:'absolute', width:600, height:600, borderRadius:'50%', background:'radial-gradient(ellipse,rgba(10,14,26,0.9) 0%,transparent 70%)', animation:'bgDrift 14s ease-in-out infinite', top:'50%', left:'50%', transform:'translate(-50%,-50%)', pointerEvents:'none' }} />
-      {/* orange bloom beneath icon */}
-      <div style={{ position:'absolute', width:220, height:90, borderRadius:'50%', background:'radial-gradient(ellipse,rgba(244,136,74,0.22) 0%,transparent 70%)', top:'calc(50% + 10px)', left:'50%', transform:'translate(-50%,-50%)', animation:'glowPulse 4s ease-in-out infinite', pointerEvents:'none' }} />
+    <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none', zIndex:0, overflow:'hidden' }}>
 
-      {/* content */}
-      <div style={{ position:'relative', display:'flex', flexDirection:'column', alignItems:'center', gap:0, animation:'emptyFadeIn .8s cubic-bezier(.16,1,.3,1) both', pointerEvents:'auto' }}>
+      {/* deep atmospheric radial — fills background */}
+      <div style={{ position:'absolute', width:900, height:900, borderRadius:'50%', background:'radial-gradient(ellipse at 50% 55%, rgba(244,136,74,0.055) 0%, rgba(12,8,4,0.0) 65%)', top:'50%', left:'50%', transform:'translate(-50%,-50%)', pointerEvents:'none', animation:'bgDrift 20s ease-in-out infinite' }} />
 
-        {/* particles */}
-        {[
-          { x:-38, y:-18, d:'drift1', delay:'0s',  size:3.5 },
-          { x: 44, y:-10, d:'drift2', delay:'.9s', size:2.5 },
-          { x:-18, y:-30, d:'drift3', delay:'1.6s',size:2   },
-          { x: 28, y:-24, d:'drift1', delay:'2.3s',size:3   },
-          { x:-52, y:-6,  d:'drift2', delay:'3.1s',size:2   },
-          { x: 56, y:-32, d:'drift3', delay:'.4s', size:2.5 },
-        ].map((p,i) => (
-          <div key={i} style={{ position:'absolute', top:'50%', left:'50%', marginLeft:p.x, marginTop:p.y, width:p.size, height:p.size, borderRadius:'50%', background:'rgba(244,136,74,0.7)', boxShadow:'0 0 4px rgba(244,136,74,0.6)', animation:`${p.d} ${2.8+i*.4}s ease-in infinite`, animationDelay:p.delay, pointerEvents:'none' }} />
-        ))}
+      {/* volumetric floor glow */}
+      <div style={{ position:'absolute', width:520, height:120, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.18) 0%, transparent 70%)', bottom:'calc(50% - 110px)', left:'50%', transform:'translateX(-50%)', animation:'glowPulse 5s ease-in-out infinite', pointerEvents:'none', filter:'blur(8px)' }} />
 
-        {/* folder icon */}
-        <div style={{ width:88, height:88, marginBottom:36, animation:'float 5s ease-in-out infinite', position:'relative' }}>
-          {/* glass base */}
-          <div style={{ position:'absolute', inset:0, borderRadius:18, background:'linear-gradient(145deg,rgba(244,136,74,0.07) 0%,rgba(244,136,74,0.02) 100%)', border:'1px solid rgba(244,136,74,0.28)', backdropFilter:'blur(12px)', boxShadow:'0 0 0 1px rgba(244,136,74,0.08) inset, 0 0 32px rgba(244,136,74,0.12), 0 20px 60px rgba(0,0,0,0.5)' }} />
-          {/* folder svg */}
+      {/* secondary warm halo behind object */}
+      <div style={{ position:'absolute', width:280, height:280, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.08) 0%, transparent 70%)', top:'50%', left:'50%', transform:'translate(-50%, calc(-50% - 20px))', animation:'glowPulse 6s ease-in-out infinite', animationDelay:'1s', pointerEvents:'none' }} />
+
+      {/* ember particles — varied opacities and sizes */}
+      {([
+        { x:-62, y: 14, d:'drift1', delay:'0s',   size:2.2, op:0.65 },
+        { x: 70, y: 20, d:'drift2', delay:'1.1s', size:1.6, op:0.45 },
+        { x:-28, y:-8,  d:'drift3', delay:'0.4s', size:3.0, op:0.7  },
+        { x: 44, y: 6,  d:'drift1', delay:'2.0s', size:1.4, op:0.5  },
+        { x:-80, y: 30, d:'drift2', delay:'3.2s', size:1.8, op:0.35 },
+        { x: 86, y:-4,  d:'drift3', delay:'1.7s', size:2.4, op:0.55 },
+        { x:-44, y: 38, d:'drift1', delay:'0.8s', size:1.2, op:0.3  },
+        { x: 32, y: 42, d:'drift2', delay:'2.6s', size:2.0, op:0.6  },
+        { x:-10, y: 16, d:'drift3', delay:'4.1s', size:1.5, op:0.4  },
+        { x: 58, y: 32, d:'drift1', delay:'1.4s', size:1.0, op:0.25 },
+      ] as {x:number,y:number,d:string,delay:string,size:number,op:number}[]).map((p,i) => (
+        <div key={i} style={{ position:'absolute', top:'calc(50% + 50px)', left:'50%', marginLeft:p.x, marginTop:p.y, width:p.size, height:p.size, borderRadius:'50%', background:`rgba(244,136,74,${p.op})`, boxShadow:`0 0 ${p.size*2}px rgba(244,136,74,${p.op*0.8})`, animation:`${p.d} ${3.2+i*0.38}s ease-in infinite`, animationDelay:p.delay, pointerEvents:'none' }} />
+      ))}
+
+      {/* ── MAIN CONTENT ── */}
+      <div style={{ position:'relative', display:'flex', flexDirection:'column', alignItems:'center', animation:'emptyFadeIn 1.1s cubic-bezier(.16,1,.3,1) both', pointerEvents:'auto' }}>
+
+        {/* ── ARCHIVE OBJECT ── */}
+        <div style={{ width:110, height:110, marginBottom:44, animation:'float 6s ease-in-out infinite', position:'relative' }}>
+
+          {/* outer atmospheric ring */}
+          <div style={{ position:'absolute', inset:-18, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.06) 0%, transparent 70%)', animation:'glowPulse 4s ease-in-out infinite' }} />
+
+          {/* main glass body */}
+          <div style={{ position:'absolute', inset:0, borderRadius:22,
+            background:'linear-gradient(145deg, rgba(244,136,74,0.09) 0%, rgba(244,136,74,0.03) 50%, rgba(10,6,2,0.4) 100%)',
+            backdropFilter:'blur(20px)',
+            border:'1px solid rgba(244,136,74,0.32)',
+            boxShadow:`
+              0 0 0 1px rgba(244,136,74,0.06) inset,
+              0 1px 0 rgba(255,255,255,0.06) inset,
+              0 0 40px rgba(244,136,74,0.14),
+              0 0 80px rgba(244,136,74,0.06),
+              0 28px 60px rgba(0,0,0,0.7)
+            `
+          }} />
+
+          {/* top edge highlight */}
+          <div style={{ position:'absolute', top:0, left:16, right:16, height:1, borderRadius:1, background:'linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)' }} />
+
+          {/* inner content — archive/folder geometry */}
           <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <svg width="42" height="38" viewBox="0 0 42 38" fill="none">
-              <path d="M2 8C2 5.79 3.79 4 6 4h10l4 4h14c2.21 0 4 1.79 4 4v18c0 2.21-1.79 4-4 4H6c-2.21 0-4-1.79-4-4V8z" fill="rgba(244,136,74,0.08)" stroke="rgba(244,136,74,0.7)" strokeWidth="1.4"/>
-              <path d="M2 14h38" stroke="rgba(244,136,74,0.35)" strokeWidth="1"/>
-              <circle cx="21" cy="25" r="3.5" fill="none" stroke="rgba(244,136,74,0.5)" strokeWidth="1.2"/>
-              <path d="M21 21.5v1M21 28.5v1M17.5 25h1M24.5 25h1" stroke="rgba(244,136,74,0.4)" strokeWidth="1" strokeLinecap="round"/>
+            <svg width="56" height="50" viewBox="0 0 56 50" fill="none">
+              {/* base platform */}
+              <rect x="4" y="32" width="48" height="14" rx="3" fill="rgba(244,136,74,0.06)" stroke="rgba(244,136,74,0.5)" strokeWidth="0.8"/>
+              {/* mid layer */}
+              <rect x="9" y="20" width="38" height="14" rx="3" fill="rgba(244,136,74,0.05)" stroke="rgba(244,136,74,0.38)" strokeWidth="0.8"/>
+              {/* top layer */}
+              <rect x="14" y="8" width="28" height="14" rx="3" fill="rgba(244,136,74,0.07)" stroke="rgba(244,136,74,0.6)" strokeWidth="0.9"/>
+              {/* top tab */}
+              <path d="M14 8h8l2-4h8l2 4" stroke="rgba(244,136,74,0.5)" strokeWidth="0.8" fill="none"/>
+              {/* scan line on top layer */}
+              <line x1="18" y1="14" x2="38" y2="14" stroke="rgba(244,136,74,0.25)" strokeWidth="0.6"/>
+              {/* small detail dots */}
+              <circle cx="18" cy="12" r="1.2" fill="rgba(244,136,74,0.6)"/>
+              <circle cx="38" cy="12" r="1.2" fill="rgba(244,136,74,0.3)"/>
+              {/* bottom layer detail */}
+              <line x1="10" y1="37" x2="46" y2="37" stroke="rgba(244,136,74,0.18)" strokeWidth="0.6"/>
+              <circle cx="10" cy="39" r="1" fill="rgba(244,136,74,0.4)"/>
+              <circle cx="46" cy="39" r="1" fill="rgba(244,136,74,0.4)"/>
             </svg>
           </div>
-          {/* rim glow */}
-          <div style={{ position:'absolute', inset:-1, borderRadius:19, boxShadow:'0 0 20px rgba(244,136,74,0.15)', pointerEvents:'none' }} />
+
+          {/* bottom shadow cast */}
+          <div style={{ position:'absolute', bottom:-14, left:'50%', transform:'translateX(-50%)', width:70, height:12, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.22) 0%, transparent 70%)', filter:'blur(4px)' }} />
         </div>
 
         {/* heading */}
-        <h2 style={{ margin:'0 0 10px', fontSize:28, fontWeight:700, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.88)', textAlign:'center', lineHeight:1.1 }}>Build something great</h2>
-        <p style={{ margin:'0 0 36px', fontSize:13, color:'rgba(255,255,255,0.28)', textAlign:'center', letterSpacing:'-0.01em', lineHeight:1.6 }}>Create a new project to get started.</p>
+        <h2 style={{ margin:'0 0 10px', fontSize:26, fontWeight:700, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.85)', textAlign:'center', lineHeight:1.1 }}>No clients yet</h2>
+        <p style={{ margin:'0 0 36px', fontSize:13, color:'rgba(255,255,255,0.25)', textAlign:'center', letterSpacing:'-0.01em', lineHeight:1.65, maxWidth:220 }}>Add your first client to begin designing their lighting system.</p>
 
-        {/* CTA button */}
+        {/* CTA */}
         <button
           onClick={onNew}
-          className="empty-cta"
-          style={{ display:'flex', alignItems:'center', gap:8, padding:'12px 24px', borderRadius:12, background:'linear-gradient(135deg,#F4884A,#df6f28)', border:'none', color:'#fff', fontSize:14, fontWeight:600, letterSpacing:'-0.02em', cursor:'pointer', boxShadow:'0 0 24px rgba(244,136,74,0.35), 0 4px 16px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.12) inset', transition:'transform .18s, box-shadow .18s' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 40px rgba(244,136,74,0.5), 0 8px 24px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.15) inset' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform='none'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 24px rgba(244,136,74,0.35), 0 4px 16px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.12) inset' }}
+          style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 26px', borderRadius:11, background:'linear-gradient(135deg,#F4884A,#d96520)', border:'none', color:'#fff', fontSize:13, fontWeight:600, letterSpacing:'-0.01em', cursor:'pointer', boxShadow:'0 0 28px rgba(244,136,74,0.32), 0 4px 18px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.14) inset', transition:'transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-2px) scale(1.02)'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 48px rgba(244,136,74,0.48), 0 8px 28px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.18) inset' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform='none'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 28px rgba(244,136,74,0.32), 0 4px 18px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.14) inset' }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
-          New project
+          New client
         </button>
 
         {/* grain texture overlay */}
