@@ -484,82 +484,108 @@ function EmptyState({ onNew }: { onNew: () => void }) {
   return (
     <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none', zIndex:0, overflow:'hidden' }}>
 
-      {/* deep atmospheric radial — fills background */}
-      <div style={{ position:'absolute', width:900, height:900, borderRadius:'50%', background:'radial-gradient(ellipse at 50% 55%, rgba(244,136,74,0.055) 0%, rgba(12,8,4,0.0) 65%)', top:'50%', left:'50%', transform:'translate(-50%,-50%)', pointerEvents:'none', animation:'bgDrift 20s ease-in-out infinite' }} />
+      {/* deep atmospheric radial */}
+      <div style={{ position:'absolute', width:900, height:900, borderRadius:'50%', background:'radial-gradient(ellipse at 50% 55%, rgba(244,136,74,0.05) 0%, transparent 65%)', top:'50%', left:'50%', transform:'translate(-50%,-50%)', pointerEvents:'none', animation:'bgDrift 20s ease-in-out infinite' }} />
 
-      {/* volumetric floor glow */}
-      <div style={{ position:'absolute', width:520, height:120, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.18) 0%, transparent 70%)', bottom:'calc(50% - 110px)', left:'50%', transform:'translateX(-50%)', animation:'glowPulse 5s ease-in-out infinite', pointerEvents:'none', filter:'blur(8px)' }} />
+      {/* volumetric floor spotlight */}
+      <div style={{ position:'absolute', width:560, height:90, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.28) 0%, rgba(244,136,74,0.08) 40%, transparent 70%)', bottom:'calc(50% - 118px)', left:'50%', transform:'translateX(-50%)', animation:'glowPulse 5s ease-in-out infinite', pointerEvents:'none', filter:'blur(10px)' }} />
+      {/* tighter inner spotlight */}
+      <div style={{ position:'absolute', width:220, height:40, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.45) 0%, transparent 70%)', bottom:'calc(50% - 112px)', left:'50%', transform:'translateX(-50%)', animation:'glowPulse 4s ease-in-out infinite', animationDelay:'.6s', pointerEvents:'none', filter:'blur(5px)' }} />
 
-      {/* secondary warm halo behind object */}
-      <div style={{ position:'absolute', width:280, height:280, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.08) 0%, transparent 70%)', top:'50%', left:'50%', transform:'translate(-50%, calc(-50% - 20px))', animation:'glowPulse 6s ease-in-out infinite', animationDelay:'1s', pointerEvents:'none' }} />
-
-      {/* ember particles — varied opacities and sizes */}
+      {/* 4-pointed star sparkles */}
       {([
-        { x:-62, y: 14, d:'drift1', delay:'0s',   size:2.2, op:0.65 },
-        { x: 70, y: 20, d:'drift2', delay:'1.1s', size:1.6, op:0.45 },
-        { x:-28, y:-8,  d:'drift3', delay:'0.4s', size:3.0, op:0.7  },
-        { x: 44, y: 6,  d:'drift1', delay:'2.0s', size:1.4, op:0.5  },
-        { x:-80, y: 30, d:'drift2', delay:'3.2s', size:1.8, op:0.35 },
-        { x: 86, y:-4,  d:'drift3', delay:'1.7s', size:2.4, op:0.55 },
-        { x:-44, y: 38, d:'drift1', delay:'0.8s', size:1.2, op:0.3  },
-        { x: 32, y: 42, d:'drift2', delay:'2.6s', size:2.0, op:0.6  },
-        { x:-10, y: 16, d:'drift3', delay:'4.1s', size:1.5, op:0.4  },
-        { x: 58, y: 32, d:'drift1', delay:'1.4s', size:1.0, op:0.25 },
-      ] as {x:number,y:number,d:string,delay:string,size:number,op:number}[]).map((p,i) => (
-        <div key={i} style={{ position:'absolute', top:'calc(50% + 50px)', left:'50%', marginLeft:p.x, marginTop:p.y, width:p.size, height:p.size, borderRadius:'50%', background:`rgba(244,136,74,${p.op})`, boxShadow:`0 0 ${p.size*2}px rgba(244,136,74,${p.op*0.8})`, animation:`${p.d} ${3.2+i*0.38}s ease-in infinite`, animationDelay:p.delay, pointerEvents:'none' }} />
-      ))}
+        { x:-105, y:-60,  s:7,  op:0.7,  d:'drift1', delay:'0s'   },
+        { x: 110, y:-80,  s:5,  op:0.5,  d:'drift2', delay:'1.2s' },
+        { x:-140, y: 10,  s:4,  op:0.35, d:'drift3', delay:'2.4s' },
+        { x: 130, y: 30,  s:6,  op:0.55, d:'drift1', delay:'0.7s' },
+        { x:-55,  y:-110, s:4,  op:0.4,  d:'drift2', delay:'3.1s' },
+        { x:  75, y:-100, s:8,  op:0.65, d:'drift3', delay:'1.8s' },
+        { x:-165, y:-30,  s:3,  op:0.3,  d:'drift1', delay:'4.0s' },
+        { x: 155, y:-50,  s:5,  op:0.45, d:'drift2', delay:'0.5s' },
+      ] as {x:number,y:number,s:number,op:number,d:string,delay:string}[]).map((sp,i) => {
+        const h = sp.s, t = h*0.22, b = h*0.22
+        const star = `M0,${-h} C${t},${-t} ${t},${-t} ${h},0 C${t},${b} ${t},${b} 0,${h} C${-t},${b} ${-t},${b} ${-h},0 C${-t},${-t} ${-t},${-t} 0,${-h}Z`
+        return (
+          <div key={i} style={{ position:'absolute', top:'50%', left:'50%', marginLeft:sp.x, marginTop:sp.y, pointerEvents:'none', animation:`${sp.d} ${4+i*0.42}s ease-in infinite`, animationDelay:sp.delay }}>
+            <svg width={sp.s*2} height={sp.s*2} viewBox={`${-sp.s} ${-sp.s} ${sp.s*2} ${sp.s*2}`} style={{ overflow:'visible', filter:`drop-shadow(0 0 ${sp.s*0.8}px rgba(244,136,74,${sp.op}))` }}>
+              <path d={star} fill={`rgba(244,136,74,${sp.op})`}/>
+            </svg>
+          </div>
+        )
+      })}
 
       {/* ── MAIN CONTENT ── */}
       <div style={{ position:'relative', display:'flex', flexDirection:'column', alignItems:'center', animation:'emptyFadeIn 1.1s cubic-bezier(.16,1,.3,1) both', pointerEvents:'auto' }}>
 
-        {/* ── ARCHIVE OBJECT ── */}
-        <div style={{ width:110, height:110, marginBottom:44, animation:'float 6s ease-in-out infinite', position:'relative' }}>
+        {/* ── WIREFRAME INBOX TRAY ── */}
+        <div style={{ marginBottom: 48, animation:'float 6s ease-in-out infinite', position:'relative' }}>
 
-          {/* outer atmospheric ring */}
-          <div style={{ position:'absolute', inset:-18, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.06) 0%, transparent 70%)', animation:'glowPulse 4s ease-in-out infinite' }} />
+          {/* warm halo behind tray */}
+          <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:220, height:220, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.07) 0%, transparent 70%)', animation:'glowPulse 5s ease-in-out infinite', pointerEvents:'none' }} />
 
-          {/* main glass body */}
-          <div style={{ position:'absolute', inset:0, borderRadius:22,
-            background:'linear-gradient(145deg, rgba(244,136,74,0.09) 0%, rgba(244,136,74,0.03) 50%, rgba(10,6,2,0.4) 100%)',
-            backdropFilter:'blur(20px)',
-            border:'1px solid rgba(244,136,74,0.32)',
-            boxShadow:`
-              0 0 0 1px rgba(244,136,74,0.06) inset,
-              0 1px 0 rgba(255,255,255,0.06) inset,
-              0 0 40px rgba(244,136,74,0.14),
-              0 0 80px rgba(244,136,74,0.06),
-              0 28px 60px rgba(0,0,0,0.7)
-            `
-          }} />
+          <svg width="174" height="148" viewBox="0 0 174 148" fill="none" xmlns="http://www.w3.org/2000/svg"
+            style={{ filter:'drop-shadow(0 0 8px rgba(244,136,74,0.55)) drop-shadow(0 0 22px rgba(244,136,74,0.25))' }}>
 
-          {/* top edge highlight */}
-          <div style={{ position:'absolute', top:0, left:16, right:16, height:1, borderRadius:1, background:'linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)' }} />
+            {/* ── TRAY BOX ──
+                Open-top rectangular tray with slight perspective depth.
+                Front face, back face visible above, two side walls, bottom floor. */}
 
-          {/* inner content — archive/folder geometry */}
-          <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <svg width="56" height="50" viewBox="0 0 56 50" fill="none">
-              {/* base platform */}
-              <rect x="4" y="32" width="48" height="14" rx="3" fill="rgba(244,136,74,0.06)" stroke="rgba(244,136,74,0.5)" strokeWidth="0.8"/>
-              {/* mid layer */}
-              <rect x="9" y="20" width="38" height="14" rx="3" fill="rgba(244,136,74,0.05)" stroke="rgba(244,136,74,0.38)" strokeWidth="0.8"/>
-              {/* top layer */}
-              <rect x="14" y="8" width="28" height="14" rx="3" fill="rgba(244,136,74,0.07)" stroke="rgba(244,136,74,0.6)" strokeWidth="0.9"/>
-              {/* top tab */}
-              <path d="M14 8h8l2-4h8l2 4" stroke="rgba(244,136,74,0.5)" strokeWidth="0.8" fill="none"/>
-              {/* scan line on top layer */}
-              <line x1="18" y1="14" x2="38" y2="14" stroke="rgba(244,136,74,0.25)" strokeWidth="0.6"/>
-              {/* small detail dots */}
-              <circle cx="18" cy="12" r="1.2" fill="rgba(244,136,74,0.6)"/>
-              <circle cx="38" cy="12" r="1.2" fill="rgba(244,136,74,0.3)"/>
-              {/* bottom layer detail */}
-              <line x1="10" y1="37" x2="46" y2="37" stroke="rgba(244,136,74,0.18)" strokeWidth="0.6"/>
-              <circle cx="10" cy="39" r="1" fill="rgba(244,136,74,0.4)"/>
-              <circle cx="46" cy="39" r="1" fill="rgba(244,136,74,0.4)"/>
-            </svg>
-          </div>
+            {/* floor */}
+            <path d="M28 112 L146 112 L146 94 L28 94 Z" fill="rgba(244,136,74,0.04)" stroke="rgba(244,136,74,0.55)" strokeWidth="1.3" strokeLinejoin="round"/>
 
-          {/* bottom shadow cast */}
-          <div style={{ position:'absolute', bottom:-14, left:'50%', transform:'translateX(-50%)', width:70, height:12, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.22) 0%, transparent 70%)', filter:'blur(4px)' }} />
+            {/* back wall (visible above front) */}
+            <path d="M28 94 L28 60 L146 60 L146 94" fill="rgba(244,136,74,0.03)" stroke="rgba(244,136,74,0.45)" strokeWidth="1.3" strokeLinejoin="round"/>
+
+            {/* left side wall */}
+            <path d="M28 60 L28 112" stroke="rgba(244,136,74,0.55)" strokeWidth="1.3"/>
+            {/* right side wall */}
+            <path d="M146 60 L146 112" stroke="rgba(244,136,74,0.55)" strokeWidth="1.3"/>
+
+            {/* front top edge (open top) */}
+            <line x1="28" y1="60" x2="146" y2="60" stroke="rgba(244,136,74,0.7)" strokeWidth="1.6"/>
+
+            {/* bottom edge */}
+            <line x1="28" y1="112" x2="146" y2="112" stroke="rgba(244,136,74,0.5)" strokeWidth="1.3"/>
+
+            {/* subtle horizontal depth lines inside tray */}
+            <line x1="32" y1="75" x2="142" y2="75" stroke="rgba(244,136,74,0.14)" strokeWidth="0.8"/>
+            <line x1="32" y1="88" x2="142" y2="88" stroke="rgba(244,136,74,0.1)" strokeWidth="0.8"/>
+
+            {/* ── U-HANDLE ARCH ──
+                Rectangular arch rising from the back-top of the tray */}
+            {/* left upright */}
+            <line x1="62" y1="60" x2="62" y2="28" stroke="rgba(244,136,74,0.6)" strokeWidth="1.4"/>
+            {/* right upright */}
+            <line x1="112" y1="60" x2="112" y2="28" stroke="rgba(244,136,74,0.6)" strokeWidth="1.4"/>
+            {/* top crossbar */}
+            <line x1="62" y1="28" x2="112" y2="28" stroke="rgba(244,136,74,0.65)" strokeWidth="1.4"/>
+
+            {/* ── DOCUMENT CARD INSIDE TRAY ──
+                Frosted white card peeking above the tray front edge */}
+
+            {/* card body — sits behind arch, partially inside tray */}
+            <rect x="50" y="36" width="74" height="62" rx="5"
+              fill="rgba(255,255,255,0.07)"
+              stroke="rgba(255,255,255,0.28)"
+              strokeWidth="1.1"/>
+
+            {/* subtle card gloss */}
+            <rect x="50" y="36" width="74" height="14" rx="5"
+              fill="rgba(255,255,255,0.05)"/>
+            <line x1="50" y1="49.5" x2="124" y2="49.5" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8"/>
+
+            {/* two content lines on card */}
+            <line x1="62" y1="62" x2="112" y2="62" stroke="rgba(255,255,255,0.22)" strokeWidth="2" strokeLinecap="round"/>
+            <line x1="62" y1="72" x2="100" y2="72" stroke="rgba(255,255,255,0.13)" strokeWidth="2" strokeLinecap="round"/>
+
+            {/* corner crease on card */}
+            <path d="M109 36 L124 51" stroke="rgba(255,255,255,0.12)" strokeWidth="0.8"/>
+            <path d="M109 36 L109 51 L124 51" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.10)" strokeWidth="0.8"/>
+
+          </svg>
+
+          {/* bottom shadow cast on floor */}
+          <div style={{ position:'absolute', bottom:-10, left:'50%', transform:'translateX(-50%)', width:100, height:14, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.28) 0%, transparent 70%)', filter:'blur(5px)' }} />
         </div>
 
         {/* heading */}
