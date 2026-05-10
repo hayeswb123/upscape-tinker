@@ -188,7 +188,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
       const _initStyle = localStorage.getItem('upscape_map_style') || 'satellite'
       const _initTime  = localStorage.getItem('upscape_map_time')  || 'night'
       const _initMapboxStyle = _initStyle === 'terrain'
-        ? 'mapbox://styles/hayesb123/cmoyv06sv001801qweuh6hjob'
+        ? 'mapbox://styles/mapbox/standard'
         : 'mapbox://styles/mapbox/standard-satellite'
       const _initPreset = _initStyle === 'terrain'
         ? ({ dawn:'dawn', day:'day', dusk:'dusk', night:'night' }[_initTime] || 'night')
@@ -485,7 +485,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
 
   useEffect(() => { (window as any).__upscapeTool = tool }, [tool])
 
-  const TERRAIN_STYLE = 'mapbox://styles/hayesb123/cmoyv06sv001801qweuh6hjob'
+  const TERRAIN_STYLE = 'mapbox://styles/mapbox/standard'
   const SAT_STYLE = 'mapbox://styles/mapbox/standard-satellite'
   const MAP_STYLES: Record<string, string> = {
     'sat-day':   SAT_STYLE,
