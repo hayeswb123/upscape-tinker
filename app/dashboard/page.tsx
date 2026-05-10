@@ -134,18 +134,21 @@ export default function DashboardPage() {
         .upscape-light .nav-item { color: #6b635c !important; font-weight: 400; }
         .upscape-light .nav-item:hover { background: rgba(0,0,0,0.05) !important; color: #2a2420 !important; }
 
-        /* project cards */
-        .upscape-light .dash-card {
+        /* client/project cards */
+        .upscape-light .dash-card,
+        .upscape-light .client-header {
           background: #ffffff !important;
           border-color: #e0dbd4 !important;
           box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04) !important;
         }
-        .upscape-light .dash-card:hover {
+        .upscape-light .dash-card:hover,
+        .upscape-light .client-header:hover {
           transform: translateY(-1px);
           box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 1.5px rgba(244,136,74,.4) !important;
           border-color: rgba(244,136,74,.35) !important;
         }
-        .upscape-light .dash-card:hover .card-name { color: #1a1714 !important; }
+        .upscape-light .dash-card:hover .card-name,
+        .upscape-light .client-header:hover .card-name { color: #1a1714 !important; }
         .upscape-light .card-name { color: #231f1c !important; }
 
         /* settings sections */
@@ -354,12 +357,43 @@ function AvatarMenu({ initials, userEmail, logout, lightMode }: { initials: stri
 
 // ── PROJECTS ──────────────────────────────────────────
 function ProjectsSection({ projects, loading, confirmDelete, setConfirmDelete, hoveredId, setHoveredId, deleteProject, router, fmt, installedCount }: any) {
+  const [expandedClients, setExpandedClients] = React.useState<Set<string>>(new Set())
+
+  // Group projects by client (homeowner name or address as fallback key)
+  const clientMap = React.useMemo(() => {
+    const map = new Map<string, { name: string; address: string; projects: Project[] }>()
+    projects.forEach((p: Project) => {
+      const key = (p.homeowner || p.address || p.name || 'Unknown').trim()
+      if (!map.has(key)) {
+        map.set(key, { name: p.homeowner || p.name || 'Unknown', address: p.address || '', projects: [] })
+      }
+      map.get(key)!.projects.push(p)
+    })
+    return map
+  }, [projects])
+
+  const clientCount = clientMap.size
+
+  function toggleClient(key: string) {
+    setExpandedClients(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  // Auto-expand all clients on first load
+  React.useEffect(() => {
+    if (clientMap.size > 0) setExpandedClients(new Set(clientMap.keys()))
+  }, [clientMap.size])
+
   return (
     <div style={{ maxWidth: 640, animation: 'fadeUp .3s ease both' }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 22 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>Projects</h1>
-          <p style={{ margin: '3px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>{projects.length} total · {installedCount} installed</p>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>Clients</h1>
+          <p style={{ margin: '3px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>{clientCount} client{clientCount!==1?'s':''} · {projects.length} project{projects.length!==1?'s':''} · {installedCount} installed</p>
         </div>
         <button className="new-btn" onClick={() => router.push('/projects/new')} style={{ background: 'linear-gradient(135deg,#F4884A,#df6f28)', border: 'none', borderRadius: 9, color: '#fff', fontWeight: 600, fontSize: 12, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, letterSpacing: '-0.02em', boxShadow: '0 2px 10px rgba(244,136,74,0.25), 0 1px 0 rgba(255,255,255,0.1) inset', flexShrink: 0 }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
@@ -367,53 +401,100 @@ function ProjectsSection({ projects, loading, confirmDelete, setConfirmDelete, h
         </button>
       </div>
 
-
       {loading && <div style={{ textAlign:'center',paddingTop:50 }}><div style={{ width:24,height:24,border:'2px solid rgba(244,136,74,0.25)',borderTopColor:'#F4884A',borderRadius:'50%',animation:'spin .8s linear infinite',margin:'0 auto 10px' }} /><p style={{ color:'rgba(255,255,255,0.2)',fontSize:12 }}>Loading…</p></div>}
 
       {!loading && projects.length === 0 && (
         <EmptyState onNew={() => router.push('/projects/new')} />
       )}
 
-      <div style={{ display:'flex',flexDirection:'column',gap:7 }}>
-        {projects.map((p: Project, i: number) => {
-          const fixtureCount = (p.markers||[]).filter((m:any) => m.type!=='power').length
-          const wireCount    = (p.wires||[]).length
-          const zoneCount    = (p.zones||[]).length
-          const isHovered    = hoveredId === p.id
+      <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
+        {Array.from(clientMap.entries()).map(([key, client], ci) => {
+          const expanded = expandedClients.has(key)
+          const initials = client.name.split(' ').map((w:string)=>w[0]).slice(0,2).join('').toUpperCase()
+          const multiProject = client.projects.length > 1
+          const allStatuses = [...new Set(client.projects.map((p:Project)=>p.status))]
+
           return (
-            <div key={p.id} className="dash-card" onClick={() => router.push(`/projects/${p.id}/map`)} onMouseEnter={() => setHoveredId(p.id)} onMouseLeave={() => setHoveredId(null)}
-              style={{ background:isHovered?'rgba(22,19,14,0.98)':'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.065)',borderRadius:13,padding:'14px 16px',cursor:'pointer',display:'flex',alignItems:'center',gap:13,boxShadow:'0 2px 14px rgba(0,0,0,.3)',animationDelay:`${i*.04}s`,position:'relative',overflow:'hidden' }}>
-              <div style={{ position:'absolute',left:0,top:10,bottom:10,width:2.5,borderRadius:2,background:STATUS_COLOR[p.status]||'#6b7280',opacity:.65 }} />
-              <div style={{ width:38,height:38,borderRadius:9,background:'rgba(244,136,74,0.06)',border:'1px solid rgba(244,136,74,0.09)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginLeft:7 }}>
-                <UpscapeMark size={22} />
-              </div>
-              <div style={{ flex:1,minWidth:0 }}>
-                <div className="card-name" style={{ fontWeight:600,fontSize:14,letterSpacing:'-0.025em',color:'rgba(255,255,255,0.86)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',transition:'color .18s' }}>{p.homeowner||p.name}</div>
-                <div style={{ color:'rgba(255,255,255,0.28)',fontSize:12,marginTop:2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',letterSpacing:'-0.01em' }}>{p.address}</div>
-                <div style={{ display:'flex',alignItems:'center',gap:7,marginTop:5 }}>
-                  <span style={{ background:STATUS_COLOR[p.status]+'16',color:STATUS_COLOR[p.status],borderRadius:5,fontSize:10,fontWeight:600,padding:'2px 6px',letterSpacing:'0.03em',textTransform:'uppercase' }}>{STATUS_LABEL[p.status]||'Draft'}</span>
-                  <span style={{ color:'rgba(255,255,255,0.18)',fontSize:11 }}>{fixtureCount} fixture{fixtureCount!==1?'s':''}{wireCount>0?` · ${wireCount}w`:''}{zoneCount>0?` · ${zoneCount}z`:''}</span>
-                  <span style={{ color:'rgba(255,255,255,0.13)',fontSize:11,marginLeft:'auto' }}>{fmt(p.created_at)}</span>
+            <div key={key} style={{ animation:`fadeUp .3s ease both`, animationDelay:`${ci*.06}s` }}>
+              {/* ── Client header ── */}
+              <div
+                className="client-header dash-card"
+                onClick={() => multiProject ? toggleClient(key) : router.push(`/projects/${client.projects[0].id}/map`)}
+                style={{ display:'flex',alignItems:'center',gap:12,padding:'13px 16px',background:'rgba(255,255,255,0.032)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:multiProject&&expanded?'13px 13px 0 0':'13px',cursor:'pointer',transition:'border-radius .2s,background .15s',position:'relative',overflow:'hidden' }}>
+                {/* color bar — use first project's status color */}
+                <div style={{ position:'absolute',left:0,top:8,bottom:8,width:2.5,borderRadius:2,background:STATUS_COLOR[client.projects[0].status]||'#6b7280',opacity:.7 }} />
+                {/* avatar */}
+                <div style={{ width:36,height:36,borderRadius:9,background:'linear-gradient(135deg,rgba(244,136,74,0.18),rgba(244,136,74,0.06))',border:'1px solid rgba(244,136,74,0.14)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:12,fontWeight:700,color:'rgba(244,136,74,0.9)',letterSpacing:'-0.02em',marginLeft:6 }}>{initials}</div>
+                <div style={{ flex:1,minWidth:0 }}>
+                  <div className="card-name" style={{ fontWeight:600,fontSize:14,letterSpacing:'-0.025em',color:'rgba(255,255,255,0.88)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{client.name}</div>
+                  <div style={{ color:'rgba(255,255,255,0.3)',fontSize:12,marginTop:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',letterSpacing:'-0.01em' }}>{client.address || 'No address'}</div>
+                </div>
+                <div style={{ display:'flex',alignItems:'center',gap:7,flexShrink:0 }}>
+                  {/* status badges for all projects */}
+                  {allStatuses.slice(0,2).map((s:string) => (
+                    <span key={s} style={{ background:STATUS_COLOR[s]+'16',color:STATUS_COLOR[s],borderRadius:5,fontSize:10,fontWeight:600,padding:'2px 6px',letterSpacing:'0.03em',textTransform:'uppercase' }}>{STATUS_LABEL[s]||s}</span>
+                  ))}
+                  {multiProject && (
+                    <span style={{ fontSize:11,color:'rgba(255,255,255,0.25)',background:'rgba(255,255,255,0.06)',borderRadius:6,padding:'2px 8px',fontWeight:500 }}>{client.projects.length}</span>
+                  )}
+                  {multiProject && (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" style={{ transform:expanded?'rotate(180deg)':'none',transition:'transform .2s',flexShrink:0 }}><path d="M6 9l6 6 6-6"/></svg>
+                  )}
+                  {!multiProject && (
+                    <span className="card-arrow" style={{ color:'rgba(255,255,255,0.22)',fontSize:17,lineHeight:1,opacity:.45 }}
+                      onClick={e=>{e.stopPropagation();router.push(`/projects/${client.projects[0].id}/map`)}}>›</span>
+                  )}
                 </div>
               </div>
-              <div style={{ display:'flex',alignItems:'center',gap:7,flexShrink:0 }}>
-                {confirmDelete===p.id ? (
-                  <>
-                    <button onClick={e=>{e.stopPropagation();deleteProject(p.id)}} style={{ background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.28)',borderRadius:7,color:'#ef4444',fontSize:11,fontWeight:600,padding:'3px 9px',cursor:'pointer' }}>Delete</button>
-                    <button onClick={e=>{e.stopPropagation();setConfirmDelete(null)}} style={{ background:'none',border:'1px solid rgba(255,255,255,0.08)',borderRadius:7,color:'rgba(255,255,255,0.28)',fontSize:11,padding:'3px 8px',cursor:'pointer' }}>Cancel</button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={e=>{e.stopPropagation();setConfirmDelete(p.id)}} style={{ background:'rgba(255,255,255,0.07)',border:'none',borderRadius:'50%',width:28,height:28,cursor:'pointer',padding:0,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="rgba(255,255,255,0.35)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M10 11v5M14 11v5" stroke="rgba(255,255,255,0.35)" strokeWidth="1.8" strokeLinecap="round"/>
-                      </svg>
-                    </button>
-                    <span className="card-arrow" style={{ color:'rgba(255,255,255,0.22)',fontSize:17,lineHeight:1,opacity:.45 }}>›</span>
-                  </>
-                )}
-              </div>
+
+              {/* ── Project rows (nested under client) ── */}
+              {(multiProject ? expanded : false) || (!multiProject) ? null : null}
+              {multiProject && expanded && (
+                <div style={{ borderLeft:'1px solid rgba(255,255,255,0.06)',borderRight:'1px solid rgba(255,255,255,0.06)',borderBottom:'1px solid rgba(255,255,255,0.06)',borderRadius:'0 0 13px 13px',overflow:'hidden' }}>
+                  {client.projects.map((p:Project, pi:number) => {
+                    const fixtureCount = (p.markers||[]).filter((m:any)=>m.type!=='power').length
+                    const wireCount    = (p.wires||[]).length
+                    const zoneCount    = (p.zones||[]).length
+                    const isHovered    = hoveredId === p.id
+                    const isLast       = pi === client.projects.length - 1
+                    return (
+                      <div key={p.id} className="dash-card" onClick={()=>router.push(`/projects/${p.id}/map`)} onMouseEnter={()=>setHoveredId(p.id)} onMouseLeave={()=>setHoveredId(null)}
+                        style={{ background:isHovered?'rgba(22,19,14,0.98)':'rgba(255,255,255,0.018)',borderBottom:isLast?'none':'1px solid rgba(255,255,255,0.045)',padding:'12px 16px 12px 20px',cursor:'pointer',display:'flex',alignItems:'center',gap:12,transition:'background .15s',position:'relative',overflow:'hidden' }}>
+                        {/* project color bar */}
+                        <div style={{ position:'absolute',left:0,top:8,bottom:8,width:2,borderRadius:2,background:STATUS_COLOR[p.status]||'#6b7280',opacity:.5 }} />
+                        {/* project icon */}
+                        <div style={{ width:30,height:30,borderRadius:7,background:'rgba(244,136,74,0.05)',border:'1px solid rgba(244,136,74,0.08)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginLeft:6 }}>
+                          <UpscapeMark size={16} />
+                        </div>
+                        <div style={{ flex:1,minWidth:0 }}>
+                          <div className="card-name" style={{ fontWeight:500,fontSize:13,letterSpacing:'-0.02em',color:'rgba(255,255,255,0.78)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',transition:'color .18s' }}>{p.name || p.address || 'Untitled project'}</div>
+                          <div style={{ display:'flex',alignItems:'center',gap:6,marginTop:3 }}>
+                            <span style={{ background:STATUS_COLOR[p.status]+'16',color:STATUS_COLOR[p.status],borderRadius:4,fontSize:9,fontWeight:600,padding:'1px 5px',letterSpacing:'0.04em',textTransform:'uppercase' }}>{STATUS_LABEL[p.status]||'Draft'}</span>
+                            <span style={{ color:'rgba(255,255,255,0.2)',fontSize:11 }}>{fixtureCount} fixture{fixtureCount!==1?'s':''}{wireCount>0?` · ${wireCount}w`:''}{zoneCount>0?` · ${zoneCount}z`:''}</span>
+                            <span style={{ color:'rgba(255,255,255,0.13)',fontSize:11,marginLeft:'auto' }}>{fmt(p.created_at)}</span>
+                          </div>
+                        </div>
+                        <div style={{ display:'flex',alignItems:'center',gap:7,flexShrink:0 }}>
+                          {confirmDelete===p.id ? (
+                            <>
+                              <button onClick={e=>{e.stopPropagation();deleteProject(p.id)}} style={{ background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.28)',borderRadius:7,color:'#ef4444',fontSize:11,fontWeight:600,padding:'3px 9px',cursor:'pointer' }}>Delete</button>
+                              <button onClick={e=>{e.stopPropagation();setConfirmDelete(null)}} style={{ background:'none',border:'1px solid rgba(255,255,255,0.08)',borderRadius:7,color:'rgba(255,255,255,0.28)',fontSize:11,padding:'3px 8px',cursor:'pointer' }}>Cancel</button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={e=>{e.stopPropagation();setConfirmDelete(p.id)}} style={{ background:'rgba(255,255,255,0.05)',border:'none',borderRadius:'50%',width:26,height:26,cursor:'pointer',padding:0,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="rgba(255,255,255,0.3)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 11v5M14 11v5" stroke="rgba(255,255,255,0.3)" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                              </button>
+                              <span className="card-arrow" style={{ color:'rgba(255,255,255,0.2)',fontSize:16,lineHeight:1,opacity:.45 }}>›</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
             </div>
           )
         })}
