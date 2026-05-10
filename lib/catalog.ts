@@ -83,7 +83,11 @@ const FIXTURE_WATTS: Record<string, number> = {
   uplight: 5, path: 3, flood: 7, well: 5, downlight: 5, hardscape: 3,
 }
 
-const WIRE_COST_PER_FOOT = 0.44 // based on AMP 12/2 cable: $109.99/250ft
+const WIRE_COST_PER_FOOT: Record<TierId, number> = {
+  budget:  0.52, // SUNVIE 12/2 250ft: $129.99/250ft
+  mid:     0.52, // SUNVIE 12/2 250ft: $129.99/250ft
+  premium: 0.44, // AMP 12/2 250ft: $109.99/250ft
+}
 
 export function calcQuote(project: { markers: Array<{ type: string; qty: number }>; wires: Array<{ feet: number }> }) {
   const wireFeet = (project.wires || []).reduce((s, w) => s + (w.feet || 0), 0)
@@ -131,7 +135,7 @@ export function calcQuote(project: { markers: Array<{ type: string; qty: number 
       labor += FIXTURES.power.laborEach * qty
     }
 
-    const wire = wireFeet * WIRE_COST_PER_FOOT
+    const wire = wireFeet * WIRE_COST_PER_FOOT[tierId]
     acc[tierId] = { lines, fixtures, labor, wire, total: fixtures + labor + wire, totalWatts }
     return acc
   }, {} as Record<TierId, { lines: { label: string; qty: number; unitPrice: number; total: number; sku: string; url: string }[]; fixtures: number; labor: number; wire: number; total: number; totalWatts: number }>)
