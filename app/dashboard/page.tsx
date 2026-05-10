@@ -334,7 +334,7 @@ function AvatarMenu({ initials, userEmail, logout, lightMode }: { initials: stri
       {open && (
         <>
           {/* panel */}
-          <div style={{ position: 'fixed', top: 62, right: 20, zIndex: 9999, width: 240, background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 16px 56px rgba(0,0,0,.9)', isolation: 'isolate' }}>
+          <div style={{ position: 'fixed', top: 62, right: 20, zIndex: 9999, width: 240, background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 16px 56px rgba(0,0,0,.95)', isolation: 'isolate', backdropFilter: 'none', WebkitBackdropFilter: 'none', opacity: 1 }}>
             {/* header */}
             <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#F4884A,#c0520a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{initials}</div>
