@@ -117,8 +117,15 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const [project, setProject] = useState<Project | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
   const [tool, setTool] = useState<ToolId>('select')
+  const [accentColor] = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_accent') || '#F4884A') : '#F4884A')
   type MapMode = 'sat-day' | 'sat-night' | '3d-dawn' | '3d-day' | '3d-dusk' | '3d-night'
-  const [mapMode, setMapMode] = useState<MapMode>('sat-day')
+  const [mapMode, setMapMode] = useState<MapMode>(() => {
+    if (typeof window === 'undefined') return 'sat-day'
+    const style = localStorage.getItem('upscape_map_style') || 'satellite'
+    const day   = localStorage.getItem('upscape_map_day') === '1'
+    if (style === 'terrain') return day ? '3d-day' : '3d-night'
+    return day ? 'sat-day' : 'sat-night'
+  })
   const [popup, setPopup] = useState<Marker | null>(null)
   const [wirePopup, setWirePopup] = useState<{ id: string; feet: number } | null>(null)
   const [wirePoints, setWirePoints] = useState<[number, number][]>([])
@@ -741,7 +748,6 @@ export default function MapClient({ projectId }: { projectId: string }) {
         <div style={{ display: 'flex', justifyContent: 'center', gap: 4, padding: '18px 16px 8px' }}>
           {TOOLS.map(t => {
             const isActive = tool === t.id
-            const color = FIXTURE_COLORS[t.id] || '#666'
             const Icon = t.icon
             return (
               <button
@@ -751,16 +757,16 @@ export default function MapClient({ projectId }: { projectId: string }) {
                 style={{
                   flex: 1, maxWidth: 52,
                   opacity: isActive ? 1 : 0.38,
-                  background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+                  background: isActive ? `${accentColor}18` : 'transparent',
                   backdropFilter: isActive ? 'blur(12px)' : 'none',
                   border: 'none',
                   borderRadius: 8, padding: '8px 2px 6px',
                   cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                  boxShadow: isActive ? `0 0 12px ${color}33` : 'none',
+                  boxShadow: isActive ? `0 0 12px ${accentColor}44` : 'none',
                   transition: 'opacity 0.15s, transform 0.15s, background 0.15s',
                 }}
               >
-                <div style={{ color: isActive ? color : 'rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20 }}>
+                <div style={{ color: isActive ? accentColor : 'rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20 }}>
                   <Icon />
                 </div>
                 <span style={{ fontSize: 9, fontWeight: 500, color: isActive ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.55)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{t.label}</span>

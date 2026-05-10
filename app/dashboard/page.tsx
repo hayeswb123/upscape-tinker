@@ -396,23 +396,41 @@ function InstallSection({ projects }: any) {
 
 // ── SETTINGS ──────────────────────────────────────────
 const ACCENT_OPTIONS = ['#F4884A','#3b82f6','#22c55e','#a855f7','#ec4899','#14b8a6']
-const MAP_STYLES = ['Satellite','Standard','Streets','Outdoors']
 
-function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+function Toggle({ on, onToggle, color = '#F4884A' }: { on: boolean; onToggle: () => void; color?: string }) {
   return (
-    <div onClick={onToggle} style={{ width:40,height:22,borderRadius:11,background:on?'#F4884A':'rgba(255,255,255,0.1)',cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0 }}>
+    <div onClick={onToggle} style={{ width:40,height:22,borderRadius:11,background:on?color:'rgba(255,255,255,0.1)',cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0 }}>
       <div style={{ position:'absolute',top:3,left:on?20:3,width:16,height:16,borderRadius:'50%',background:'#fff',transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,.3)' }} />
     </div>
   )
 }
 
+const MAP_STYLE_OPTIONS = [
+  { id: 'satellite', label: 'Satellite', desc: 'Aerial night view' },
+  { id: 'terrain',   label: 'Terrain',   desc: 'Topographic map' },
+]
+
 function SettingsSection({ userEmail, logout }: any) {
-  const [darkMode, setDarkMode]         = useState(true)
-  const [accentColor, setAccentColor]   = useState('#F4884A')
-  const [mapStyle, setMapStyle]         = useState('Satellite')
+  const [accentColor, setAccentColor]   = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_accent') || '#F4884A') : '#F4884A')
+  const [mapStyle, setMapStyle]         = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_style') || 'satellite') : 'satellite')
+  const [daytime, setDaytime]           = useState(() => typeof window !== 'undefined' ? localStorage.getItem('upscape_map_day') === '1' : false)
   const [quoteAlerts, setQuoteAlerts]   = useState(true)
   const [projectUpdates, setProjectUpdates] = useState(true)
   const [gmailCount] = useState(0)
+
+  function pickAccent(c: string) {
+    setAccentColor(c)
+    localStorage.setItem('upscape_accent', c)
+  }
+  function pickMapStyle(id: string) {
+    setMapStyle(id)
+    localStorage.setItem('upscape_map_style', id)
+  }
+  function toggleDay() {
+    const next = !daytime
+    setDaytime(next)
+    localStorage.setItem('upscape_map_day', next ? '1' : '0')
+  }
 
   const row = (label: string, right: React.ReactNode, sub?: string) => (
     <div style={{ padding:'13px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
@@ -438,39 +456,48 @@ function SettingsSection({ userEmail, logout }: any) {
 
       <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
 
-        {/* Appearance */}
-        {card('Appearance', <>
-          {row('Dark mode', <Toggle on={darkMode} onToggle={() => setDarkMode(v => !v)} />)}
-          {row('Accent color', (
-            <div style={{ display:'flex', gap:6 }}>
-              {ACCENT_OPTIONS.map(c => (
-                <div key={c} onClick={() => setAccentColor(c)} style={{ width:20, height:20, borderRadius:'50%', background:c, cursor:'pointer', outline: accentColor===c ? `2px solid ${c}` : 'none', outlineOffset:2, opacity: accentColor===c ? 1 : 0.55, transition:'opacity .15s,outline .15s' }} />
+        {/* Map */}
+        {card('Map', <>
+          {/* style picker */}
+          <div style={{ padding:'13px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{ fontSize:13, color:'rgba(255,255,255,0.72)', marginBottom:10 }}>Style</div>
+            <div style={{ display:'flex', gap:8 }}>
+              {MAP_STYLE_OPTIONS.map(opt => (
+                <div key={opt.id} onClick={() => pickMapStyle(opt.id)}
+                  style={{ flex:1, border:`1.5px solid ${mapStyle===opt.id ? accentColor : 'rgba(255,255,255,0.08)'}`, borderRadius:10, padding:'10px 12px', cursor:'pointer', background: mapStyle===opt.id ? `${accentColor}10` : 'rgba(255,255,255,0.02)', transition:'all .15s' }}>
+                  <div style={{ fontSize:13, fontWeight:600, color: mapStyle===opt.id ? accentColor : 'rgba(255,255,255,0.6)' }}>{opt.label}</div>
+                  <div style={{ fontSize:11, color:'rgba(255,255,255,0.25)', marginTop:2 }}>{opt.desc}</div>
+                </div>
               ))}
             </div>
-          ))}
-          {row('Map style', (
-            <select value={mapStyle} onChange={e => setMapStyle(e.target.value)} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, color:'rgba(255,255,255,0.7)', fontSize:12, padding:'4px 8px', cursor:'pointer', outline:'none' }}>
-              {MAP_STYLES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          ))}
+          </div>
+          {row('Daytime color', <Toggle on={daytime} onToggle={toggleDay} color={accentColor} />, daytime ? 'Light satellite view' : 'Dark night view')}
+        </>)}
+
+        {/* Appearance */}
+        {card('Appearance', <>
+          {row('Tool icon color', (
+            <div style={{ display:'flex', gap:6 }}>
+              {ACCENT_OPTIONS.map(c => (
+                <div key={c} onClick={() => pickAccent(c)}
+                  style={{ width:22, height:22, borderRadius:'50%', background:c, cursor:'pointer', outline: accentColor===c ? `2px solid ${c}` : 'none', outlineOffset:2.5, opacity: accentColor===c ? 1 : 0.45, transition:'opacity .15s,outline .15s' }} />
+              ))}
+            </div>
+          ), 'Color of map tool icons')}
         </>)}
 
         {/* Notifications */}
         {card('Notifications', <>
           {row('Gmail', (
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              {gmailCount > 0 ? (
-                <div style={{ background:'#ea4335', borderRadius:10, fontSize:11, fontWeight:700, color:'#fff', padding:'2px 7px', minWidth:22, textAlign:'center' }}>
-                  {gmailCount > 99 ? '99+' : gmailCount}
-                </div>
-              ) : (
-                <span style={{ fontSize:11, color:'rgba(255,255,255,0.2)' }}>No new</span>
-              )}
+              {gmailCount > 0
+                ? <div style={{ background:'#ea4335', borderRadius:10, fontSize:11, fontWeight:700, color:'#fff', padding:'2px 7px' }}>{gmailCount > 99 ? '99+' : gmailCount}</div>
+                : <span style={{ fontSize:11, color:'rgba(255,255,255,0.2)' }}>No new</span>}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"/><path d="M2 7l10 7 10-7" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"/></svg>
             </div>
           ), 'Upscape-related emails')}
-          {row('Quote alerts', <Toggle on={quoteAlerts} onToggle={() => setQuoteAlerts(v => !v)} />, 'Notify when quote is opened')}
-          {row('Project updates', <Toggle on={projectUpdates} onToggle={() => setProjectUpdates(v => !v)} />, 'Status change reminders')}
+          {row('Quote alerts', <Toggle on={quoteAlerts} onToggle={() => setQuoteAlerts(v => !v)} color={accentColor} />, 'Notify when quote is opened')}
+          {row('Project updates', <Toggle on={projectUpdates} onToggle={() => setProjectUpdates(v => !v)} color={accentColor} />, 'Status change reminders')}
         </>)}
 
       </div>
