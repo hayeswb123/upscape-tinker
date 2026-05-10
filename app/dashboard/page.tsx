@@ -62,6 +62,7 @@ export default function DashboardPage() {
     })
   }
 
+  const [ambientGlow, setAmbientGlow] = useState(() => typeof window !== 'undefined' ? +(localStorage.getItem('upscape_glow') || 70) : 70)
   const L = lightMode
 
   useEffect(() => {
@@ -125,11 +126,20 @@ export default function DashboardPage() {
         .upscape-light .dash-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.12), 0 0 0 1px rgba(244,136,74,.25) !important; border-color: rgba(244,136,74,.3) !important; }
         .upscape-light .dash-card:hover .card-name { color: rgba(0,0,0,.9) !important; }
         .upscape-light .card-name { color: rgba(0,0,0,.8) !important; }
+        /* flip all white text → dark in light mode */
+        .upscape-light h1, .upscape-light h2, .upscape-light h3 { color: rgba(0,0,0,0.85) !important; }
+        .upscape-light p { color: rgba(0,0,0,0.45) !important; }
+        .upscape-light span { color: rgba(0,0,0,0.6) !important; }
+        .upscape-light div { color: rgba(0,0,0,0.7); }
+        .upscape-light button:not(.new-btn):not(.empty-cta) { color: rgba(0,0,0,0.6) !important; }
+        .upscape-light input[type=range] { filter: none; }
+        .upscape-light .nav-item { color: rgba(0,0,0,0.45) !important; }
+        .upscape-light aside { scrollbar-color: rgba(0,0,0,0.1) transparent; }
       `}</style>
 
-      {/* ambient glows */}
-      <div style={{ position:'fixed',top:-80,left:60,width:340,height:200,borderRadius:'50%',background:'radial-gradient(ellipse,rgba(244,136,74,.07) 0%,transparent 70%)',pointerEvents:'none',animation:'ambientPulse 7s ease-in-out infinite' }} />
-      <div style={{ position:'fixed',bottom:0,left:180,width:300,height:300,borderRadius:'50%',background:'radial-gradient(ellipse,rgba(244,136,74,.035) 0%,transparent 70%)',pointerEvents:'none' }} />
+      {/* ambient glows — scale with ambientGlow (0–100) */}
+      <div style={{ position:'fixed',top:-80,left:60,width:340,height:200,borderRadius:'50%',background:`radial-gradient(ellipse,rgba(244,136,74,${(ambientGlow/100)*0.14}) 0%,transparent 70%)`,pointerEvents:'none',animation:'ambientPulse 7s ease-in-out infinite',transition:'opacity .4s' }} />
+      <div style={{ position:'fixed',bottom:0,left:180,width:300,height:300,borderRadius:'50%',background:`radial-gradient(ellipse,rgba(244,136,74,${(ambientGlow/100)*0.07}) 0%,transparent 70%)`,pointerEvents:'none',transition:'opacity .4s' }} />
 
       {/* ── SIDEBAR ── */}
       <aside style={{
@@ -229,7 +239,7 @@ export default function DashboardPage() {
         <main style={{ flex: 1, overflowY: 'auto', padding: '28px 28px 60px' }}>
           {section === 'projects' && <ProjectsSection projects={projects} loading={loading} confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} hoveredId={hoveredId} setHoveredId={setHoveredId} deleteProject={deleteProject} router={router} fmt={fmt} installedCount={installedCount} />}
           {section === 'products' && <ProductsSection />}
-          {section === 'settings' && <SettingsSection userEmail={userEmail} logout={logout} lightMode={L} toggleTheme={toggleTheme} />}
+          {section === 'settings' && <SettingsSection userEmail={userEmail} logout={logout} lightMode={L} toggleTheme={toggleTheme} ambientGlow={ambientGlow} setAmbientGlow={(v: number) => { setAmbientGlow(v); localStorage.setItem('upscape_glow', String(v)) }} />}
         </main>
       </div>
     </div>
@@ -562,11 +572,10 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   )
 }
 
-function SettingsSection({ userEmail, logout, lightMode, toggleTheme }: any) {
+function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlow, setAmbientGlow }: any) {
   const [active, setActive]         = useState('general')
   const [mapStyle, setMapStyle]     = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_style') || 'satellite') : 'satellite')
   const [daytime, setDaytime]       = useState(() => typeof window !== 'undefined' ? localStorage.getItem('upscape_map_day') === '1' : false)
-  const [ambientGlow, setAmbientGlow] = useState(70)
   const [animations, setAnimations] = useState(true)
   const [quoteAlerts, setQuoteAlerts]     = useState(true)
   const [projectUpdates, setProjectUpdates] = useState(true)
