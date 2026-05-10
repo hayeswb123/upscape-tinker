@@ -356,9 +356,7 @@ function AvatarMenu({ initials, userEmail, logout, lightMode }: { initials: stri
 }
 
 // ── PROJECTS ──────────────────────────────────────────
-function ProjectsSection({ projects, loading, confirmDelete, setConfirmDelete, hoveredId, setHoveredId, deleteProject, router, fmt, installedCount }: any) {
-  const [selectedClient, setSelectedClient] = React.useState<string | null>(null)
-
+function ProjectsSection({ projects, loading, router, installedCount }: any) {
   // Group projects by client
   const clientMap = React.useMemo(() => {
     const map = new Map<string, { name: string; address: string; projects: Project[] }>()
@@ -371,78 +369,6 @@ function ProjectsSection({ projects, loading, confirmDelete, setConfirmDelete, h
   }, [projects])
 
   const clientCount = clientMap.size
-
-  // ── CLIENT DETAIL VIEW ────────────────────────────
-  if (selectedClient) {
-    const client = clientMap.get(selectedClient)!
-    const initials = client.name.split(' ').map((w:string)=>w[0]).slice(0,2).join('').toUpperCase()
-    return (
-      <div style={{ maxWidth: 640, animation: 'fadeUp .25s ease both' }}>
-        {/* back + header */}
-        <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:24 }}>
-          <button onClick={()=>setSelectedClient(null)} style={{ background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,color:'rgba(255,255,255,0.45)',fontSize:13,padding:'6px 12px',cursor:'pointer',display:'flex',alignItems:'center',gap:6,flexShrink:0 }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-            Clients
-          </button>
-          <div style={{ width:1,height:20,background:'rgba(255,255,255,0.08)' }} />
-          <div style={{ display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0 }}>
-            <div style={{ width:34,height:34,borderRadius:9,background:'linear-gradient(135deg,rgba(244,136,74,0.2),rgba(244,136,74,0.07))',border:'1px solid rgba(244,136,74,0.16)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'rgba(244,136,74,0.9)',flexShrink:0 }}>{initials}</div>
-            <div style={{ minWidth:0 }}>
-              <div style={{ fontSize:16,fontWeight:700,letterSpacing:'-0.03em',color:'rgba(255,255,255,0.9)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{client.name}</div>
-              <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginTop:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{client.address || 'No address'}</div>
-            </div>
-          </div>
-          <button className="new-btn" onClick={() => router.push(`/projects/new?homeowner=${encodeURIComponent(client.name)}&address=${encodeURIComponent(client.address)}`)}
-            style={{ background:'linear-gradient(135deg,#F4884A,#df6f28)',border:'none',borderRadius:9,color:'#fff',fontWeight:600,fontSize:12,padding:'8px 14px',cursor:'pointer',display:'flex',alignItems:'center',gap:6,letterSpacing:'-0.02em',boxShadow:'0 2px 10px rgba(244,136,74,0.25)',flexShrink:0 }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
-            New project
-          </button>
-        </div>
-
-        {/* project list */}
-        <div style={{ display:'flex',flexDirection:'column',gap:7 }}>
-          {client.projects.map((p:Project, i:number) => {
-            const fixtureCount = (p.markers||[]).filter((m:any)=>m.type!=='power').length
-            const wireCount    = (p.wires||[]).length
-            const zoneCount    = (p.zones||[]).length
-            const isHovered    = hoveredId === p.id
-            return (
-              <div key={p.id} className="dash-card" onClick={()=>router.push(`/projects/${p.id}/map`)} onMouseEnter={()=>setHoveredId(p.id)} onMouseLeave={()=>setHoveredId(null)}
-                style={{ background:isHovered?'rgba(22,19,14,0.98)':'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.065)',borderRadius:13,padding:'14px 16px',cursor:'pointer',display:'flex',alignItems:'center',gap:13,boxShadow:'0 2px 14px rgba(0,0,0,.3)',animationDelay:`${i*.04}s`,position:'relative',overflow:'hidden' }}>
-                <div style={{ position:'absolute',left:0,top:10,bottom:10,width:2.5,borderRadius:2,background:STATUS_COLOR[p.status]||'#6b7280',opacity:.65 }} />
-                <div style={{ width:36,height:36,borderRadius:9,background:'rgba(244,136,74,0.06)',border:'1px solid rgba(244,136,74,0.09)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginLeft:7 }}>
-                  <UpscapeMark size={20} />
-                </div>
-                <div style={{ flex:1,minWidth:0 }}>
-                  <div className="card-name" style={{ fontWeight:600,fontSize:14,letterSpacing:'-0.025em',color:'rgba(255,255,255,0.86)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',transition:'color .18s' }}>{p.name || p.address || 'Untitled project'}</div>
-                  <div style={{ display:'flex',alignItems:'center',gap:7,marginTop:4 }}>
-                    <span style={{ background:STATUS_COLOR[p.status]+'16',color:STATUS_COLOR[p.status],borderRadius:5,fontSize:10,fontWeight:600,padding:'2px 6px',letterSpacing:'0.03em',textTransform:'uppercase' }}>{STATUS_LABEL[p.status]||'Draft'}</span>
-                    <span style={{ color:'rgba(255,255,255,0.22)',fontSize:11 }}>{fixtureCount} fixture{fixtureCount!==1?'s':''}{wireCount>0?` · ${wireCount}w`:''}{zoneCount>0?` · ${zoneCount}z`:''}</span>
-                    <span style={{ color:'rgba(255,255,255,0.15)',fontSize:11,marginLeft:'auto' }}>{fmt(p.created_at)}</span>
-                  </div>
-                </div>
-                <div style={{ display:'flex',alignItems:'center',gap:7,flexShrink:0 }}>
-                  {confirmDelete===p.id ? (
-                    <>
-                      <button onClick={e=>{e.stopPropagation();deleteProject(p.id)}} style={{ background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.28)',borderRadius:7,color:'#ef4444',fontSize:11,fontWeight:600,padding:'3px 9px',cursor:'pointer' }}>Delete</button>
-                      <button onClick={e=>{e.stopPropagation();setConfirmDelete(null)}} style={{ background:'none',border:'1px solid rgba(255,255,255,0.08)',borderRadius:7,color:'rgba(255,255,255,0.28)',fontSize:11,padding:'3px 8px',cursor:'pointer' }}>Cancel</button>
-                    </>
-                  ) : (
-                    <>
-                      <button onClick={e=>{e.stopPropagation();setConfirmDelete(p.id)}} style={{ background:'rgba(255,255,255,0.07)',border:'none',borderRadius:'50%',width:28,height:28,cursor:'pointer',padding:0,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="rgba(255,255,255,0.35)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 11v5M14 11v5" stroke="rgba(255,255,255,0.35)" strokeWidth="1.8" strokeLinecap="round"/></svg>
-                      </button>
-                      <span className="card-arrow" style={{ color:'rgba(255,255,255,0.22)',fontSize:17,lineHeight:1,opacity:.45 }}>›</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    )
-  }
 
   // ── CLIENTS LIST VIEW ─────────────────────────────
   return (
@@ -463,7 +389,7 @@ function ProjectsSection({ projects, loading, confirmDelete, setConfirmDelete, h
           const initials = client.name.split(' ').map((w:string)=>w[0]).slice(0,2).join('').toUpperCase()
           const allStatuses = [...new Set(client.projects.map((p:Project)=>p.status))]
           return (
-            <div key={key} className="dash-card" onClick={()=>setSelectedClient(key)}
+            <div key={key} className="dash-card" onClick={()=>router.push(`/clients/${encodeURIComponent(key)}`)}
               style={{ background:'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.065)',borderRadius:13,padding:'14px 16px',cursor:'pointer',display:'flex',alignItems:'center',gap:13,boxShadow:'0 2px 14px rgba(0,0,0,.3)',animation:'fadeUp .3s ease both',animationDelay:`${ci*.05}s`,position:'relative',overflow:'hidden' }}>
               <div style={{ position:'absolute',left:0,top:10,bottom:10,width:2.5,borderRadius:2,background:STATUS_COLOR[client.projects[0].status]||'#6b7280',opacity:.65 }} />
               {/* initials avatar */}
