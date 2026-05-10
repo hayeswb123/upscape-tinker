@@ -273,7 +273,7 @@ function AvatarMenu({ initials, userEmail, logout, lightMode }: { initials: stri
       {open && (
         <>
           {/* panel */}
-          <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 100, width: 240, background: lightMode ? '#ffffff' : '#0d0d0d', border: lightMode ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.09)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 16px 48px rgba(0,0,0,.5)' }}>
+          <div style={{ position: 'fixed', top: 62, right: 20, zIndex: 9999, width: 240, background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 16px 56px rgba(0,0,0,.9)', isolation: 'isolate' }}>
             {/* header */}
             <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#F4884A,#c0520a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{initials}</div>
@@ -575,7 +575,7 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlow, setAmbientGlow }: any) {
   const [active, setActive]         = useState('general')
   const [mapStyle, setMapStyle]     = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_style') || 'satellite') : 'satellite')
-  const [daytime, setDaytime]       = useState(() => typeof window !== 'undefined' ? localStorage.getItem('upscape_map_day') === '1' : false)
+  const [mapTime, setMapTime]       = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_time') || 'night') : 'night')
   const [animations, setAnimations] = useState(true)
   const [quoteAlerts, setQuoteAlerts]     = useState(true)
   const [projectUpdates, setProjectUpdates] = useState(true)
@@ -583,7 +583,7 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
   const scrollRef = React.useRef<HTMLDivElement>(null)
 
   function pickMapStyle(id: string) { setMapStyle(id); localStorage.setItem('upscape_map_style', id) }
-  function toggleDay() { const n=!daytime; setDaytime(n); localStorage.setItem('upscape_map_day',n?'1':'0') }
+  function pickMapTime(t: string) { setMapTime(t); localStorage.setItem('upscape_map_time', t) }
 
   function scrollTo(id: string) {
     setActive(id)
@@ -654,7 +654,27 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
               ))}
             </div>
           </div>
-          {row('Daytime color','Adjust how maps appear during daytime.',T(daytime,toggleDay),true)}
+          <div style={{ padding:'15px 20px' }}>
+            <div style={{ fontSize:13,color:'rgba(255,255,255,0.82)',fontWeight:500,marginBottom:2 }}>Time of day</div>
+            <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginBottom:12 }}>Sets the lighting when you open a project.</div>
+            <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
+              {[
+                { id:'dawn',  label:'Dawn',  sky:'linear-gradient(160deg,#1a0a2e,#6b2f7a,#e8836a)', dot:'#c97bd4' },
+                { id:'day',   label:'Day',   sky:'linear-gradient(160deg,#1a3a6b,#4a8fd4,#f5d876)', dot:'#f5d876' },
+                { id:'dusk',  label:'Dusk',  sky:'linear-gradient(160deg,#0d0a1a,#6b2510,#f4884a)', dot:'#f4884a' },
+                { id:'night', label:'Night', sky:'linear-gradient(160deg,#020408,#060d1a,#0d1e35)', dot:'#3b82f6' },
+              ].map(opt => (
+                <div key={opt.id} onClick={() => pickMapTime(opt.id)}
+                  style={{ borderRadius:10, border:`1.5px solid ${mapTime===opt.id?opt.dot:'rgba(255,255,255,0.07)'}`, overflow:'hidden', cursor:'pointer', transition:'border-color .15s', background:mapTime===opt.id?'rgba(255,255,255,0.04)':'transparent' }}>
+                  <div style={{ height:44, background:opt.sky }} />
+                  <div style={{ padding:'7px 8px', display:'flex', alignItems:'center', gap:5 }}>
+                    <div style={{ width:6, height:6, borderRadius:'50%', background:opt.dot, flexShrink:0, boxShadow:mapTime===opt.id?`0 0 6px ${opt.dot}`:'none' }} />
+                    <span style={{ fontSize:11, fontWeight: mapTime===opt.id?600:400, color: mapTime===opt.id?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.4)', letterSpacing:'-0.01em' }}>{opt.label}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </>)}
 
         {block('appearance','Appearance', <>

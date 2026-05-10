@@ -120,11 +120,13 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const [accentColor] = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_accent') || '#F4884A') : '#F4884A')
   type MapMode = 'sat-day' | 'sat-night' | '3d-dawn' | '3d-day' | '3d-dusk' | '3d-night'
   const [mapMode, setMapMode] = useState<MapMode>(() => {
-    if (typeof window === 'undefined') return 'sat-day'
+    if (typeof window === 'undefined') return 'sat-night'
     const style = localStorage.getItem('upscape_map_style') || 'satellite'
-    const day   = localStorage.getItem('upscape_map_day') === '1'
-    if (style === 'terrain') return day ? '3d-day' : '3d-night'
-    return day ? 'sat-day' : 'sat-night'
+    const time  = localStorage.getItem('upscape_map_time') || 'night'
+    if (style === 'terrain') {
+      return ({ dawn:'3d-dawn', day:'3d-day', dusk:'3d-dusk', night:'3d-night' }[time] || '3d-night') as MapMode
+    }
+    return (time === 'day' ? 'sat-day' : 'sat-night') as MapMode
   })
   const [popup, setPopup] = useState<Marker | null>(null)
   const [wirePopup, setWirePopup] = useState<{ id: string; feet: number } | null>(null)
