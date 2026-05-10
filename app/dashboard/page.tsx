@@ -7,30 +7,7 @@ const STATUS_LABEL: Record<string, string> = { draft: 'Draft', quoted: 'Quoted',
 const STATUS_COLOR: Record<string, string> = { draft: '#6b7280', quoted: '#F4884A', approved: '#22c55e', installed: '#a78bfa' }
 
 function UpscapeMark({ size = 36 }: { size?: number }) {
-  const s = size / 32
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <circle cx="4"  cy="4"  r={2.2*s*8} fill="rgba(244,136,74,0.8)"/>
-      <circle cx="10" cy="4"  r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
-      <circle cx="22" cy="4"  r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
-      <circle cx="28" cy="4"  r={2.2*s*8} fill="rgba(244,136,74,0.8)"/>
-      <circle cx="4"  cy="10" r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
-      <circle cx="10" cy="10" r={2.2*s*8} fill="rgba(244,136,74,0.85)"/>
-      <circle cx="22" cy="10" r={2.2*s*8} fill="rgba(244,136,74,0.85)"/>
-      <circle cx="28" cy="10" r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
-      <circle cx="10" cy="16" r={1.6*s*8} fill="rgba(244,136,74,0.4)"/>
-      <circle cx="16" cy="16" r={2.0*s*8} fill="rgba(244,136,74,0.65)"/>
-      <circle cx="22" cy="16" r={1.6*s*8} fill="rgba(244,136,74,0.4)"/>
-      <circle cx="4"  cy="22" r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
-      <circle cx="10" cy="22" r={2.2*s*8} fill="rgba(244,136,74,0.85)"/>
-      <circle cx="22" cy="22" r={2.2*s*8} fill="rgba(244,136,74,0.85)"/>
-      <circle cx="28" cy="22" r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
-      <circle cx="4"  cy="28" r={2.2*s*8} fill="rgba(244,136,74,0.8)"/>
-      <circle cx="10" cy="28" r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
-      <circle cx="22" cy="28" r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
-      <circle cx="28" cy="28" r={2.2*s*8} fill="rgba(244,136,74,0.8)"/>
-    </svg>
-  )
+  return <img src="/upscape-logo-mark.png" alt="Upscape" width={size} height={size} style={{ objectFit: 'contain', display: 'block' }} />
 }
 
 type Section = 'projects' | 'quotes' | 'products' | 'install' | 'settings'
@@ -273,16 +250,6 @@ function ProjectsSection({ projects, loading, confirmDelete, setConfirmDelete, h
         </button>
       </div>
 
-      {!loading && projects.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginBottom: 20 }}>
-          {[{label:'Draft',count:draftCount,color:'#6b7280'},{label:'Quoted',count:quotedCount,color:'#3b82f6'},{label:'Approved',count:approvedCount,color:'#22c55e'},{label:'Installed',count:installedCount,color:'#a78bfa'}].map(s => (
-            <div key={s.label} style={{ background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.05)',borderRadius:10,padding:'10px 12px' }}>
-              <div style={{ fontSize:20,fontWeight:700,color:s.count>0?s.color:'rgba(255,255,255,0.12)',letterSpacing:'-0.04em' }}>{s.count}</div>
-              <div style={{ fontSize:10,color:'rgba(255,255,255,0.25)',marginTop:2,letterSpacing:'0.04em',textTransform:'uppercase' }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {loading && <div style={{ textAlign:'center',paddingTop:50 }}><div style={{ width:24,height:24,border:'2px solid rgba(244,136,74,0.25)',borderTopColor:'#F4884A',borderRadius:'50%',animation:'spin .8s linear infinite',margin:'0 auto 10px' }} /><p style={{ color:'rgba(255,255,255,0.2)',fontSize:12 }}>Loading…</p></div>}
 

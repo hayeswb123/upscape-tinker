@@ -53,7 +53,7 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
         <span style={{ fontWeight: 600, fontSize: 14 }}>Quote — {project.homeowner || project.name}</span>
       </header>
 
-      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 100 }}>
+      <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, paddingBottom: 100, alignItems: 'start' }}>
         {(Object.keys(TIERS) as TierId[]).map(tierId => {
           const tier = TIERS[tierId]
           const q = quote[tierId]
@@ -65,46 +65,36 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
               onClick={() => selectTier(tierId)}
               style={{ background: 'var(--surface)', border: `2px solid ${selected ? tier.color : 'var(--border)'}`, borderRadius: 14, overflow: 'hidden', cursor: 'pointer', position: 'relative' }}
             >
-              <div style={{ borderTop: `3px solid ${tier.color}`, padding: '14px 16px 10px' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                  <span style={{ fontWeight: 700, fontSize: 17, color: tier.color }}>{tier.label}</span>
-                  <span style={{ fontSize: 13, color: 'var(--muted)' }}>{tier.tagline}</span>
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{tier.note}</div>
+              <div style={{ borderTop: `3px solid ${tier.color}`, padding: '12px 12px 8px' }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: tier.color }}>{tier.label}</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{tier.tagline}</div>
+                <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2, opacity: 0.7 }}>{tier.note}</div>
               </div>
 
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                <tbody>
-                  {q.lines.map((l, i) => (
-                    <tr key={i} style={{ borderTop: '1px solid var(--border)' }}>
-                      <td style={{ padding: '7px 16px', color: 'var(--muted)' }}>
-                        <div>{l.label}</div>
-                        {l.sku && <div style={{ fontSize: 11, color: 'var(--muted)', opacity: 0.6, marginTop: 1 }}>
-                          {l.url ? <a href={l.url} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ color: 'var(--accent)', textDecoration: 'none' }}>{l.sku}</a> : l.sku}
-                        </div>}
-                      </td>
-                      <td style={{ padding: '7px 4px', color: 'var(--muted)', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <div>×{l.qty}</div>
-                        <div style={{ fontSize: 11, opacity: 0.6 }}>{fmt(l.unitPrice)} ea</div>
-                      </td>
-                      <td style={{ padding: '7px 16px', textAlign: 'right', fontWeight: 500, whiteSpace: 'nowrap' }}>{fmt(l.total)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div style={{ padding: '10px 16px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--muted)' }}><span>Labor</span><span>{fmt(q.labor)}</span></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--muted)' }}><span>Wire ({wireFeet.toFixed(0)} ft)</span><span>{fmt(q.wire)}</span></div>
+              <div style={{ borderTop: '1px solid var(--border)', fontSize: 12 }}>
+                {q.lines.map((l, i) => (
+                  <div key={i} style={{ padding: '6px 12px', borderBottom: '1px solid var(--border)', color: 'var(--muted)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 4 }}>
+                      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.label.split('–')[0].trim()}</span>
+                      <span style={{ fontWeight: 600, flexShrink: 0 }}>{fmt(l.total)}</span>
+                    </div>
+                    <div style={{ fontSize: 10, opacity: 0.5, marginTop: 1 }}>×{l.qty} · {fmt(l.unitPrice)} ea</div>
+                  </div>
+                ))}
               </div>
 
-              <div style={{ padding: '12px 16px', background: 'var(--surface2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: 700, fontSize: 16 }}>Total</span>
-                <span style={{ fontWeight: 700, fontSize: 20, color: tier.color }}>{fmt(q.total)}</span>
+              <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border)', fontSize: 12, color: 'var(--muted)', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Labor</span><span>{fmt(q.labor)}</span></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Wire</span><span>{fmt(q.wire)}</span></div>
+              </div>
+
+              <div style={{ padding: '10px 12px', background: 'var(--surface2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 700, fontSize: 13 }}>Total</span>
+                <span style={{ fontWeight: 700, fontSize: 17, color: tier.color }}>{fmt(q.total)}</span>
               </div>
 
               {selected && (
-                <div style={{ position: 'absolute', top: 12, right: 12, background: tier.color, borderRadius: 6, fontSize: 11, fontWeight: 700, color: '#fff', padding: '3px 8px' }}>Selected</div>
+                <div style={{ position: 'absolute', top: 10, right: 10, background: tier.color, borderRadius: 5, fontSize: 10, fontWeight: 700, color: '#fff', padding: '2px 6px' }}>✓</div>
               )}
             </div>
           )
