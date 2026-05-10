@@ -266,7 +266,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
 
   function addMarkerToMap(map: mapboxgl.Map, m: Marker) {
     const el = markerEl(m.type)
-    const mb = new mapboxgl.Marker({ element: el, draggable: true })
+    const mb = new mapboxgl.Marker({ element: el, draggable: true, anchor: 'center' })
       .setLngLat([m.lng, m.lat])
       .addTo(map)
 
