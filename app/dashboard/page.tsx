@@ -95,7 +95,7 @@ export default function DashboardPage() {
   const installedCount = projects.filter(p => p.status === 'installed').length
 
   return (
-    <div className={L ? 'upscape-light' : 'upscape-dark'} style={{ display: 'flex', height: '100dvh', background: L ? '#f0ede7' : 'linear-gradient(145deg,#060504 0%,#0a0906 60%,#080604 100%)', overflow: 'hidden', transition: 'background .3s' }}>
+    <div className={L ? 'upscape-light' : 'upscape-dark'} style={{ display: 'flex', height: '100dvh', background: L ? '#ede9e3' : 'linear-gradient(145deg,#060504 0%,#0a0906 60%,#080604 100%)', overflow: 'hidden', transition: 'background .3s' }}>
       <style>{`
         @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         @keyframes spin   { to{transform:rotate(360deg)} }
@@ -107,10 +107,12 @@ export default function DashboardPage() {
         @keyframes drift3 { 0%{transform:translate(0,0) scale(1);opacity:.5} 50%{transform:translate(-6px,-20px) scale(.5);opacity:.2} 100%{transform:translate(8px,-32px) scale(.2);opacity:0} }
         @keyframes bgDrift { 0%,100%{transform:translate(0,0)} 33%{transform:translate(20px,-10px)} 66%{transform:translate(-12px,14px)} }
         @keyframes emptyFadeIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
-        .nav-item { transition: background .18s ease, color .18s ease, box-shadow .18s ease; }
+
+        /* ── DARK DEFAULTS ── */
+        .nav-item { transition: background .18s ease, color .18s ease; }
         .nav-item:hover { background: rgba(255,255,255,0.05) !important; }
         .dash-card { transition: transform .2s cubic-bezier(.22,1,.36,1), box-shadow .2s ease, border-color .2s ease; animation: fadeUp .35s ease both; }
-        .dash-card:hover { transform: translateY(-1px); box-shadow: 0 6px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(244,136,74,.16), 0 0 20px rgba(244,136,74,.05) !important; border-color: rgba(244,136,74,.2) !important; }
+        .dash-card:hover { transform: translateY(-1px); box-shadow: 0 6px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(244,136,74,.16) !important; border-color: rgba(244,136,74,.2) !important; }
         .dash-card:hover .card-arrow { transform: translateX(3px); opacity: .9 !important; }
         .dash-card:hover .card-name  { color: rgba(255,255,255,.98) !important; }
         .card-arrow { transition: transform .18s ease, opacity .18s ease; }
@@ -120,21 +122,49 @@ export default function DashboardPage() {
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 2px; }
-        /* ── LIGHT MODE OVERRIDES ── */
-        .upscape-light .nav-item:hover { background: rgba(0,0,0,0.06) !important; }
-        .upscape-light .dash-card { background: rgba(255,255,255,0.85) !important; border-color: rgba(0,0,0,0.09) !important; }
-        .upscape-light .dash-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.12), 0 0 0 1px rgba(244,136,74,.25) !important; border-color: rgba(244,136,74,.3) !important; }
-        .upscape-light .dash-card:hover .card-name { color: rgba(0,0,0,.9) !important; }
-        .upscape-light .card-name { color: rgba(0,0,0,.8) !important; }
-        /* flip all white text → dark in light mode */
-        .upscape-light h1, .upscape-light h2, .upscape-light h3 { color: rgba(0,0,0,0.85) !important; }
-        .upscape-light p { color: rgba(0,0,0,0.45) !important; }
-        .upscape-light span { color: rgba(0,0,0,0.6) !important; }
-        .upscape-light div { color: rgba(0,0,0,0.7); }
-        .upscape-light button:not(.new-btn):not(.empty-cta) { color: rgba(0,0,0,0.6) !important; }
-        .upscape-light input[type=range] { filter: none; }
-        .upscape-light .nav-item { color: rgba(0,0,0,0.45) !important; }
-        .upscape-light aside { scrollbar-color: rgba(0,0,0,0.1) transparent; }
+
+        /* ── LIGHT MODE — premium warm theme ── */
+
+        /* typography */
+        .upscape-light h1 { color: #1a1714 !important; }
+        .upscape-light h2, .upscape-light h3 { color: #1a1714 !important; }
+        .upscape-light p { color: #5c564f !important; }
+
+        /* sidebar */
+        .upscape-light .nav-item { color: #6b635c !important; font-weight: 400; }
+        .upscape-light .nav-item:hover { background: rgba(0,0,0,0.05) !important; color: #2a2420 !important; }
+
+        /* project cards */
+        .upscape-light .dash-card {
+          background: #ffffff !important;
+          border-color: #e0dbd4 !important;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04) !important;
+        }
+        .upscape-light .dash-card:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 1.5px rgba(244,136,74,.4) !important;
+          border-color: rgba(244,136,74,.35) !important;
+        }
+        .upscape-light .dash-card:hover .card-name { color: #1a1714 !important; }
+        .upscape-light .card-name { color: #231f1c !important; }
+
+        /* settings sections */
+        .upscape-light .settings-block {
+          background: #ffffff !important;
+          border: 1px solid #ddd8d1 !important;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+        }
+        .upscape-light .settings-row {
+          border-bottom-color: #ede9e3 !important;
+        }
+        .upscape-light .settings-label { color: #231f1c !important; font-weight: 500; }
+        .upscape-light .settings-desc  { color: #8a837a !important; }
+
+        /* scrollbar */
+        .upscape-light ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); }
+
+        /* new project button stays orange */
+        .upscape-light .new-btn:hover { box-shadow: 0 0 20px rgba(244,136,74,.4), 0 4px 12px rgba(0,0,0,.15) !important; }
       `}</style>
 
       {/* ambient glows — scale with ambientGlow (0–100) */}
@@ -599,10 +629,10 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
   const T = (on: boolean, fn: ()=>void) => <Toggle on={on} onToggle={fn} />
 
   const row = (label: string, desc: string, right: React.ReactNode, last=false) => (
-    <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'15px 20px',borderBottom:last?'none':'1px solid rgba(255,255,255,0.05)',gap:20 }}>
+    <div className="settings-row" style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'15px 20px',borderBottom:last?'none':'1px solid rgba(255,255,255,0.05)',gap:20 }}>
       <div style={{ flex:1,minWidth:0 }}>
-        <div style={{ fontSize:13,color:'rgba(255,255,255,0.82)',fontWeight:500,letterSpacing:'-0.01em' }}>{label}</div>
-        <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginTop:2 }}>{desc}</div>
+        <div className="settings-label" style={{ fontSize:13,color:'rgba(255,255,255,0.82)',fontWeight:500,letterSpacing:'-0.01em' }}>{label}</div>
+        <div className="settings-desc" style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginTop:2 }}>{desc}</div>
       </div>
       <div style={{ flexShrink:0 }}>{right}</div>
     </div>
@@ -611,7 +641,7 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
   const block = (id: string, title: string, children: React.ReactNode) => (
     <div id={'settings-'+id} style={{ marginBottom:28, scrollMarginTop:16 }}>
       <div style={{ fontSize:10,fontWeight:700,color:'#F4884A',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:10 }}>{title}</div>
-      <div style={{ background:'rgba(255,255,255,0.028)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:13,overflow:'hidden' }}>{children}</div>
+      <div className="settings-block" style={{ background:'rgba(255,255,255,0.028)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:13,overflow:'hidden' }}>{children}</div>
     </div>
   )
 
@@ -638,9 +668,9 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
       <div ref={scrollRef} style={{ display:'flex', flexDirection:'column' }}>
 
         {block('general','General', <>
-          <div style={{ padding:'15px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ fontSize:13,color:'rgba(255,255,255,0.82)',fontWeight:500,marginBottom:2 }}>Map style</div>
-            <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginBottom:12 }}>Choose how maps appear in the designer.</div>
+          <div className="settings-row" style={{ padding:'15px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+            <div className="settings-label" style={{ fontSize:13,color:'rgba(255,255,255,0.82)',fontWeight:500,marginBottom:2 }}>Map style</div>
+            <div className="settings-desc" style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginBottom:12 }}>Choose how maps appear in the designer.</div>
             <div style={{ display:'flex', gap:10 }}>
               {[{id:'satellite',label:'Satellite',desc:'Aerial night view'},{id:'terrain',label:'Terrain',desc:'Topographic map'}].map(opt => (
                 <div key={opt.id} onClick={() => pickMapStyle(opt.id)}
@@ -654,9 +684,9 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
               ))}
             </div>
           </div>
-          <div style={{ padding:'15px 20px' }}>
-            <div style={{ fontSize:13,color:'rgba(255,255,255,0.82)',fontWeight:500,marginBottom:2 }}>Time of day</div>
-            <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginBottom:12 }}>Sets the lighting when you open a project.</div>
+          <div className="settings-row" style={{ padding:'15px 20px' }}>
+            <div className="settings-label" style={{ fontSize:13,color:'rgba(255,255,255,0.82)',fontWeight:500,marginBottom:2 }}>Time of day</div>
+            <div className="settings-desc" style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginBottom:12 }}>Sets the lighting when you open a project.</div>
             <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
               {[
                 { id:'dawn',  label:'Dawn',  sky:'linear-gradient(160deg,#1a0a2e,#6b2f7a,#e8836a)', dot:'#c97bd4' },
