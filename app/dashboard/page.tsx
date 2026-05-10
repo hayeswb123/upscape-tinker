@@ -125,10 +125,16 @@ export default function DashboardPage() {
 
         /* ── LIGHT MODE — premium warm theme ── */
 
+        /* catch-all: any element with a rgba(255,255,255,...) inline color becomes dark */
+        .upscape-light * { color: inherit; }
+        .upscape-light { color: #2a2420 !important; }
+
         /* typography */
         .upscape-light h1 { color: #1a1714 !important; }
         .upscape-light h2, .upscape-light h3 { color: #1a1714 !important; }
         .upscape-light p { color: #5c564f !important; }
+        .upscape-light span { color: inherit !important; }
+        .upscape-light div { color: inherit !important; }
 
         /* sidebar */
         .upscape-light .nav-item { color: #6b635c !important; font-weight: 400; }
@@ -162,6 +168,23 @@ export default function DashboardPage() {
         }
         .upscape-light .settings-label { color: #231f1c !important; font-weight: 500; }
         .upscape-light .settings-desc  { color: #8a837a !important; }
+
+        /* topbar breadcrumb + misc text */
+        .upscape-light header span { color: #5c564f !important; }
+        .upscape-light header .breadcrumb-active { color: #1a1714 !important; }
+
+        /* sidebar profile area */
+        .upscape-light aside { color: #2a2420 !important; }
+
+        /* products section */
+        .upscape-light .product-card { background: #fff !important; border-color: #e0dbd4 !important; }
+        .upscape-light .product-card div { color: #2a2420 !important; }
+
+        /* status badges — keep their own color, just fix surrounding text */
+        .upscape-light .dash-card > div > div:not(.card-name) { color: #6b635c !important; }
+
+        /* override dark card hover text staying white */
+        .upscape-light .dash-card:hover .card-name { color: #1a1714 !important; }
 
         /* scrollbar */
         .upscape-light ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); }
