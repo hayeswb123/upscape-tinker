@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState, use } from 'react'
+import React, { useEffect, useState, use, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, type Project } from '@/lib/supabase'
 
@@ -18,6 +18,7 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [uploading, setUploading] = useState<string | null>(null) // project id being uploaded
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -36,6 +37,22 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
     setProjects(prev => prev.filter(p => p.id !== id))
     setConfirmDelete(null)
     await supabase.from('projects').delete().eq('id', id)
+  }
+
+  async function uploadImage(projectId: string, file: File) {
+    setUploading(projectId)
+    try {
+      const ext  = file.name.split('.').pop()
+      const path = `${projectId}/${Date.now()}.${ext}`
+      const { error: upErr } = await supabase.storage.from('project-images').upload(path, file, { upsert: true })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage.from('project-images').getPublicUrl(path)
+      await supabase.from('projects').update({ cover_image: publicUrl }).eq('id', projectId)
+      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, cover_image: publicUrl } : p))
+    } catch (e: any) {
+      alert('Upload failed: ' + e.message)
+    }
+    setUploading(null)
   }
 
   const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -108,6 +125,8 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
             const wireCount    = (p.wires || []).length
             const zoneCount    = (p.zones || []).length
             const isHovered    = hoveredId === p.id
+            const isUploading  = uploading === p.id
+            const fileInputRef = React.createRef<HTMLInputElement>()
             return (
               <div key={p.id} className="dash-card"
                 onClick={() => router.push(`/projects/${p.id}/map`)}
@@ -115,8 +134,27 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
                 onMouseLeave={() => setHoveredId(null)}
                 style={{ background: isHovered ? 'rgba(22,19,14,0.98)' : 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.065)', borderRadius: 13, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 13, boxShadow: '0 2px 14px rgba(0,0,0,.3)', animation: 'fadeUp .3s ease both', animationDelay: `${i * .04}s`, position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', left: 0, top: 10, bottom: 10, width: 2.5, borderRadius: 2, background: STATUS_COLOR[p.status] || '#6b7280', opacity: .65 }} />
-                <div style={{ width: 38, height: 38, borderRadius: 9, background: 'rgba(244,136,74,0.06)', border: '1px solid rgba(244,136,74,0.09)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: 7 }}>
-                  <UpscapeMark size={22} />
+
+                {/* thumbnail / upload zone */}
+                <div
+                  onClick={e => { e.stopPropagation(); fileInputRef.current?.click() }}
+                  style={{ width: 52, height: 52, borderRadius: 10, background: 'rgba(244,136,74,0.06)', border: '1px solid rgba(244,136,74,0.09)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: 7, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
+                  {p.cover_image
+                    ? <img src={p.cover_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : isUploading
+                      ? <div style={{ width: 18, height: 18, border: '2px solid rgba(244,136,74,0.25)', borderTopColor: '#F4884A', borderRadius: '50%', animation: 'spin .8s linear infinite' }} />
+                      : <UpscapeMark size={22} />
+                  }
+                  {/* camera overlay on hover */}
+                  {!isUploading && (
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity .15s' }}
+                      onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                      onMouseLeave={e => (e.currentTarget.style.opacity = '0')}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    </div>
+                  )}
+                  <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }}
+                    onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(p.id, f) }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="card-name" style={{ fontWeight: 600, fontSize: 14, letterSpacing: '-0.025em', color: 'rgba(255,255,255,0.86)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', transition: 'color .18s' }}>{p.name || p.address || 'Untitled project'}</div>
