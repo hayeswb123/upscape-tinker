@@ -395,33 +395,87 @@ function InstallSection({ projects }: any) {
 }
 
 // ── SETTINGS ──────────────────────────────────────────
-function SettingsSection({ userEmail, logout }: any) {
-  const groups = [
-    { label:'Account', items:['Email & password','Profile & avatar','Billing'] },
-    { label:'Appearance', items:['Dark mode','Accent color','Map default style'] },
-    { label:'Company', items:['Company name','Branding & logo','Service area'] },
-    { label:'Team', items:['Members & roles','Permissions','Invite team'] },
-    { label:'Integrations', items:['SendGrid (email)','Mapbox','CRM connect'] },
-    { label:'Notifications', items:['Quote alerts','Project updates','Install reminders'] },
-  ]
+const ACCENT_OPTIONS = ['#F4884A','#3b82f6','#22c55e','#a855f7','#ec4899','#14b8a6']
+const MAP_STYLES = ['Satellite','Standard','Streets','Outdoors']
+
+function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
-    <div style={{ maxWidth: 520, animation:'fadeUp .3s ease both' }}>
-      <h1 style={{ margin:'0 0 6px',fontSize:22,fontWeight:700,letterSpacing:'-0.03em',color:'rgba(255,255,255,0.92)' }}>Settings</h1>
-      <p style={{ margin:'0 0 22px',fontSize:12,color:'rgba(255,255,255,0.25)' }}>{userEmail}</p>
-      <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
-        {groups.map(g => (
-          <div key={g.label} style={{ background:'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:12,overflow:'hidden' }}>
-            <div style={{ padding:'10px 16px',borderBottom:'1px solid rgba(255,255,255,0.04)',fontSize:11,fontWeight:600,color:'rgba(255,255,255,0.3)',letterSpacing:'0.06em',textTransform:'uppercase' }}>{g.label}</div>
-            {g.items.map((item,i) => (
-              <div key={item} style={{ padding:'11px 16px',display:'flex',alignItems:'center',borderBottom:i<g.items.length-1?'1px solid rgba(255,255,255,0.03)':'none',cursor:'pointer',transition:'background .15s' }}>
-                <span style={{ fontSize:13,color:'rgba(255,255,255,0.6)',letterSpacing:'-0.01em' }}>{item}</span>
-                <span style={{ marginLeft:'auto',color:'rgba(255,255,255,0.18)',fontSize:14 }}>›</span>
-              </div>
-            ))}
-          </div>
-        ))}
+    <div onClick={onToggle} style={{ width:40,height:22,borderRadius:11,background:on?'#F4884A':'rgba(255,255,255,0.1)',cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0 }}>
+      <div style={{ position:'absolute',top:3,left:on?20:3,width:16,height:16,borderRadius:'50%',background:'#fff',transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,.3)' }} />
+    </div>
+  )
+}
+
+function SettingsSection({ userEmail, logout }: any) {
+  const [darkMode, setDarkMode]         = useState(true)
+  const [accentColor, setAccentColor]   = useState('#F4884A')
+  const [mapStyle, setMapStyle]         = useState('Satellite')
+  const [quoteAlerts, setQuoteAlerts]   = useState(true)
+  const [projectUpdates, setProjectUpdates] = useState(true)
+  const [gmailCount] = useState(0)
+
+  const row = (label: string, right: React.ReactNode, sub?: string) => (
+    <div style={{ padding:'13px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
+      <div>
+        <div style={{ fontSize:13, color:'rgba(255,255,255,0.72)', letterSpacing:'-0.01em' }}>{label}</div>
+        {sub && <div style={{ fontSize:11, color:'rgba(255,255,255,0.25)', marginTop:2 }}>{sub}</div>}
       </div>
-      <button onClick={logout} style={{ marginTop:16,width:'100%',background:'transparent',border:'1px solid rgba(239,68,68,0.2)',borderRadius:10,color:'rgba(239,68,68,0.6)',fontSize:13,fontWeight:500,padding:'11px',cursor:'pointer',letterSpacing:'-0.01em',transition:'border-color .15s,color .15s' }}>Sign out</button>
+      {right}
+    </div>
+  )
+
+  const card = (label: string, children: React.ReactNode) => (
+    <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:12, overflow:'hidden' }}>
+      <div style={{ padding:'9px 16px', fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.25)', letterSpacing:'0.08em', textTransform:'uppercase', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>{label}</div>
+      {children}
+    </div>
+  )
+
+  return (
+    <div style={{ maxWidth:480, animation:'fadeUp .3s ease both' }}>
+      <h1 style={{ margin:'0 0 6px', fontSize:22, fontWeight:700, letterSpacing:'-0.03em', color:'rgba(255,255,255,0.92)' }}>Settings</h1>
+      <p style={{ margin:'0 0 22px', fontSize:12, color:'rgba(255,255,255,0.25)' }}>{userEmail}</p>
+
+      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+
+        {/* Appearance */}
+        {card('Appearance', <>
+          {row('Dark mode', <Toggle on={darkMode} onToggle={() => setDarkMode(v => !v)} />)}
+          {row('Accent color', (
+            <div style={{ display:'flex', gap:6 }}>
+              {ACCENT_OPTIONS.map(c => (
+                <div key={c} onClick={() => setAccentColor(c)} style={{ width:20, height:20, borderRadius:'50%', background:c, cursor:'pointer', outline: accentColor===c ? `2px solid ${c}` : 'none', outlineOffset:2, opacity: accentColor===c ? 1 : 0.55, transition:'opacity .15s,outline .15s' }} />
+              ))}
+            </div>
+          ))}
+          {row('Map style', (
+            <select value={mapStyle} onChange={e => setMapStyle(e.target.value)} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, color:'rgba(255,255,255,0.7)', fontSize:12, padding:'4px 8px', cursor:'pointer', outline:'none' }}>
+              {MAP_STYLES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          ))}
+        </>)}
+
+        {/* Notifications */}
+        {card('Notifications', <>
+          {row('Gmail', (
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              {gmailCount > 0 ? (
+                <div style={{ background:'#ea4335', borderRadius:10, fontSize:11, fontWeight:700, color:'#fff', padding:'2px 7px', minWidth:22, textAlign:'center' }}>
+                  {gmailCount > 99 ? '99+' : gmailCount}
+                </div>
+              ) : (
+                <span style={{ fontSize:11, color:'rgba(255,255,255,0.2)' }}>No new</span>
+              )}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"/><path d="M2 7l10 7 10-7" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"/></svg>
+            </div>
+          ), 'Upscape-related emails')}
+          {row('Quote alerts', <Toggle on={quoteAlerts} onToggle={() => setQuoteAlerts(v => !v)} />, 'Notify when quote is opened')}
+          {row('Project updates', <Toggle on={projectUpdates} onToggle={() => setProjectUpdates(v => !v)} />, 'Status change reminders')}
+        </>)}
+
+      </div>
+
+      <button onClick={logout} style={{ marginTop:16, width:'100%', background:'transparent', border:'1px solid rgba(239,68,68,0.2)', borderRadius:10, color:'rgba(239,68,68,0.6)', fontSize:13, fontWeight:500, padding:'11px', cursor:'pointer', letterSpacing:'-0.01em' }}>Sign out</button>
     </div>
   )
 }
