@@ -562,116 +562,120 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   )
 }
 
-const SETTINGS_NAV = ['General','Appearance','Notifications']
-
 function SettingsSection({ userEmail, logout, lightMode, toggleTheme }: any) {
-  const [sub, setSub]               = useState('General')
+  const [active, setActive]         = useState('general')
   const [mapStyle, setMapStyle]     = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_style') || 'satellite') : 'satellite')
   const [daytime, setDaytime]       = useState(() => typeof window !== 'undefined' ? localStorage.getItem('upscape_map_day') === '1' : false)
   const [ambientGlow, setAmbientGlow] = useState(70)
   const [animations, setAnimations] = useState(true)
   const [quoteAlerts, setQuoteAlerts]     = useState(true)
   const [projectUpdates, setProjectUpdates] = useState(true)
-  const [systemUpdates, setSystemUpdates]   = useState(false)
   const [gmailCount] = useState(0)
+  const scrollRef = React.useRef<HTMLDivElement>(null)
 
   function pickMapStyle(id: string) { setMapStyle(id); localStorage.setItem('upscape_map_style', id) }
   function toggleDay() { const n=!daytime; setDaytime(n); localStorage.setItem('upscape_map_day',n?'1':'0') }
 
+  function scrollTo(id: string) {
+    setActive(id)
+    document.getElementById('settings-'+id)?.scrollIntoView({ behavior:'smooth', block:'start' })
+  }
+
+  const TABS = [
+    { id:'general', label:'General' },
+    { id:'appearance', label:'Appearance' },
+    { id:'notifications', label:'Notifications' },
+  ]
+
   const T = (on: boolean, fn: ()=>void) => <Toggle on={on} onToggle={fn} />
 
-  const row = (label: string, sub: string, right: React.ReactNode, last=false) => (
-    <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px',borderBottom:last?'none':'1px solid rgba(255,255,255,0.05)',gap:16 }}>
-      <div>
-        <div style={{ fontSize:13,color:'rgba(255,255,255,0.78)',fontWeight:500,letterSpacing:'-0.01em' }}>{label}</div>
-        <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginTop:2 }}>{sub}</div>
+  const row = (label: string, desc: string, right: React.ReactNode, last=false) => (
+    <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'15px 20px',borderBottom:last?'none':'1px solid rgba(255,255,255,0.05)',gap:20 }}>
+      <div style={{ flex:1,minWidth:0 }}>
+        <div style={{ fontSize:13,color:'rgba(255,255,255,0.82)',fontWeight:500,letterSpacing:'-0.01em' }}>{label}</div>
+        <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginTop:2 }}>{desc}</div>
       </div>
       <div style={{ flexShrink:0 }}>{right}</div>
     </div>
   )
 
-  const section = (title: string, children: React.ReactNode) => (
-    <div style={{ marginBottom:20 }}>
-      <div style={{ fontSize:10,fontWeight:700,color:'#F4884A',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:8,paddingLeft:2 }}>{title}</div>
-      <div style={{ background:'rgba(255,255,255,0.028)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:12,overflow:'hidden' }}>{children}</div>
+  const block = (id: string, title: string, children: React.ReactNode) => (
+    <div id={'settings-'+id} style={{ marginBottom:28, scrollMarginTop:16 }}>
+      <div style={{ fontSize:10,fontWeight:700,color:'#F4884A',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:10 }}>{title}</div>
+      <div style={{ background:'rgba(255,255,255,0.028)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:13,overflow:'hidden' }}>{children}</div>
     </div>
   )
 
   const mapIcons: Record<string,React.ReactNode> = {
-    satellite: <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.5)"/><rect x="14" y="2" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.3)"/><rect x="2" y="14" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.3)"/><rect x="14" y="14" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.5)"/></svg>,
-    terrain:   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M2 18L8 8l4 6 4-8 6 12H2z" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2"/></svg>,
+    satellite: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.55)"/><rect x="14" y="2" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.3)"/><rect x="2" y="14" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.3)"/><rect x="14" y="14" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.55)"/></svg>,
+    terrain:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M2 18L8 8l4 6 4-8 6 12H2z" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.45)" strokeWidth="1.3"/></svg>,
   }
 
   return (
-    <div style={{ display:'flex', gap:0, height:'100%', animation:'fadeUp .3s ease both', maxWidth:760 }}>
-      {/* left nav */}
-      <div style={{ width:180,flexShrink:0,paddingTop:4,paddingRight:16 }}>
-        <div style={{ fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.2)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:10,paddingLeft:10 }}>Settings</div>
-        {SETTINGS_NAV.map(item => (
-          <button key={item} onClick={()=>setSub(item)} style={{ width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 10px',borderRadius:8,border:'none',background:sub===item?'rgba(255,255,255,0.07)':'transparent',color:sub===item?'rgba(255,255,255,0.88)':'rgba(255,255,255,0.4)',fontSize:13,cursor:'pointer',textAlign:'left',transition:'background .15s,color .15s',marginBottom:1 }}>
-            {item}
-            {sub===item && <div style={{ width:5,height:5,borderRadius:'50%',background:'#F4884A',boxShadow:'0 0 6px rgba(244,136,74,0.7)',flexShrink:0 }} />}
+    <div style={{ maxWidth:560, animation:'fadeUp .3s ease both' }}>
+
+      {/* horizontal tab bar */}
+      <div style={{ display:'flex', gap:2, marginBottom:24, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10, padding:3 }}>
+        {TABS.map(t => (
+          <button key={t.id} onClick={() => scrollTo(t.id)}
+            style={{ flex:1, padding:'7px 12px', borderRadius:7, border:'none', background: active===t.id ? 'rgba(255,255,255,0.08)' : 'transparent', color: active===t.id ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.38)', fontSize:12, fontWeight: active===t.id ? 600 : 400, cursor:'pointer', letterSpacing:'-0.01em', transition:'all .15s', position:'relative' }}>
+            {t.label}
+            {active===t.id && <div style={{ position:'absolute',bottom:2,left:'50%',transform:'translateX(-50%)',width:16,height:2,borderRadius:1,background:'#F4884A' }} />}
           </button>
         ))}
       </div>
 
-      {/* right content */}
-      <div style={{ flex:1,minWidth:0,borderLeft:'1px solid rgba(255,255,255,0.06)',paddingLeft:24,paddingTop:4 }}>
-        {sub === 'General' && <>
-          {section('General', <>
-            <div style={{ padding:'14px 20px',borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ fontSize:13,color:'rgba(255,255,255,0.78)',fontWeight:500,marginBottom:2 }}>Map style</div>
-              <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginBottom:12 }}>Choose how maps appear in the designer.</div>
-              <div style={{ display:'flex',gap:10 }}>
-                {[{id:'satellite',label:'Satellite',desc:'Aerial night view'},{id:'terrain',label:'Terrain',desc:'Topographic map'}].map(opt=>(
-                  <div key={opt.id} onClick={()=>pickMapStyle(opt.id)}
-                    style={{ flex:1,display:'flex',alignItems:'center',gap:10,padding:'12px 14px',borderRadius:10,border:`1.5px solid ${mapStyle===opt.id?'#F4884A':'rgba(255,255,255,0.08)'}`,background:mapStyle===opt.id?'rgba(244,136,74,0.08)':'rgba(255,255,255,0.02)',cursor:'pointer',transition:'all .15s' }}>
-                    <div style={{ color:'rgba(255,255,255,0.4)',flexShrink:0 }}>{mapIcons[opt.id]}</div>
-                    <div>
-                      <div style={{ fontSize:13,fontWeight:600,color:mapStyle===opt.id?'#F4884A':'rgba(255,255,255,0.65)',letterSpacing:'-0.01em' }}>{opt.label}</div>
-                      <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginTop:1 }}>{opt.desc}</div>
-                    </div>
+      {/* scrollable content — all sections on one page */}
+      <div ref={scrollRef} style={{ display:'flex', flexDirection:'column' }}>
+
+        {block('general','General', <>
+          <div style={{ padding:'15px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ fontSize:13,color:'rgba(255,255,255,0.82)',fontWeight:500,marginBottom:2 }}>Map style</div>
+            <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginBottom:12 }}>Choose how maps appear in the designer.</div>
+            <div style={{ display:'flex', gap:10 }}>
+              {[{id:'satellite',label:'Satellite',desc:'Aerial night view'},{id:'terrain',label:'Terrain',desc:'Topographic map'}].map(opt => (
+                <div key={opt.id} onClick={() => pickMapStyle(opt.id)}
+                  style={{ flex:1,display:'flex',alignItems:'center',gap:10,padding:'12px 14px',borderRadius:10,border:`1.5px solid ${mapStyle===opt.id?'#F4884A':'rgba(255,255,255,0.08)'}`,background:mapStyle===opt.id?'rgba(244,136,74,0.08)':'rgba(255,255,255,0.02)',cursor:'pointer',transition:'all .15s' }}>
+                  <div style={{ color:'rgba(255,255,255,0.5)',flexShrink:0 }}>{mapIcons[opt.id]}</div>
+                  <div>
+                    <div style={{ fontSize:13,fontWeight:600,color:mapStyle===opt.id?'#F4884A':'rgba(255,255,255,0.65)',letterSpacing:'-0.01em' }}>{opt.label}</div>
+                    <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginTop:1 }}>{opt.desc}</div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-            {row('Daytime color','Adjust how maps appear during daytime.',T(daytime,toggleDay),true)}
-          </>)}
-        </>}
+          </div>
+          {row('Daytime color','Adjust how maps appear during daytime.',T(daytime,toggleDay),true)}
+        </>)}
 
-        {sub === 'Appearance' && <>
-          {section('Appearance', <>
-            {row('Dark / Light mode','Toggle between dark and light interface.',(
-              <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-                <span style={{ fontSize:11,color:'rgba(255,255,255,0.3)',minWidth:28 }}>{lightMode?'Light':'Dark'}</span>
-                <Toggle on={lightMode} onToggle={toggleTheme} />
-              </div>
-            ))}
-            {row('Ambient glow','Adjust the intensity of ambient glow.',(
-              <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-                <input type="range" min={0} max={100} value={ambientGlow} onChange={e=>setAmbientGlow(+e.target.value)}
-                  style={{ width:120,accentColor:'#F4884A',cursor:'pointer' }} />
-                <span style={{ fontSize:11,color:'rgba(255,255,255,0.3)',minWidth:32,textAlign:'right' }}>{ambientGlow}%</span>
-              </div>
-            ))}
-            {row('Animations','Enable interface animations and transitions.',T(animations,()=>setAnimations(v=>!v)),true)}
-          </>)}
-        </>}
+        {block('appearance','Appearance', <>
+          {row('Dark / Light mode','Toggle between dark and light interface.',(
+            <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+              <span style={{ fontSize:11,color:'rgba(255,255,255,0.3)',minWidth:28 }}>{lightMode?'Light':'Dark'}</span>
+              <Toggle on={lightMode} onToggle={toggleTheme} />
+            </div>
+          ))}
+          {row('Ambient glow','Adjust the intensity of ambient glow.',(
+            <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+              <input type="range" min={0} max={100} value={ambientGlow} onChange={e=>setAmbientGlow(+e.target.value)} style={{ width:110,accentColor:'#F4884A',cursor:'pointer' }} />
+              <span style={{ fontSize:11,color:'rgba(255,255,255,0.3)',minWidth:30,textAlign:'right' }}>{ambientGlow}%</span>
+            </div>
+          ))}
+          {row('Animations','Enable interface animations and transitions.',T(animations,()=>setAnimations(v=>!v)),true)}
+        </>)}
 
-        {sub === 'Notifications' && <>
-          {section('Notifications', <>
-            {row('Quote alerts','Notify when a quote is opened.',T(quoteAlerts,()=>setQuoteAlerts(v=>!v)))}
-            {row('Project updates','Receive project status change reminders.',T(projectUpdates,()=>setProjectUpdates(v=>!v)))}
-            {row('Gmail',`Upscape-related emails · ${gmailCount>0?(gmailCount>99?'99+':gmailCount)+' unread':'No new'}`,
-              gmailCount>0
-                ? <div style={{ background:'#ea4335',borderRadius:10,fontSize:11,fontWeight:700,color:'#fff',padding:'2px 8px' }}>{gmailCount>99?'99+':gmailCount}</div>
-                : <span style={{ fontSize:11,color:'rgba(255,255,255,0.2)' }}>No new</span>,
-              true
-            )}
-          </>)}
-        </>}
+        {block('notifications','Notifications', <>
+          {row('Quote alerts','Notify when a quote is opened.',T(quoteAlerts,()=>setQuoteAlerts(v=>!v)))}
+          {row('Project updates','Receive project status change reminders.',T(projectUpdates,()=>setProjectUpdates(v=>!v)))}
+          {row('Gmail','Upscape-related emails',
+            gmailCount > 0
+              ? <div style={{ background:'#ea4335',borderRadius:10,fontSize:11,fontWeight:700,color:'#fff',padding:'2px 8px' }}>{gmailCount>99?'99+':gmailCount}</div>
+              : <span style={{ fontSize:11,color:'rgba(255,255,255,0.2)' }}>No new</span>,
+            true
+          )}
+        </>)}
 
-        <button onClick={logout} style={{ marginTop:8,background:'transparent',border:'1px solid rgba(239,68,68,0.18)',borderRadius:9,color:'rgba(239,68,68,0.55)',fontSize:12,fontWeight:500,padding:'9px 18px',cursor:'pointer' }}>Sign out</button>
+        <button onClick={logout} style={{ marginTop:4,alignSelf:'flex-start',background:'transparent',border:'1px solid rgba(239,68,68,0.18)',borderRadius:9,color:'rgba(239,68,68,0.55)',fontSize:12,fontWeight:500,padding:'9px 18px',cursor:'pointer' }}>Sign out</button>
       </div>
     </div>
   )
