@@ -649,13 +649,24 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
     { id:'notifications', label:'Notifications' },
   ]
 
+  const L = lightMode
+  const txt  = L ? '#1a1714' : 'rgba(255,255,255,0.82)'
+  const muted = L ? '#6b635c' : 'rgba(255,255,255,0.35)'
+  const border = L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.05)'
+  const cardBg = L ? '#ffffff' : 'rgba(255,255,255,0.028)'
+  const cardBorder = L ? '#ddd8d1' : 'rgba(255,255,255,0.07)'
+  const optBorder = (active: boolean, col='#F4884A') => active ? col : (L ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.08)')
+  const optBg = (active: boolean) => active ? 'rgba(244,136,74,0.08)' : (L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)')
+  const tabBg = L ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.03)'
+  const tabBorder = L ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'
+
   const T = (on: boolean, fn: ()=>void) => <Toggle on={on} onToggle={fn} />
 
   const row = (label: string, desc: string, right: React.ReactNode, last=false) => (
-    <div className="settings-row" style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'15px 20px',borderBottom:last?'none':'1px solid rgba(255,255,255,0.05)',gap:20 }}>
+    <div className="settings-row" style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'15px 20px',borderBottom:last?'none':`1px solid ${border}`,gap:20 }}>
       <div style={{ flex:1,minWidth:0 }}>
-        <div className="settings-label" style={{ fontSize:13,color:'rgba(255,255,255,0.82)',fontWeight:500,letterSpacing:'-0.01em' }}>{label}</div>
-        <div className="settings-desc" style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginTop:2 }}>{desc}</div>
+        <div style={{ fontSize:13,color:txt,fontWeight:500,letterSpacing:'-0.01em' }}>{label}</div>
+        <div style={{ fontSize:11,color:muted,marginTop:2 }}>{desc}</div>
       </div>
       <div style={{ flexShrink:0 }}>{right}</div>
     </div>
@@ -664,23 +675,23 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
   const block = (id: string, title: string, children: React.ReactNode) => (
     <div id={'settings-'+id} style={{ marginBottom:28, scrollMarginTop:16 }}>
       <div style={{ fontSize:10,fontWeight:700,color:'#F4884A',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:10 }}>{title}</div>
-      <div className="settings-block" style={{ background:'rgba(255,255,255,0.028)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:13,overflow:'hidden' }}>{children}</div>
+      <div style={{ background:cardBg,border:`1px solid ${cardBorder}`,borderRadius:13,overflow:'hidden',boxShadow:L?'0 1px 4px rgba(0,0,0,0.06)':'none' }}>{children}</div>
     </div>
   )
 
   const mapIcons: Record<string,React.ReactNode> = {
     satellite: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.55)"/><rect x="14" y="2" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.3)"/><rect x="2" y="14" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.3)"/><rect x="14" y="14" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.55)"/></svg>,
-    terrain:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M2 18L8 8l4 6 4-8 6 12H2z" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.45)" strokeWidth="1.3"/></svg>,
+    terrain:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M2 18L8 8l4 6 4-8 6 12H2z" fill={L?'rgba(0,0,0,0.12)':'rgba(255,255,255,0.15)'} stroke={L?'rgba(0,0,0,0.45)':'rgba(255,255,255,0.45)'} strokeWidth="1.3"/></svg>,
   }
 
   return (
     <div style={{ maxWidth:560, animation:'fadeUp .3s ease both' }}>
 
       {/* horizontal tab bar */}
-      <div style={{ display:'flex', gap:2, marginBottom:24, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10, padding:3 }}>
+      <div style={{ display:'flex', gap:2, marginBottom:24, background:tabBg, border:`1px solid ${tabBorder}`, borderRadius:10, padding:3 }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => scrollTo(t.id)}
-            style={{ flex:1, padding:'7px 12px', borderRadius:7, border:'none', background: active===t.id ? 'rgba(255,255,255,0.08)' : 'transparent', color: active===t.id ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.38)', fontSize:12, fontWeight: active===t.id ? 600 : 400, cursor:'pointer', letterSpacing:'-0.01em', transition:'all .15s', position:'relative' }}>
+            style={{ flex:1, padding:'7px 12px', borderRadius:7, border:'none', background: active===t.id ? (L?'rgba(0,0,0,0.06)':'rgba(255,255,255,0.08)') : 'transparent', color: active===t.id ? txt : muted, fontSize:12, fontWeight: active===t.id ? 600 : 400, cursor:'pointer', letterSpacing:'-0.01em', transition:'all .15s', position:'relative' }}>
             {t.label}
             {active===t.id && <div style={{ position:'absolute',bottom:2,left:'50%',transform:'translateX(-50%)',width:16,height:2,borderRadius:1,background:'#F4884A' }} />}
           </button>
@@ -691,25 +702,25 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
       <div ref={scrollRef} style={{ display:'flex', flexDirection:'column' }}>
 
         {block('general','General', <>
-          <div className="settings-row" style={{ padding:'15px 20px', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
-            <div className="settings-label" style={{ fontSize:13,color:'rgba(255,255,255,0.82)',fontWeight:500,marginBottom:2 }}>Map style</div>
-            <div className="settings-desc" style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginBottom:12 }}>Choose how maps appear in the designer.</div>
+          <div style={{ padding:'15px 20px', borderBottom:`1px solid ${border}` }}>
+            <div style={{ fontSize:13,color:txt,fontWeight:500,marginBottom:2 }}>Map style</div>
+            <div style={{ fontSize:11,color:muted,marginBottom:12 }}>Choose how maps appear in the designer.</div>
             <div style={{ display:'flex', gap:10 }}>
-              {[{id:'satellite',label:'Satellite',desc:'Aerial night view'},{id:'terrain',label:'Terrain',desc:'Topographic map'}].map(opt => (
+              {[{id:'satellite',label:'Satellite',desc:'Aerial imagery'},{id:'terrain',label:'Terrain',desc:'Topographic map'}].map(opt => (
                 <div key={opt.id} onClick={() => pickMapStyle(opt.id)}
-                  style={{ flex:1,display:'flex',alignItems:'center',gap:10,padding:'12px 14px',borderRadius:10,border:`1.5px solid ${mapStyle===opt.id?'#F4884A':'rgba(255,255,255,0.08)'}`,background:mapStyle===opt.id?'rgba(244,136,74,0.08)':'rgba(255,255,255,0.02)',cursor:'pointer',transition:'all .15s' }}>
-                  <div style={{ color:'rgba(255,255,255,0.5)',flexShrink:0 }}>{mapIcons[opt.id]}</div>
+                  style={{ flex:1,display:'flex',alignItems:'center',gap:10,padding:'12px 14px',borderRadius:10,border:`1.5px solid ${optBorder(mapStyle===opt.id)}`,background:optBg(mapStyle===opt.id),cursor:'pointer',transition:'all .15s' }}>
+                  <div style={{ flexShrink:0 }}>{mapIcons[opt.id]}</div>
                   <div>
-                    <div style={{ fontSize:13,fontWeight:600,color:mapStyle===opt.id?'#F4884A':'rgba(255,255,255,0.65)',letterSpacing:'-0.01em' }}>{opt.label}</div>
-                    <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginTop:1 }}>{opt.desc}</div>
+                    <div style={{ fontSize:13,fontWeight:600,color:mapStyle===opt.id?'#F4884A':txt,letterSpacing:'-0.01em' }}>{opt.label}</div>
+                    <div style={{ fontSize:11,color:muted,marginTop:1 }}>{opt.desc}</div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-          <div className="settings-row" style={{ padding:'15px 20px' }}>
-            <div className="settings-label" style={{ fontSize:13,color:'rgba(255,255,255,0.82)',fontWeight:500,marginBottom:2 }}>Time of day</div>
-            <div className="settings-desc" style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginBottom:12 }}>Sets the lighting when you open a project.</div>
+          <div style={{ padding:'15px 20px' }}>
+            <div style={{ fontSize:13,color:txt,fontWeight:500,marginBottom:2 }}>Time of day</div>
+            <div style={{ fontSize:11,color:muted,marginBottom:12 }}>Sets the lighting when you open a project.</div>
             <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
               {[
                 { id:'dawn',  label:'Dawn',  sky:'linear-gradient(160deg,#1a0a2e,#6b2f7a,#e8836a)', dot:'#c97bd4' },
@@ -718,11 +729,11 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
                 { id:'night', label:'Night', sky:'linear-gradient(160deg,#020408,#060d1a,#0d1e35)', dot:'#3b82f6' },
               ].map(opt => (
                 <div key={opt.id} onClick={() => pickMapTime(opt.id)}
-                  style={{ borderRadius:10, border:`1.5px solid ${mapTime===opt.id?opt.dot:'rgba(255,255,255,0.07)'}`, overflow:'hidden', cursor:'pointer', transition:'border-color .15s', background:mapTime===opt.id?'rgba(255,255,255,0.04)':'transparent' }}>
+                  style={{ borderRadius:10, border:`1.5px solid ${optBorder(mapTime===opt.id,opt.dot)}`, overflow:'hidden', cursor:'pointer', transition:'border-color .15s', background:mapTime===opt.id?(L?'rgba(0,0,0,0.03)':'rgba(255,255,255,0.04)'):'transparent' }}>
                   <div style={{ height:44, background:opt.sky }} />
-                  <div style={{ padding:'7px 8px', display:'flex', alignItems:'center', gap:5 }}>
+                  <div style={{ padding:'7px 8px', display:'flex', alignItems:'center', gap:5, background:L?'#fff':'transparent' }}>
                     <div style={{ width:6, height:6, borderRadius:'50%', background:opt.dot, flexShrink:0, boxShadow:mapTime===opt.id?`0 0 6px ${opt.dot}`:'none' }} />
-                    <span style={{ fontSize:11, fontWeight: mapTime===opt.id?600:400, color: mapTime===opt.id?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.4)', letterSpacing:'-0.01em' }}>{opt.label}</span>
+                    <span style={{ fontSize:11, fontWeight: mapTime===opt.id?600:400, color: mapTime===opt.id?txt:muted, letterSpacing:'-0.01em' }}>{opt.label}</span>
                   </div>
                 </div>
               ))}
@@ -733,14 +744,14 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
         {block('appearance','Appearance', <>
           {row('Dark / Light mode','Toggle between dark and light interface.',(
             <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-              <span style={{ fontSize:11,color:'rgba(255,255,255,0.3)',minWidth:28 }}>{lightMode?'Light':'Dark'}</span>
+              <span style={{ fontSize:11,color:muted,minWidth:28 }}>{lightMode?'Light':'Dark'}</span>
               <Toggle on={lightMode} onToggle={toggleTheme} />
             </div>
           ))}
           {row('Ambient glow','Adjust the intensity of ambient glow.',(
             <div style={{ display:'flex',alignItems:'center',gap:10 }}>
               <input type="range" min={0} max={100} value={ambientGlow} onChange={e=>setAmbientGlow(+e.target.value)} style={{ width:110,accentColor:'#F4884A',cursor:'pointer' }} />
-              <span style={{ fontSize:11,color:'rgba(255,255,255,0.3)',minWidth:30,textAlign:'right' }}>{ambientGlow}%</span>
+              <span style={{ fontSize:11,color:muted,minWidth:30,textAlign:'right' }}>{ambientGlow}%</span>
             </div>
           ))}
           {row('Animations','Enable interface animations and transitions.',T(animations,()=>setAnimations(v=>!v)),true)}
@@ -752,7 +763,7 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
           {row('Gmail','Upscape-related emails',
             gmailCount > 0
               ? <div style={{ background:'#ea4335',borderRadius:10,fontSize:11,fontWeight:700,color:'#fff',padding:'2px 8px' }}>{gmailCount>99?'99+':gmailCount}</div>
-              : <span style={{ fontSize:11,color:'rgba(255,255,255,0.2)' }}>No new</span>,
+              : <span style={{ fontSize:11,color:muted }}>No new</span>,
             true
           )}
         </>)}
