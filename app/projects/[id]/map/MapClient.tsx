@@ -15,8 +15,11 @@ const TOOLS = [
   { id: 'well',    label: 'Well',    icon: WellIcon   },
   { id: 'power',   label: 'Power',   icon: PowerIcon  },
   { id: 'wire',    label: 'Wire',    icon: WireIcon   },
+  { id: 'zone',    label: 'Zone',    icon: ZoneIcon   },
   { id: 'select',  label: 'Select',  icon: SelectIcon },
 ] as const
+
+const ZONE_COLORS = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#a855f7','#06b6d4','#f97316','#ec4899']
 
 type ToolId = typeof TOOLS[number]['id']
 
@@ -122,13 +125,21 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const wireRef = useRef<[number, number][]>([])
   const wireMarkersRef = useRef<mapboxgl.Marker[]>([])
   const projectRef = useRef<Project | null>(null)
+  const [zonePoints, setZonePoints] = useState<[number, number][]>([])
+  const zoneRef = useRef<[number, number][]>([])
+  const zoneMarkersRef = useRef<mapboxgl.Marker[]>([])
+  const [zoneColor, setZoneColor] = useState(ZONE_COLORS[0])
+  const zoneColorRef = useRef(ZONE_COLORS[0])
+  const [zonePopup, setZonePopup] = useState<Zone | null>(null)
 
   useEffect(() => { wireRef.current = wirePoints }, [wirePoints])
   useEffect(() => { projectRef.current = project }, [project])
+  useEffect(() => { zoneRef.current = zonePoints }, [zonePoints])
+  useEffect(() => { zoneColorRef.current = zoneColor }, [zoneColor])
 
   // Ghost cursor — scoped to the Mapbox canvas element only
   useEffect(() => {
-    const isFixture = tool !== 'select' && tool !== 'wire'
+    const isFixture = tool !== 'select' && tool !== 'wire' && tool !== 'zone'
     if (!isFixture) { setGhostPos(null); return }
 
     // Use the canvas directly so UI overlays (toolbar, topbar) never trigger it
@@ -198,26 +209,45 @@ export default function MapClient({ projectId }: { projectId: string }) {
         map.addLayer({ id: 'wire-preview-line', type: 'line', source: 'wire-preview', paint: { 'line-color': '#e8a030', 'line-width': 1.5, 'line-opacity': 0.45, 'line-dasharray': [5, 4] } })
 
         map.addSource('zones', { type: 'geojson', data: zonesToGeoJSON(p.zones || []) })
-        map.addLayer({ id: 'zones-fill', type: 'fill', source: 'zones', paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.12 } })
-        map.addLayer({ id: 'zones-line', type: 'line', source: 'zones', paint: { 'line-color': '#3b82f6', 'line-width': 1.5 } })
+        map.addLayer({ id: 'zones-fill', type: 'fill', source: 'zones', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.15 } })
+        map.addLayer({ id: 'zones-line', type: 'line', source: 'zones', paint: { 'line-color': ['get', 'color'], 'line-width': 2 } })
+        map.addLayer({ id: 'zones-hit', type: 'fill', source: 'zones', paint: { 'fill-color': 'transparent', 'fill-opacity': 0 } })
+
+        map.addSource('zone-preview', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
+        map.addLayer({ id: 'zone-preview-line', type: 'line', source: 'zone-preview', paint: { 'line-color': ['get', 'color'], 'line-width': 1.5, 'line-opacity': 0.6, 'line-dasharray': [4, 3] } })
+        map.addLayer({ id: 'zone-preview-fill', type: 'fill', source: 'zone-preview', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.08 } })
 
         for (const m of p.markers || []) addMarkerToMap(map, m)
 
-        // Update wire preview on mousemove
+        // Update wire + zone preview on mousemove
         map.on('mousemove', e => {
           const currentTool = (window as any).__upscapeTool as ToolId
           if (currentTool !== 'wire') {
             ;(map.getSource('wire-preview') as mapboxgl.GeoJSONSource)?.setData({ type: 'FeatureCollection', features: [] })
-            return
+          } else {
+            const pts = wireRef.current
+            if (pts.length > 0) {
+              const cursor: [number, number] = [e.lngLat.lng, e.lngLat.lat]
+              ;(map.getSource('wire-preview') as mapboxgl.GeoJSONSource)?.setData({
+                type: 'FeatureCollection',
+                features: [{ type: 'Feature', geometry: { type: 'LineString', coordinates: [...pts, cursor] }, properties: {} }],
+              })
+            }
           }
-          const pts = wireRef.current
-          if (pts.length === 0) return
-          const cursor: [number, number] = [e.lngLat.lng, e.lngLat.lat]
-          const previewPts = [...pts, cursor]
-          ;(map.getSource('wire-preview') as mapboxgl.GeoJSONSource)?.setData({
-            type: 'FeatureCollection',
-            features: [{ type: 'Feature', geometry: { type: 'LineString', coordinates: previewPts }, properties: {} }],
-          })
+          if (currentTool !== 'zone') {
+            ;(map.getSource('zone-preview') as mapboxgl.GeoJSONSource)?.setData({ type: 'FeatureCollection', features: [] })
+          } else {
+            const pts = zoneRef.current
+            const color = zoneColorRef.current
+            if (pts.length > 0) {
+              const cursor: [number, number] = [e.lngLat.lng, e.lngLat.lat]
+              const ring = [...pts, cursor, pts[0]]
+              ;(map.getSource('zone-preview') as mapboxgl.GeoJSONSource)?.setData({
+                type: 'FeatureCollection',
+                features: [{ type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: { color } }],
+              })
+            }
+          }
         })
 
         map.on('mousemove', e => {
@@ -230,14 +260,32 @@ export default function MapClient({ projectId }: { projectId: string }) {
 
         map.on('click', e => {
           const currentTool = (window as any).__upscapeTool as ToolId
-          // In select mode, check for wire clicks
+          // In select mode, check for wire/zone clicks
           if (!currentTool || currentTool === 'select') {
-            const features = map.queryRenderedFeatures(e.point, { layers: ['wires-hit'] })
-            if (features.length > 0) {
-              const wireId = features[0].properties?.wireId as string
+            const wireFeatures = map.queryRenderedFeatures(e.point, { layers: ['wires-hit'] })
+            if (wireFeatures.length > 0) {
+              const wireId = wireFeatures[0].properties?.wireId as string
               const wireData = projectRef.current?.wires?.find((w: Wire) => w.id === wireId)
               if (wireId && wireData) setWirePopup({ id: wireId, feet: wireData.feet })
+              return
             }
+            const zoneFeatures = map.queryRenderedFeatures(e.point, { layers: ['zones-hit'] })
+            if (zoneFeatures.length > 0) {
+              const zoneId = zoneFeatures[0].properties?.zoneId as string
+              const zoneData = projectRef.current?.zones?.find((z: Zone) => z.id === zoneId)
+              if (zoneData) setZonePopup({ ...zoneData })
+            }
+            return
+          }
+          if (currentTool === 'zone') {
+            const pt: [number, number] = [e.lngLat.lng, e.lngLat.lat]
+            const next = [...zoneRef.current, pt]
+            zoneRef.current = next
+            setZonePoints([...next])
+            const el = document.createElement('div')
+            el.style.cssText = `width:8px;height:8px;border-radius:50%;background:${zoneColorRef.current};border:1.5px solid rgba(255,255,255,0.8);`
+            const node = new mapboxgl.Marker({ element: el, anchor: 'center' }).setLngLat(pt).addTo(map)
+            zoneMarkersRef.current.push(node)
             return
           }
           if (currentTool === 'wire') {
@@ -317,6 +365,47 @@ export default function MapClient({ projectId }: { projectId: string }) {
     wireMarkersRef.current = []
   }
 
+  function clearZoneMarkers() {
+    zoneMarkersRef.current.forEach(m => m.remove())
+    zoneMarkersRef.current = []
+  }
+
+  async function finishZone() {
+    const pts = zoneRef.current
+    clearZoneMarkers()
+    ;(mapRef.current?.getSource('zone-preview') as mapboxgl.GeoJSONSource)?.setData({ type: 'FeatureCollection', features: [] })
+    if (pts.length < 3) { setZonePoints([]); zoneRef.current = []; return }
+    const closed = [...pts, pts[0]]
+    const zone: Zone = { id: crypto.randomUUID(), label: '', color: zoneColorRef.current, points: closed }
+    const { data: proj } = await supabase.from('projects').select('zones').eq('id', projectId).single()
+    if (!proj) return
+    const zones = [...(proj.zones as Zone[] || []), zone]
+    await supabase.from('projects').update({ zones }).eq('id', projectId)
+    ;(mapRef.current?.getSource('zones') as mapboxgl.GeoJSONSource)?.setData(zonesToGeoJSON(zones))
+    setProject(p => p ? { ...p, zones } : p)
+    setZonePoints([]); zoneRef.current = []
+  }
+
+  async function deleteZone(id: string) {
+    const { data: proj } = await supabase.from('projects').select('zones').eq('id', projectId).single()
+    if (!proj) return
+    const zones = (proj.zones as Zone[]).filter(z => z.id !== id)
+    await supabase.from('projects').update({ zones }).eq('id', projectId)
+    ;(mapRef.current?.getSource('zones') as mapboxgl.GeoJSONSource)?.setData(zonesToGeoJSON(zones))
+    setProject(p => p ? { ...p, zones } : p)
+    setZonePopup(null)
+  }
+
+  async function saveZone(updated: Zone) {
+    const { data: proj } = await supabase.from('projects').select('zones').eq('id', projectId).single()
+    if (!proj) return
+    const zones = (proj.zones as Zone[]).map(z => z.id === updated.id ? updated : z)
+    await supabase.from('projects').update({ zones }).eq('id', projectId)
+    ;(mapRef.current?.getSource('zones') as mapboxgl.GeoJSONSource)?.setData(zonesToGeoJSON(zones))
+    setProject(p => p ? { ...p, zones } : p)
+    setZonePopup(null)
+  }
+
   async function finishWire() {
     const pts = wireRef.current
     clearWireMarkers()
@@ -366,12 +455,14 @@ export default function MapClient({ projectId }: { projectId: string }) {
     setTool(t)
     ;(window as any).__upscapeTool = t
     if (t !== 'wire') { clearWireMarkers(); setWirePoints([]); wireRef.current = [] }
-    // Disable marker dragging in wire mode so taps snap cleanly
-    const draggable = t !== 'wire'
+    if (t !== 'zone') {
+      clearZoneMarkers(); setZonePoints([]); zoneRef.current = []
+      ;(mapRef.current?.getSource('zone-preview') as mapboxgl.GeoJSONSource)?.setData({ type: 'FeatureCollection', features: [] })
+    }
+    const draggable = t !== 'wire' && t !== 'zone'
     markersRef.current.forEach(mb => mb.setDraggable(draggable))
-    // Set crosshair cursor for wire mode, reset otherwise
     const canvas = mapRef.current?.getCanvas()
-    if (canvas) canvas.style.cursor = t === 'wire' ? 'crosshair' : ''
+    if (canvas) canvas.style.cursor = (t === 'wire' || t === 'zone') ? 'crosshair' : ''
   }
 
   useEffect(() => { (window as any).__upscapeTool = tool }, [tool])
@@ -416,8 +507,12 @@ export default function MapClient({ projectId }: { projectId: string }) {
         map.addSource('wire-preview', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
         map.addLayer({ id: 'wire-preview-line', type: 'line', source: 'wire-preview', paint: { 'line-color': '#e8a030', 'line-width': 1.5, 'line-opacity': 0.45, 'line-dasharray': [5, 4] } })
         map.addSource('zones', { type: 'geojson', data: zonesToGeoJSON(p.zones || []) })
-        map.addLayer({ id: 'zones-fill', type: 'fill', source: 'zones', paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.12 } })
-        map.addLayer({ id: 'zones-line', type: 'line', source: 'zones', paint: { 'line-color': '#3b82f6', 'line-width': 1.5 } })
+        map.addLayer({ id: 'zones-fill', type: 'fill', source: 'zones', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.15 } })
+        map.addLayer({ id: 'zones-line', type: 'line', source: 'zones', paint: { 'line-color': ['get', 'color'], 'line-width': 2 } })
+        map.addLayer({ id: 'zones-hit', type: 'fill', source: 'zones', paint: { 'fill-color': 'transparent', 'fill-opacity': 0 } })
+        map.addSource('zone-preview', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
+        map.addLayer({ id: 'zone-preview-line', type: 'line', source: 'zone-preview', paint: { 'line-color': ['get', 'color'], 'line-width': 1.5, 'line-opacity': 0.6, 'line-dasharray': [4, 3] } })
+        map.addLayer({ id: 'zone-preview-fill', type: 'fill', source: 'zone-preview', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.08 } })
         markersRef.current.forEach(mb => mb.addTo(map))
       })
     } else {
@@ -612,6 +707,31 @@ export default function MapClient({ projectId }: { projectId: string }) {
         </div>
       )}
 
+      {/* zone banner */}
+      {tool === 'zone' && (
+        <div style={{
+          position: 'absolute', top: 62, left: 16, zIndex: 20,
+          background: 'rgba(8,8,8,0.82)', backdropFilter: 'blur(16px)',
+          borderRadius: 8, padding: '8px 14px',
+          display: 'flex', alignItems: 'center', gap: 10,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+        }}>
+          <div style={{ display: 'flex', gap: 5 }}>
+            {ZONE_COLORS.map(c => (
+              <button key={c} onClick={() => { setZoneColor(c); zoneColorRef.current = c }} style={{
+                width: 16, height: 16, borderRadius: '50%', background: c, border: `2px solid ${c === zoneColor ? '#fff' : 'transparent'}`,
+                cursor: 'pointer', padding: 0, flexShrink: 0,
+              }} />
+            ))}
+          </div>
+          <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.45)', letterSpacing: '-0.01em' }}>
+            {zonePoints.length < 3 ? 'tap to draw zone' : `${zonePoints.length} pts`}
+          </span>
+          <button onClick={finishZone} disabled={zonePoints.length < 3} style={{ background: zonePoints.length >= 3 ? '#F4884A' : 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 6, color: '#fff', fontSize: 11, fontWeight: 500, padding: '5px 11px', cursor: zonePoints.length >= 3 ? 'pointer' : 'default', letterSpacing: '-0.01em' }}>Done</button>
+          <button onClick={() => { clearZoneMarkers(); setZonePoints([]); zoneRef.current = []; setToolAndSync('select') }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 11, padding: '5px 4px', cursor: 'pointer' }}>cancel</button>
+        </div>
+      )}
+
       {/* toolbar */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
@@ -660,6 +780,33 @@ export default function MapClient({ projectId }: { projectId: string }) {
           </div>
           <div style={{ padding: '0 16px 14px', display: 'flex', gap: 8 }}>
             <button onClick={() => deleteWire(wirePopup.id)} style={{ flex: 1, background: 'transparent', border: 'none', borderRadius: 8, color: 'rgba(239,68,68,0.7)', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer' }}>Remove wire</button>
+          </div>
+        </div>
+      )}
+
+      {/* zone popup */}
+      {zonePopup && (
+        <div style={{ position: 'absolute', bottom: 96, left: 14, right: 14, zIndex: 30, background: 'rgba(12,12,12,0.96)', backdropFilter: 'blur(24px)', borderRadius: 12, boxShadow: '0 12px 48px rgba(0,0,0,0.65)', overflow: 'hidden' }}>
+          <div style={{ padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ width: 14, height: 14, borderRadius: 3, background: zonePopup.color, flexShrink: 0 }} />
+            <span style={{ fontWeight: 500, fontSize: 13, color: 'rgba(255,255,255,0.88)' }}>Zone</span>
+            <button onClick={() => setZonePopup(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', cursor: 'pointer', fontSize: 18, padding: 4 }}>✕</button>
+          </div>
+          <div style={{ padding: '12px 16px' }}>
+            <label style={labelSt}>Label</label>
+            <input style={inputSt} value={zonePopup.label} onChange={e => setZonePopup({ ...zonePopup, label: e.target.value })} placeholder="e.g. Front yard, Pool area…" />
+            <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+              {ZONE_COLORS.map(c => (
+                <button key={c} onClick={() => setZonePopup({ ...zonePopup, color: c })} style={{
+                  width: 20, height: 20, borderRadius: '50%', background: c, border: `2px solid ${c === zonePopup.color ? '#fff' : 'transparent'}`,
+                  cursor: 'pointer', padding: 0,
+                }} />
+              ))}
+            </div>
+          </div>
+          <div style={{ padding: '0 16px 14px', display: 'flex', gap: 8 }}>
+            <button onClick={() => deleteZone(zonePopup.id)} style={{ flex: 1, background: 'transparent', border: 'none', borderRadius: 8, color: 'rgba(239,68,68,0.7)', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer' }}>Remove zone</button>
+            <button onClick={() => saveZone(zonePopup)} style={{ flex: 2, background: '#F4884A', border: 'none', borderRadius: 8, color: '#fff', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer' }}>Save</button>
           </div>
         </div>
       )}
@@ -726,6 +873,7 @@ function FloodIcon()  { return <svg width="16" height="16" viewBox="0 0 24 24" f
 function WellIcon()   { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/></svg> }
 function PowerIcon()  { return <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> }
 function WireIcon()   { return <svg width="18" height="16" viewBox="0 0 24 16" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="4 2"><path d="M2 8h20"/></svg> }
+function ZoneIcon()   { return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="3,18 8,4 16,8 21,16 12,21"/></svg> }
 function SelectIcon() { return <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 2l16 10-8 2-4 8z"/></svg> }
 
 // helpers
@@ -733,7 +881,7 @@ function wiresToGeoJSON(wires: Wire[]) {
   return { type: 'FeatureCollection' as const, features: wires.map(w => ({ type: 'Feature' as const, geometry: { type: 'LineString' as const, coordinates: w.points }, properties: { wireId: w.id, feet: w.feet } })) }
 }
 function zonesToGeoJSON(zones: Zone[]) {
-  return { type: 'FeatureCollection' as const, features: zones.map(z => ({ type: 'Feature' as const, geometry: { type: 'Polygon' as const, coordinates: [z.points] }, properties: {} })) }
+  return { type: 'FeatureCollection' as const, features: zones.map(z => ({ type: 'Feature' as const, geometry: { type: 'Polygon' as const, coordinates: [z.points] }, properties: { zoneId: z.id, color: z.color || '#3b82f6', label: z.label } })) }
 }
 function calcWireFeet(pts: [number, number][]) {
   let feet = 0

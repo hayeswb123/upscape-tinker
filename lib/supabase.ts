@@ -42,5 +42,6 @@ export type Wire = {
 export type Zone = {
   id: string
   label: string
+  color: string
   points: [number, number][]
 }
