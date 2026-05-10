@@ -99,6 +99,13 @@ export default function DashboardPage() {
         @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         @keyframes spin   { to{transform:rotate(360deg)} }
         @keyframes ambientPulse { 0%,100%{opacity:.16} 50%{opacity:.26} }
+        @keyframes float { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-10px)} }
+        @keyframes glowPulse { 0%,100%{opacity:.45;transform:scale(1)} 50%{opacity:.7;transform:scale(1.06)} }
+        @keyframes drift1 { 0%{transform:translate(0,0) scale(1);opacity:.7} 50%{transform:translate(-8px,-18px) scale(.7);opacity:.3} 100%{transform:translate(4px,-34px) scale(.4);opacity:0} }
+        @keyframes drift2 { 0%{transform:translate(0,0) scale(1);opacity:.6} 50%{transform:translate(12px,-14px) scale(.6);opacity:.25} 100%{transform:translate(-4px,-28px) scale(.3);opacity:0} }
+        @keyframes drift3 { 0%{transform:translate(0,0) scale(1);opacity:.5} 50%{transform:translate(-6px,-20px) scale(.5);opacity:.2} 100%{transform:translate(8px,-32px) scale(.2);opacity:0} }
+        @keyframes bgDrift { 0%,100%{transform:translate(0,0)} 33%{transform:translate(20px,-10px)} 66%{transform:translate(-12px,14px)} }
+        @keyframes emptyFadeIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
         .nav-item { transition: background .18s ease, color .18s ease, box-shadow .18s ease; }
         .nav-item:hover { background: rgba(255,255,255,0.05) !important; }
         .dash-card { transition: transform .2s cubic-bezier(.22,1,.36,1), box-shadow .2s ease, border-color .2s ease; animation: fadeUp .35s ease both; }
@@ -324,13 +331,7 @@ function ProjectsSection({ projects, loading, confirmDelete, setConfirmDelete, h
       {loading && <div style={{ textAlign:'center',paddingTop:50 }}><div style={{ width:24,height:24,border:'2px solid rgba(244,136,74,0.25)',borderTopColor:'#F4884A',borderRadius:'50%',animation:'spin .8s linear infinite',margin:'0 auto 10px' }} /><p style={{ color:'rgba(255,255,255,0.2)',fontSize:12 }}>Loading…</p></div>}
 
       {!loading && projects.length === 0 && (
-        <div style={{ textAlign:'center',paddingTop:70,animation:'fadeUp .4s ease both' }}>
-          <div style={{ width:56,height:56,borderRadius:14,background:'rgba(244,136,74,0.07)',border:'1px solid rgba(244,136,74,0.12)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}>
-            <UpscapeMark size={32} />
-          </div>
-          <p style={{ fontWeight:600,color:'rgba(255,255,255,0.65)',fontSize:14,margin:'0 0 5px',letterSpacing:'-0.02em' }}>No projects yet</p>
-          <p style={{ fontSize:12,color:'rgba(255,255,255,0.25)',margin:0 }}>Click New project to get started</p>
-        </div>
+        <EmptyState onNew={() => router.push('/projects/new')} />
       )}
 
       <div style={{ display:'flex',flexDirection:'column',gap:7 }}>
@@ -406,6 +407,73 @@ function QuotesSection({ projects, router, fmt }: any) {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+// ── EMPTY STATE ───────────────────────────────────────
+function EmptyState({ onNew }: { onNew: () => void }) {
+  return (
+    <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none', zIndex:0 }}>
+      {/* deep bg glow */}
+      <div style={{ position:'absolute', width:600, height:600, borderRadius:'50%', background:'radial-gradient(ellipse,rgba(10,14,26,0.9) 0%,transparent 70%)', animation:'bgDrift 14s ease-in-out infinite', top:'50%', left:'50%', transform:'translate(-50%,-50%)', pointerEvents:'none' }} />
+      {/* orange bloom beneath icon */}
+      <div style={{ position:'absolute', width:220, height:90, borderRadius:'50%', background:'radial-gradient(ellipse,rgba(244,136,74,0.22) 0%,transparent 70%)', top:'calc(50% + 10px)', left:'50%', transform:'translate(-50%,-50%)', animation:'glowPulse 4s ease-in-out infinite', pointerEvents:'none' }} />
+
+      {/* content */}
+      <div style={{ position:'relative', display:'flex', flexDirection:'column', alignItems:'center', gap:0, animation:'emptyFadeIn .8s cubic-bezier(.16,1,.3,1) both', pointerEvents:'auto' }}>
+
+        {/* particles */}
+        {[
+          { x:-38, y:-18, d:'drift1', delay:'0s',  size:3.5 },
+          { x: 44, y:-10, d:'drift2', delay:'.9s', size:2.5 },
+          { x:-18, y:-30, d:'drift3', delay:'1.6s',size:2   },
+          { x: 28, y:-24, d:'drift1', delay:'2.3s',size:3   },
+          { x:-52, y:-6,  d:'drift2', delay:'3.1s',size:2   },
+          { x: 56, y:-32, d:'drift3', delay:'.4s', size:2.5 },
+        ].map((p,i) => (
+          <div key={i} style={{ position:'absolute', top:'50%', left:'50%', marginLeft:p.x, marginTop:p.y, width:p.size, height:p.size, borderRadius:'50%', background:'rgba(244,136,74,0.7)', boxShadow:'0 0 4px rgba(244,136,74,0.6)', animation:`${p.d} ${2.8+i*.4}s ease-in infinite`, animationDelay:p.delay, pointerEvents:'none' }} />
+        ))}
+
+        {/* folder icon */}
+        <div style={{ width:88, height:88, marginBottom:36, animation:'float 5s ease-in-out infinite', position:'relative' }}>
+          {/* glass base */}
+          <div style={{ position:'absolute', inset:0, borderRadius:18, background:'linear-gradient(145deg,rgba(244,136,74,0.07) 0%,rgba(244,136,74,0.02) 100%)', border:'1px solid rgba(244,136,74,0.28)', backdropFilter:'blur(12px)', boxShadow:'0 0 0 1px rgba(244,136,74,0.08) inset, 0 0 32px rgba(244,136,74,0.12), 0 20px 60px rgba(0,0,0,0.5)' }} />
+          {/* folder svg */}
+          <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <svg width="42" height="38" viewBox="0 0 42 38" fill="none">
+              <path d="M2 8C2 5.79 3.79 4 6 4h10l4 4h14c2.21 0 4 1.79 4 4v18c0 2.21-1.79 4-4 4H6c-2.21 0-4-1.79-4-4V8z" fill="rgba(244,136,74,0.08)" stroke="rgba(244,136,74,0.7)" strokeWidth="1.4"/>
+              <path d="M2 14h38" stroke="rgba(244,136,74,0.35)" strokeWidth="1"/>
+              <circle cx="21" cy="25" r="3.5" fill="none" stroke="rgba(244,136,74,0.5)" strokeWidth="1.2"/>
+              <path d="M21 21.5v1M21 28.5v1M17.5 25h1M24.5 25h1" stroke="rgba(244,136,74,0.4)" strokeWidth="1" strokeLinecap="round"/>
+            </svg>
+          </div>
+          {/* rim glow */}
+          <div style={{ position:'absolute', inset:-1, borderRadius:19, boxShadow:'0 0 20px rgba(244,136,74,0.15)', pointerEvents:'none' }} />
+        </div>
+
+        {/* heading */}
+        <h2 style={{ margin:'0 0 10px', fontSize:28, fontWeight:700, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.88)', textAlign:'center', lineHeight:1.1 }}>Build something great</h2>
+        <p style={{ margin:'0 0 36px', fontSize:13, color:'rgba(255,255,255,0.28)', textAlign:'center', letterSpacing:'-0.01em', lineHeight:1.6 }}>Create a new project to get started.</p>
+
+        {/* CTA button */}
+        <button
+          onClick={onNew}
+          className="empty-cta"
+          style={{ display:'flex', alignItems:'center', gap:8, padding:'12px 24px', borderRadius:12, background:'linear-gradient(135deg,#F4884A,#df6f28)', border:'none', color:'#fff', fontSize:14, fontWeight:600, letterSpacing:'-0.02em', cursor:'pointer', boxShadow:'0 0 24px rgba(244,136,74,0.35), 0 4px 16px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.12) inset', transition:'transform .18s, box-shadow .18s' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 40px rgba(244,136,74,0.5), 0 8px 24px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.15) inset' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform='none'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 24px rgba(244,136,74,0.35), 0 4px 16px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.12) inset' }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          New project
+        </button>
+
+        {/* grain texture overlay */}
+        <svg style={{ position:'fixed', inset:0, width:'100%', height:'100%', pointerEvents:'none', opacity:.018, zIndex:-1 }} xmlns="http://www.w3.org/2000/svg">
+          <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+          <rect width="100%" height="100%" filter="url(#grain)" />
+        </svg>
+      </div>
     </div>
   )
 }
@@ -486,120 +554,125 @@ function InstallSection({ projects }: any) {
 }
 
 // ── SETTINGS ──────────────────────────────────────────
-const ACCENT_OPTIONS = ['#F4884A','#3b82f6','#22c55e','#a855f7','#ec4899','#14b8a6']
-
-function Toggle({ on, onToggle, color = '#F4884A' }: { on: boolean; onToggle: () => void; color?: string }) {
+function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
-    <div onClick={onToggle} style={{ width:40,height:22,borderRadius:11,background:on?color:'rgba(255,255,255,0.1)',cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0 }}>
-      <div style={{ position:'absolute',top:3,left:on?20:3,width:16,height:16,borderRadius:'50%',background:'#fff',transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,.3)' }} />
+    <div onClick={onToggle} style={{ width:44,height:24,borderRadius:12,background:on?'#F4884A':'rgba(255,255,255,0.12)',cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,boxShadow:on?'0 0 12px rgba(244,136,74,0.4)':'none' }}>
+      <div style={{ position:'absolute',top:3,left:on?22:3,width:18,height:18,borderRadius:'50%',background:'#fff',transition:'left .18s',boxShadow:'0 1px 5px rgba(0,0,0,.35)' }} />
     </div>
   )
 }
 
-const MAP_STYLE_OPTIONS = [
-  { id: 'satellite', label: 'Satellite', desc: 'Aerial night view' },
-  { id: 'terrain',   label: 'Terrain',   desc: 'Topographic map' },
-]
+const SETTINGS_NAV = ['General','Appearance','Notifications']
 
 function SettingsSection({ userEmail, logout, lightMode, toggleTheme }: any) {
-  const [accentColor, setAccentColor]   = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_accent') || '#F4884A') : '#F4884A')
-  const [mapStyle, setMapStyle]         = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_style') || 'satellite') : 'satellite')
-  const [daytime, setDaytime]           = useState(() => typeof window !== 'undefined' ? localStorage.getItem('upscape_map_day') === '1' : false)
-  const [quoteAlerts, setQuoteAlerts]   = useState(true)
+  const [sub, setSub]               = useState('General')
+  const [mapStyle, setMapStyle]     = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_style') || 'satellite') : 'satellite')
+  const [daytime, setDaytime]       = useState(() => typeof window !== 'undefined' ? localStorage.getItem('upscape_map_day') === '1' : false)
+  const [ambientGlow, setAmbientGlow] = useState(70)
+  const [animations, setAnimations] = useState(true)
+  const [quoteAlerts, setQuoteAlerts]     = useState(true)
   const [projectUpdates, setProjectUpdates] = useState(true)
+  const [systemUpdates, setSystemUpdates]   = useState(false)
   const [gmailCount] = useState(0)
 
-  function pickAccent(c: string) {
-    setAccentColor(c)
-    localStorage.setItem('upscape_accent', c)
-  }
-  function pickMapStyle(id: string) {
-    setMapStyle(id)
-    localStorage.setItem('upscape_map_style', id)
-  }
-  function toggleDay() {
-    const next = !daytime
-    setDaytime(next)
-    localStorage.setItem('upscape_map_day', next ? '1' : '0')
-  }
+  function pickMapStyle(id: string) { setMapStyle(id); localStorage.setItem('upscape_map_style', id) }
+  function toggleDay() { const n=!daytime; setDaytime(n); localStorage.setItem('upscape_map_day',n?'1':'0') }
 
-  const row = (label: string, right: React.ReactNode, sub?: string) => (
-    <div style={{ padding:'13px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
+  const T = (on: boolean, fn: ()=>void) => <Toggle on={on} onToggle={fn} />
+
+  const row = (label: string, sub: string, right: React.ReactNode, last=false) => (
+    <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px',borderBottom:last?'none':'1px solid rgba(255,255,255,0.05)',gap:16 }}>
       <div>
-        <div style={{ fontSize:13, color:'rgba(255,255,255,0.72)', letterSpacing:'-0.01em' }}>{label}</div>
-        {sub && <div style={{ fontSize:11, color:'rgba(255,255,255,0.25)', marginTop:2 }}>{sub}</div>}
+        <div style={{ fontSize:13,color:'rgba(255,255,255,0.78)',fontWeight:500,letterSpacing:'-0.01em' }}>{label}</div>
+        <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginTop:2 }}>{sub}</div>
       </div>
-      {right}
+      <div style={{ flexShrink:0 }}>{right}</div>
     </div>
   )
 
-  const card = (label: string, children: React.ReactNode) => (
-    <div style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:12, overflow:'hidden' }}>
-      <div style={{ padding:'9px 16px', fontSize:10, fontWeight:700, color:'rgba(255,255,255,0.25)', letterSpacing:'0.08em', textTransform:'uppercase', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>{label}</div>
-      {children}
+  const section = (title: string, children: React.ReactNode) => (
+    <div style={{ marginBottom:20 }}>
+      <div style={{ fontSize:10,fontWeight:700,color:'#F4884A',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:8,paddingLeft:2 }}>{title}</div>
+      <div style={{ background:'rgba(255,255,255,0.028)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:12,overflow:'hidden' }}>{children}</div>
     </div>
   )
+
+  const mapIcons: Record<string,React.ReactNode> = {
+    satellite: <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.5)"/><rect x="14" y="2" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.3)"/><rect x="2" y="14" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.3)"/><rect x="14" y="14" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.5)"/></svg>,
+    terrain:   <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M2 18L8 8l4 6 4-8 6 12H2z" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.4)" strokeWidth="1.2"/></svg>,
+  }
 
   return (
-    <div style={{ maxWidth:480, animation:'fadeUp .3s ease both' }}>
-      <h1 style={{ margin:'0 0 6px', fontSize:22, fontWeight:700, letterSpacing:'-0.03em', color:'rgba(255,255,255,0.92)' }}>Settings</h1>
-      <p style={{ margin:'0 0 22px', fontSize:12, color:'rgba(255,255,255,0.25)' }}>{userEmail}</p>
-
-      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-
-        {/* Map */}
-        {card('Map', <>
-          {/* style picker */}
-          <div style={{ padding:'13px 16px', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
-            <div style={{ fontSize:13, color:'rgba(255,255,255,0.72)', marginBottom:10 }}>Style</div>
-            <div style={{ display:'flex', gap:8 }}>
-              {MAP_STYLE_OPTIONS.map(opt => (
-                <div key={opt.id} onClick={() => pickMapStyle(opt.id)}
-                  style={{ flex:1, border:`1.5px solid ${mapStyle===opt.id ? accentColor : 'rgba(255,255,255,0.08)'}`, borderRadius:10, padding:'10px 12px', cursor:'pointer', background: mapStyle===opt.id ? `${accentColor}10` : 'rgba(255,255,255,0.02)', transition:'all .15s' }}>
-                  <div style={{ fontSize:13, fontWeight:600, color: mapStyle===opt.id ? accentColor : 'rgba(255,255,255,0.6)' }}>{opt.label}</div>
-                  <div style={{ fontSize:11, color:'rgba(255,255,255,0.25)', marginTop:2 }}>{opt.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          {row('Daytime color', <Toggle on={daytime} onToggle={toggleDay} color={accentColor} />, daytime ? 'Light satellite view' : 'Dark night view')}
-        </>)}
-
-        {/* Appearance */}
-        {card('Appearance', <>
-          {row('Appearance', (
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{lightMode ? 'Light' : 'Dark'}</span>
-              <Toggle on={lightMode} onToggle={toggleTheme} color={accentColor} />
-            </div>
-          ), 'System appearance')}
-          {row('Tool icon color', (
-            <div style={{ display:'flex', gap:6 }}>
-              {ACCENT_OPTIONS.map(c => (
-                <div key={c} onClick={() => pickAccent(c)}
-                  style={{ width:22, height:22, borderRadius:'50%', background:c, cursor:'pointer', outline: accentColor===c ? `2px solid ${c}` : 'none', outlineOffset:2.5, opacity: accentColor===c ? 1 : 0.45, transition:'opacity .15s,outline .15s' }} />
-              ))}
-            </div>
-          ), 'Color of map tool icons')}
-        </>)}
-
-        {/* Notifications */}
-        {card('Notifications', <>
-          {row('Gmail', (
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              {gmailCount > 0
-                ? <div style={{ background:'#ea4335', borderRadius:10, fontSize:11, fontWeight:700, color:'#fff', padding:'2px 7px' }}>{gmailCount > 99 ? '99+' : gmailCount}</div>
-                : <span style={{ fontSize:11, color:'rgba(255,255,255,0.2)' }}>No new</span>}
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="2" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"/><path d="M2 7l10 7 10-7" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"/></svg>
-            </div>
-          ), 'Upscape-related emails')}
-          {row('Quote alerts', <Toggle on={quoteAlerts} onToggle={() => setQuoteAlerts(v => !v)} color={accentColor} />, 'Notify when quote is opened')}
-          {row('Project updates', <Toggle on={projectUpdates} onToggle={() => setProjectUpdates(v => !v)} color={accentColor} />, 'Status change reminders')}
-        </>)}
-
+    <div style={{ display:'flex', gap:0, height:'100%', animation:'fadeUp .3s ease both', maxWidth:760 }}>
+      {/* left nav */}
+      <div style={{ width:180,flexShrink:0,paddingTop:4,paddingRight:16 }}>
+        <div style={{ fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.2)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:10,paddingLeft:10 }}>Settings</div>
+        {SETTINGS_NAV.map(item => (
+          <button key={item} onClick={()=>setSub(item)} style={{ width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 10px',borderRadius:8,border:'none',background:sub===item?'rgba(255,255,255,0.07)':'transparent',color:sub===item?'rgba(255,255,255,0.88)':'rgba(255,255,255,0.4)',fontSize:13,cursor:'pointer',textAlign:'left',transition:'background .15s,color .15s',marginBottom:1 }}>
+            {item}
+            {sub===item && <div style={{ width:5,height:5,borderRadius:'50%',background:'#F4884A',boxShadow:'0 0 6px rgba(244,136,74,0.7)',flexShrink:0 }} />}
+          </button>
+        ))}
       </div>
 
-      <button onClick={logout} style={{ marginTop:16, width:'100%', background:'transparent', border:'1px solid rgba(239,68,68,0.2)', borderRadius:10, color:'rgba(239,68,68,0.6)', fontSize:13, fontWeight:500, padding:'11px', cursor:'pointer', letterSpacing:'-0.01em' }}>Sign out</button>
+      {/* right content */}
+      <div style={{ flex:1,minWidth:0,borderLeft:'1px solid rgba(255,255,255,0.06)',paddingLeft:24,paddingTop:4 }}>
+        {sub === 'General' && <>
+          {section('General', <>
+            <div style={{ padding:'14px 20px',borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize:13,color:'rgba(255,255,255,0.78)',fontWeight:500,marginBottom:2 }}>Map style</div>
+              <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginBottom:12 }}>Choose how maps appear in the designer.</div>
+              <div style={{ display:'flex',gap:10 }}>
+                {[{id:'satellite',label:'Satellite',desc:'Aerial night view'},{id:'terrain',label:'Terrain',desc:'Topographic map'}].map(opt=>(
+                  <div key={opt.id} onClick={()=>pickMapStyle(opt.id)}
+                    style={{ flex:1,display:'flex',alignItems:'center',gap:10,padding:'12px 14px',borderRadius:10,border:`1.5px solid ${mapStyle===opt.id?'#F4884A':'rgba(255,255,255,0.08)'}`,background:mapStyle===opt.id?'rgba(244,136,74,0.08)':'rgba(255,255,255,0.02)',cursor:'pointer',transition:'all .15s' }}>
+                    <div style={{ color:'rgba(255,255,255,0.4)',flexShrink:0 }}>{mapIcons[opt.id]}</div>
+                    <div>
+                      <div style={{ fontSize:13,fontWeight:600,color:mapStyle===opt.id?'#F4884A':'rgba(255,255,255,0.65)',letterSpacing:'-0.01em' }}>{opt.label}</div>
+                      <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginTop:1 }}>{opt.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {row('Daytime color','Adjust how maps appear during daytime.',T(daytime,toggleDay),true)}
+          </>)}
+        </>}
+
+        {sub === 'Appearance' && <>
+          {section('Appearance', <>
+            {row('Dark / Light mode','Toggle between dark and light interface.',(
+              <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+                <span style={{ fontSize:11,color:'rgba(255,255,255,0.3)',minWidth:28 }}>{lightMode?'Light':'Dark'}</span>
+                <Toggle on={lightMode} onToggle={toggleTheme} />
+              </div>
+            ))}
+            {row('Ambient glow','Adjust the intensity of ambient glow.',(
+              <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+                <input type="range" min={0} max={100} value={ambientGlow} onChange={e=>setAmbientGlow(+e.target.value)}
+                  style={{ width:120,accentColor:'#F4884A',cursor:'pointer' }} />
+                <span style={{ fontSize:11,color:'rgba(255,255,255,0.3)',minWidth:32,textAlign:'right' }}>{ambientGlow}%</span>
+              </div>
+            ))}
+            {row('Animations','Enable interface animations and transitions.',T(animations,()=>setAnimations(v=>!v)),true)}
+          </>)}
+        </>}
+
+        {sub === 'Notifications' && <>
+          {section('Notifications', <>
+            {row('Quote alerts','Notify when a quote is opened.',T(quoteAlerts,()=>setQuoteAlerts(v=>!v)))}
+            {row('Project updates','Receive project status change reminders.',T(projectUpdates,()=>setProjectUpdates(v=>!v)))}
+            {row('Gmail',`Upscape-related emails · ${gmailCount>0?(gmailCount>99?'99+':gmailCount)+' unread':'No new'}`,
+              gmailCount>0
+                ? <div style={{ background:'#ea4335',borderRadius:10,fontSize:11,fontWeight:700,color:'#fff',padding:'2px 8px' }}>{gmailCount>99?'99+':gmailCount}</div>
+                : <span style={{ fontSize:11,color:'rgba(255,255,255,0.2)' }}>No new</span>,
+              true
+            )}
+          </>)}
+        </>}
+
+        <button onClick={logout} style={{ marginTop:8,background:'transparent',border:'1px solid rgba(239,68,68,0.18)',borderRadius:9,color:'rgba(239,68,68,0.55)',fontSize:12,fontWeight:500,padding:'9px 18px',cursor:'pointer' }}>Sign out</button>
+      </div>
     </div>
   )
 }
