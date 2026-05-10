@@ -4,7 +4,34 @@ import { useRouter } from 'next/navigation'
 import { supabase, type Project } from '@/lib/supabase'
 
 const STATUS_LABEL: Record<string, string> = { draft: 'Draft', quoted: 'Quoted', approved: 'Approved', installed: 'Installed' }
-const STATUS_COLOR: Record<string, string> = { draft: '#6b7280', quoted: '#3b82f6', approved: '#22c55e', installed: '#a78bfa' }
+const STATUS_COLOR: Record<string, string> = { draft: '#6b7280', quoted: '#F4884A', approved: '#22c55e', installed: '#a78bfa' }
+
+function UpscapeMark({ size = 36 }: { size?: number }) {
+  const s = size / 32
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 32 32" fill="none">
+      <circle cx="4"  cy="4"  r={2.2*s*8} fill="rgba(244,136,74,0.8)"/>
+      <circle cx="10" cy="4"  r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
+      <circle cx="22" cy="4"  r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
+      <circle cx="28" cy="4"  r={2.2*s*8} fill="rgba(244,136,74,0.8)"/>
+      <circle cx="4"  cy="10" r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
+      <circle cx="10" cy="10" r={2.2*s*8} fill="rgba(244,136,74,0.85)"/>
+      <circle cx="22" cy="10" r={2.2*s*8} fill="rgba(244,136,74,0.85)"/>
+      <circle cx="28" cy="10" r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
+      <circle cx="10" cy="16" r={1.6*s*8} fill="rgba(244,136,74,0.4)"/>
+      <circle cx="16" cy="16" r={2.0*s*8} fill="rgba(244,136,74,0.65)"/>
+      <circle cx="22" cy="16" r={1.6*s*8} fill="rgba(244,136,74,0.4)"/>
+      <circle cx="4"  cy="22" r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
+      <circle cx="10" cy="22" r={2.2*s*8} fill="rgba(244,136,74,0.85)"/>
+      <circle cx="22" cy="22" r={2.2*s*8} fill="rgba(244,136,74,0.85)"/>
+      <circle cx="28" cy="22" r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
+      <circle cx="4"  cy="28" r={2.2*s*8} fill="rgba(244,136,74,0.8)"/>
+      <circle cx="10" cy="28" r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
+      <circle cx="22" cy="28" r={1.8*s*8} fill="rgba(244,136,74,0.55)"/>
+      <circle cx="28" cy="28" r={2.2*s*8} fill="rgba(244,136,74,0.8)"/>
+    </svg>
+  )
+}
 
 type Section = 'projects' | 'quotes' | 'products' | 'install' | 'settings'
 
@@ -262,7 +289,7 @@ function ProjectsSection({ projects, loading, confirmDelete, setConfirmDelete, h
       {!loading && projects.length === 0 && (
         <div style={{ textAlign:'center',paddingTop:70,animation:'fadeUp .4s ease both' }}>
           <div style={{ width:56,height:56,borderRadius:14,background:'rgba(244,136,74,0.07)',border:'1px solid rgba(244,136,74,0.12)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.55)" strokeWidth="1.5"><path d="M12 3l9 18H3z"/></svg>
+            <UpscapeMark size={32} />
           </div>
           <p style={{ fontWeight:600,color:'rgba(255,255,255,0.65)',fontSize:14,margin:'0 0 5px',letterSpacing:'-0.02em' }}>No projects yet</p>
           <p style={{ fontSize:12,color:'rgba(255,255,255,0.25)',margin:0 }}>Click New project to get started</p>
@@ -279,8 +306,8 @@ function ProjectsSection({ projects, loading, confirmDelete, setConfirmDelete, h
             <div key={p.id} className="dash-card" onClick={() => router.push(`/projects/${p.id}/map`)} onMouseEnter={() => setHoveredId(p.id)} onMouseLeave={() => setHoveredId(null)}
               style={{ background:isHovered?'rgba(22,19,14,0.98)':'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.065)',borderRadius:13,padding:'14px 16px',cursor:'pointer',display:'flex',alignItems:'center',gap:13,boxShadow:'0 2px 14px rgba(0,0,0,.3)',animationDelay:`${i*.04}s`,position:'relative',overflow:'hidden' }}>
               <div style={{ position:'absolute',left:0,top:10,bottom:10,width:2.5,borderRadius:2,background:STATUS_COLOR[p.status]||'#6b7280',opacity:.65 }} />
-              <div style={{ width:38,height:38,borderRadius:9,background:'rgba(244,136,74,0.07)',border:'1px solid rgba(244,136,74,0.09)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginLeft:7 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.65)" strokeWidth="1.5"><path d="M12 3l9 18H3z"/></svg>
+              <div style={{ width:38,height:38,borderRadius:9,background:'rgba(244,136,74,0.06)',border:'1px solid rgba(244,136,74,0.09)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginLeft:7 }}>
+                <UpscapeMark size={22} />
               </div>
               <div style={{ flex:1,minWidth:0 }}>
                 <div className="card-name" style={{ fontWeight:600,fontSize:14,letterSpacing:'-0.025em',color:'rgba(255,255,255,0.86)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',transition:'color .18s' }}>{p.homeowner||p.name}</div>
@@ -299,7 +326,12 @@ function ProjectsSection({ projects, loading, confirmDelete, setConfirmDelete, h
                   </>
                 ) : (
                   <>
-                    <button onClick={e=>{e.stopPropagation();setConfirmDelete(p.id)}} style={{ background:'none',border:'none',color:'rgba(255,255,255,0.12)',fontSize:14,cursor:'pointer',padding:3,lineHeight:1 }}>🗑</button>
+                    <button onClick={e=>{e.stopPropagation();setConfirmDelete(p.id)}} style={{ background:'rgba(255,255,255,0.07)',border:'none',borderRadius:'50%',width:28,height:28,cursor:'pointer',padding:0,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="rgba(255,255,255,0.35)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M10 11v5M14 11v5" stroke="rgba(255,255,255,0.35)" strokeWidth="1.8" strokeLinecap="round"/>
+                      </svg>
+                    </button>
                     <span className="card-arrow" style={{ color:'rgba(255,255,255,0.22)',fontSize:17,lineHeight:1,opacity:.45 }}>›</span>
                   </>
                 )}
@@ -344,32 +376,79 @@ function QuotesSection({ projects, router, fmt }: any) {
 // ── PRODUCTS ──────────────────────────────────────────
 function ProductsSection() {
   const categories = [
-    { label:'Uplights',    count:6,  icon:'▲', color:'#F4884A' },
-    { label:'Path Lights', count:4,  icon:'●', color:'#F5C842' },
-    { label:'Flood Lights',count:3,  icon:'▼', color:'#EF4444' },
-    { label:'Well Lights', count:4,  icon:'◎', color:'#3B82F6' },
-    { label:'Step Lights', count:3,  icon:'■', color:'#F97316' },
-    { label:'Transformers',count:6,  icon:'⚡', color:'#9CA3AF' },
-    { label:'Wire & Cable',count:4,  icon:'—', color:'#6B7280' },
-    { label:'Accessories', count:8,  icon:'⬡', color:'#A855F7' },
+    {
+      label: 'Uplights', count: 6, color: '#F4884A',
+      sunvie: 'https://www.sunvie.com/cdn/shop/files/81S_wHUWU9L._AC_SL1500.jpg?v=1727514491',
+      amp: 'https://www.amplighting.com/media/catalog/product/c/b/cb59530c-88f8-4893-8792-01f33d6aad55_cb59530c-88f8-4893-8792-01f33d6aad55.jpg',
+    },
+    {
+      label: 'Path Lights', count: 4, color: '#F5C842',
+      sunvie: 'https://www.sunvie.com/cdn/shop/files/3W-12_60W_-__01.jpg?v=1744272663',
+      amp: 'https://www.amplighting.com/media/catalog/product/a/h/aht-3309-bbz_002_jpg_1_3.jpg',
+    },
+    {
+      label: 'Flood Lights', count: 3, color: '#EF4444',
+      sunvie: 'https://www.sunvie.com/cdn/shop/files/81ijDHm9QCL._AC_SL1500.jpg?v=1727494089',
+      amp: 'https://www.amplighting.com/media/catalog/product/e/c/ecopro-bbz_0006_pit_7733.png',
+    },
+    {
+      label: 'Well Lights', count: 4, color: '#F4884A',
+      sunvie: 'https://www.sunvie.com/cdn/shop/files/81boh8z1ZlL._AC_SL1500.jpg?v=1727494089',
+      amp: 'https://www.amplighting.com/media/catalog/product/d/9/d9caee05-0d88-4b77-8c2a-e2dfaa9c5e7b_d9caee05-0d88-4b77-8c2a-e2dfaa9c5e7b.jpg',
+    },
+    {
+      label: 'Step Lights', count: 3, color: '#F97316',
+      sunvie: 'https://www.sunvie.com/cdn/shop/files/71NNBgZuTXL._AC_SL1500.jpg?v=1728633281',
+      amp: 'https://www.amplighting.com/media/catalog/product/v/a/val-1813-40-bbz_003_jpg_-_copy_2.jpg',
+    },
+    {
+      label: 'Transformers', count: 6, color: '#9CA3AF',
+      sunvie: 'https://www.sunvie.com/cdn/shop/files/71lua3i5qsL._AC_SL1500.jpg?v=1727504110',
+      amp: 'https://www.amplighting.com/media/catalog/product/3/d/3d6e43e5-ad71-4fe6-ad90-65677e67f1fe_3d6e43e5-ad71-4fe6-ad90-65677e67f1fe.jpg',
+    },
+    {
+      label: 'Wire & Cable', count: 4, color: '#6B7280',
+      sunvie: 'https://www.sunvie.com/cdn/shop/files/1_a63910cb-1abc-491f-bd24-8558dc2317c3.jpg?v=1744270790',
+      amp: null,
+    },
+    {
+      label: 'Accessories', count: 8, color: '#A855F7',
+      sunvie: 'https://www.sunvie.com/cdn/shop/files/2_82dd0874-24c2-4262-95b9-efc0c7a77161.jpg?v=1744270790',
+      amp: null,
+    },
   ]
+
   return (
-    <div style={{ maxWidth: 640, animation:'fadeUp .3s ease both' }}>
-      <h1 style={{ margin:'0 0 6px',fontSize:22,fontWeight:700,letterSpacing:'-0.03em',color:'rgba(255,255,255,0.92)' }}>Products</h1>
-      <p style={{ margin:'0 0 22px',fontSize:12,color:'rgba(255,255,255,0.25)' }}>Fixture library · Sunvie · AMP Lighting</p>
-      <div style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8 }}>
+    <div style={{ maxWidth: 680, animation: 'fadeUp .3s ease both' }}>
+      <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>Products</h1>
+      <p style={{ margin: '0 0 22px', fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>Fixture library · Sunvie · AMP Lighting</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }}>
         {categories.map(c => (
-          <div key={c.label} style={{ background:'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:12,padding:'16px 18px',cursor:'pointer',transition:'border-color .18s,background .18s' }}>
-            <div style={{ display:'flex',alignItems:'center',gap:10,marginBottom:10 }}>
-              <div style={{ width:34,height:34,borderRadius:8,background:`${c.color}14`,border:`1px solid ${c.color}22`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,color:c.color }}>{c.icon}</div>
-              <span style={{ fontSize:13,fontWeight:500,color:'rgba(255,255,255,0.75)',letterSpacing:'-0.02em' }}>{c.label}</span>
+          <div key={c.label} style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 13, overflow: 'hidden', cursor: 'pointer', transition: 'border-color .18s, box-shadow .18s' }}>
+            {/* product images strip */}
+            <div style={{ height: 90, display: 'flex', gap: 0, background: 'rgba(0,0,0,0.3)', overflow: 'hidden' }}>
+              <div style={{ flex: 1, overflow: 'hidden', borderRight: c.amp ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                <img src={c.sunvie} alt={c.label} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.82, filter: 'brightness(0.9)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+              </div>
+              {c.amp && (
+                <div style={{ flex: 1, overflow: 'hidden' }}>
+                  <img src={c.amp} alt={`${c.label} AMP`} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.82, filter: 'brightness(0.9)' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                </div>
+              )}
             </div>
-            <div style={{ fontSize:11,color:'rgba(255,255,255,0.2)' }}>{c.count} products</div>
+            {/* info */}
+            <div style={{ padding: '12px 14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.78)', letterSpacing: '-0.02em' }}>{c.label}</span>
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.03em' }}>{c.count} products</span>
+              </div>
+              <div style={{ display: 'flex', gap: 5, marginTop: 8 }}>
+                <span style={{ fontSize: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 4, padding: '2px 7px', color: 'rgba(255,255,255,0.35)' }}>Sunvie</span>
+                {c.amp && <span style={{ fontSize: 10, background: `${c.color}12`, borderRadius: 4, padding: '2px 7px', color: c.color }}>AMP</span>}
+              </div>
+            </div>
           </div>
         ))}
-      </div>
-      <div style={{ marginTop:16,padding:'14px 18px',background:'rgba(244,136,74,0.05)',border:'1px solid rgba(244,136,74,0.1)',borderRadius:12 }}>
-        <p style={{ margin:0,fontSize:12,color:'rgba(255,255,255,0.35)',letterSpacing:'-0.01em' }}>Full product catalog with beam spreads, lumen specs, and manufacturer data coming soon.</p>
       </div>
     </div>
   )
