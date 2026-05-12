@@ -100,37 +100,47 @@ export default function DashboardPage() {
   }
 
   const [ambientGlow, setAmbientGlow] = useState(() => typeof window !== 'undefined' ? +(localStorage.getItem('upscape_glow') || 70) : 70)
-  const [soundOn, setSoundOn] = useState(() => typeof window !== 'undefined' ? localStorage.getItem('upscape_sound') === 'true' : false)
+  const [soundOn, setSoundOn] = useState(() => typeof window !== 'undefined' ? localStorage.getItem('upscape_sound') !== 'false' : true)
   const introAudioRef = React.useRef<HTMLAudioElement | null>(null)
   const introTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const L = lightMode
 
-  // Intro sound — play for 60 s when soundOn, volume tracks ambientGlow
+  // Intro sound — auto-plays on mount for 60 s, volume tracks ambientGlow
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (!introAudioRef.current) {
-      const audio = new Audio('/intro-sound.mp3')
-      audio.loop = true
-      introAudioRef.current = audio
-    }
-    const audio = introAudioRef.current
-    audio.volume = soundOn ? Math.max(0.02, ambientGlow / 100) : 0
+    const audio = new Audio('/intro-sound.mp3')
+    audio.loop = true
+    audio.volume = Math.max(0.02, ambientGlow / 100)
+    introAudioRef.current = audio
     if (soundOn) {
       audio.play().catch(() => {})
-      if (introTimerRef.current) clearTimeout(introTimerRef.current)
       introTimerRef.current = setTimeout(() => {
         audio.pause()
         audio.currentTime = 0
       }, 60_000)
+    }
+    return () => {
+      audio.pause()
+      if (introTimerRef.current) clearTimeout(introTimerRef.current)
+    }
+  }, [])
+
+  // Toggle on/off after mount
+  useEffect(() => {
+    const audio = introAudioRef.current
+    if (!audio) return
+    if (soundOn) {
+      audio.play().catch(() => {})
+      if (introTimerRef.current) clearTimeout(introTimerRef.current)
+      introTimerRef.current = setTimeout(() => { audio.pause(); audio.currentTime = 0 }, 60_000)
     } else {
       audio.pause()
       audio.currentTime = 0
       if (introTimerRef.current) clearTimeout(introTimerRef.current)
     }
-    return () => { /* keep audio alive between renders */ }
   }, [soundOn])
 
-  // Live volume tracking via ambientGlow slider (no restart)
+  // Live volume tracking via ambientGlow slider
   useEffect(() => {
     if (introAudioRef.current && soundOn) {
       introAudioRef.current.volume = Math.max(0.02, ambientGlow / 100)
