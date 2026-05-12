@@ -143,7 +143,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
   })
   const [timeOfDay, setTimeOfDay] = useState<'dawn'|'day'|'dusk'|'night'>(() => {
     if (typeof window === 'undefined') return 'night'
-    return (localStorage.getItem('upscape_map_time') || 'night') as 'dawn'|'day'|'dusk'|'night'
+    return (localStorage.getItem('upscape_map_time') || 'day') as 'dawn'|'day'|'dusk'|'night'
   })
   const [popup, setPopup] = useState<Marker | null>(null)
   const [wirePopup, setWirePopup] = useState<{ id: string; feet: number } | null>(null)
@@ -214,7 +214,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
     loadProject().then(p => {
       if (!p || !mapDiv.current) return
       const _initStyle = localStorage.getItem('upscape_map_style') || 'satellite'
-      const _initTime  = localStorage.getItem('upscape_map_time')  || 'night'
+      const _initTime  = localStorage.getItem('upscape_map_time')  || 'day'
       const _initMapboxStyle = _initStyle === 'terrain'
         ? 'mapbox://styles/mapbox/standard'
         : 'mapbox://styles/mapbox/standard-satellite'
