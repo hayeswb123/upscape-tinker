@@ -707,94 +707,96 @@ export default function MapClient({ projectId }: { projectId: string }) {
 
       {/* Cinematic Time of Day selector */}
       {(() => {
+        // Mountain silhouette path — used in every card
+        const MtnPath = ({ fill }: { fill: string }) => (
+          <svg width="100%" height="28" viewBox="0 0 80 28" preserveAspectRatio="none" style={{ display: 'block' }}>
+            <path d="M0 28 L0 18 L10 10 L18 16 L26 6 L34 14 L42 4 L50 12 L58 8 L66 15 L74 11 L80 16 L80 28 Z" fill={fill}/>
+          </svg>
+        )
+
         const times = [
           {
             id: 'dawn' as const,
             label: 'Dawn',
-            glowColor: '#c084fc',
-            glowAnim: 'timeGlowDawn',
+            // Sky: deep indigo top → soft mauve → rose horizon
+            skyGrad: 'linear-gradient(180deg, #1a0a2e 0%, #3d1f5c 35%, #7b3f6e 65%, #c47a8a 85%, #e8a87c 100%)',
+            mtFill: '#150820cc',
+            // Small sun peeking at horizon
             icon: (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                {/* horizon line */}
-                <line x1="3" y1="15" x2="21" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
-                {/* sun rising */}
-                <path d="M12 15 A5 5 0 0 1 7 15" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                <path d="M12 15 A5 5 0 0 0 17 15" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                {/* rays */}
-                <line x1="12" y1="7" x2="12" y2="5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="7.5" y1="9.5" x2="6.2" y2="8.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="16.5" y1="9.5" x2="17.8" y2="8.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="5" y1="13" x2="3" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="19" y1="13" x2="21" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <line x1="4" y1="17" x2="20" y2="17" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/>
+                <path d="M12 17 A5 5 0 0 1 7 17" stroke="white" strokeWidth="1.4" fill="none" strokeLinecap="round"/>
+                <path d="M12 17 A5 5 0 0 0 17 17" stroke="white" strokeWidth="1.4" fill="none" strokeLinecap="round"/>
+                <line x1="12" y1="9" x2="12" y2="7" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
+                <line x1="7.8" y1="11.2" x2="6.4" y2="9.8" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+                <line x1="16.2" y1="11.2" x2="17.6" y2="9.8" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+                <line x1="5.5" y1="15" x2="3.5" y2="15" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+                <line x1="18.5" y1="15" x2="20.5" y2="15" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
               </svg>
             ),
           },
           {
             id: 'day' as const,
             label: 'Day',
-            glowColor: '#fde047',
-            glowAnim: 'timeGlowDay',
+            // Sky: rich blue top → bright midday blue
+            skyGrad: 'linear-gradient(180deg, #0d3b6e 0%, #1565c0 30%, #1e88e5 60%, #64b5f6 85%, #bbdefb 100%)',
+            mtFill: '#0a2540cc',
             icon: (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="4.5" stroke="currentColor" strokeWidth="1.5"/>
-                <line x1="12" y1="2" x2="12" y2="4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="12" y1="19.5" x2="12" y2="22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="2" y1="12" x2="4.5" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="19.5" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="5.6" y1="5.6" x2="7.3" y2="7.3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="16.7" y1="16.7" x2="18.4" y2="18.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="18.4" y1="5.6" x2="16.7" y2="7.3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="7.3" y1="16.7" x2="5.6" y2="18.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="11" r="4" stroke="white" strokeWidth="1.4"/>
+                <line x1="12" y1="3" x2="12" y2="5" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
+                <line x1="12" y1="17" x2="12" y2="19" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
+                <line x1="4" y1="11" x2="6" y2="11" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
+                <line x1="18" y1="11" x2="20" y2="11" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
+                <line x1="6.3" y1="5.3" x2="7.7" y2="6.7" stroke="white" strokeWidth="1.3" strokeLinecap="round"/>
+                <line x1="16.3" y1="15.3" x2="17.7" y2="16.7" stroke="white" strokeWidth="1.3" strokeLinecap="round"/>
+                <line x1="17.7" y1="5.3" x2="16.3" y2="6.7" stroke="white" strokeWidth="1.3" strokeLinecap="round"/>
+                <line x1="7.7" y1="15.3" x2="6.3" y2="16.7" stroke="white" strokeWidth="1.3" strokeLinecap="round"/>
               </svg>
             ),
           },
           {
             id: 'dusk' as const,
             label: 'Dusk',
-            glowColor: '#fb923c',
-            glowAnim: 'timeGlowDusk',
+            // Sky: deep amber/burnt orange → golden horizon
+            skyGrad: 'linear-gradient(180deg, #1a0a00 0%, #5c2200 25%, #b84400 50%, #e8720a 72%, #f5a623 88%, #fdd87a 100%)',
+            mtFill: '#150800cc',
             icon: (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                {/* horizon */}
-                <line x1="3" y1="15" x2="21" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
-                {/* setting sun — mostly below horizon */}
-                <path d="M12 15 A4 4 0 0 1 8 15" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                <path d="M12 15 A4 4 0 0 0 16 15" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-                {/* warm rays low */}
-                <line x1="4" y1="12" x2="5.5" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="18.5" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="6.5" y1="9.5" x2="7.8" y2="10.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="17.5" y1="9.5" x2="16.2" y2="10.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                {/* warm shimmer lines below */}
-                <line x1="6" y1="18" x2="9" y2="18" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.4"/>
-                <line x1="15" y1="18" x2="18" y2="18" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.4"/>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <line x1="4" y1="17" x2="20" y2="17" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/>
+                <path d="M12 17 A4.5 4.5 0 0 1 7.5 17" stroke="white" strokeWidth="1.4" fill="none" strokeLinecap="round"/>
+                <path d="M12 17 A4.5 4.5 0 0 0 16.5 17" stroke="white" strokeWidth="1.4" fill="none" strokeLinecap="round"/>
+                <line x1="4.5" y1="14" x2="6" y2="14" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+                <line x1="18" y1="14" x2="19.5" y2="14" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+                <line x1="6.8" y1="11.5" x2="7.9" y2="12.6" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+                <line x1="17.2" y1="11.5" x2="16.1" y2="12.6" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
               </svg>
             ),
           },
           {
             id: 'night' as const,
             label: 'Night',
-            glowColor: '#60a5fa',
-            glowAnim: 'timeGlowNight',
+            // Sky: near-black → deep navy
+            skyGrad: 'linear-gradient(180deg, #000005 0%, #050a1a 30%, #0a1535 60%, #0f1f4a 80%, #162454 100%)',
+            mtFill: '#03060fcc',
             icon: (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                {/* crescent */}
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                {/* stars */}
-                <circle cx="18" cy="5" r="0.9" fill="currentColor"/>
-                <circle cx="20" cy="9" r="0.6" fill="currentColor"/>
-                <circle cx="15" cy="3" r="0.6" fill="currentColor"/>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.5 6.5 0 0 0 9.5 9.5z" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="17.5" cy="5.5" r="0.8" fill="white"/>
+                <circle cx="20" cy="9" r="0.55" fill="white"/>
+                <circle cx="15" cy="3.5" r="0.55" fill="white"/>
               </svg>
             ),
           },
         ]
+
         return (
           <div style={{
             position: 'absolute', top: 58, right: 16, zIndex: 10,
-            display: 'flex', gap: 4,
-            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(16px)',
-            borderRadius: 14, padding: 4,
-            boxShadow: '0 4px 24px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.06) inset',
+            display: 'flex', gap: 5,
+            background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(18px)',
+            borderRadius: 16, padding: 5,
+            boxShadow: '0 6px 28px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.07) inset',
           }}>
             {times.map(t => {
               const isActive = timeOfDay === t.id
@@ -804,31 +806,66 @@ export default function MapClient({ projectId }: { projectId: string }) {
                   className="upscape-time-btn"
                   onClick={() => applyMapView(mapStyle, t.id)}
                   style={{
-                    width: 50, height: 50, border: 'none', borderRadius: 10,
-                    background: isActive ? `${t.glowColor}14` : 'transparent',
-                    outline: isActive ? `1.5px solid ${t.glowColor}50` : '1.5px solid transparent',
-                    cursor: 'pointer',
-                    display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center', gap: 5,
-                    animation: isActive ? `${t.glowAnim} 2.2s ease-in-out infinite` : 'none',
-                    position: 'relative', overflow: 'hidden',
+                    width: 72, height: 58, padding: 0, border: 'none', borderRadius: 11,
+                    cursor: 'pointer', position: 'relative', overflow: 'hidden',
+                    outline: isActive ? '2px solid #F4884A' : '2px solid transparent',
+                    outlineOffset: '-2px',
+                    boxShadow: isActive ? '0 0 14px rgba(244,136,74,0.5)' : 'none',
+                    transition: 'outline-color 0.2s, box-shadow 0.2s, transform 0.15s',
                   }}
                 >
-                  {/* Shimmer sweep on hover — CSS handles via pseudo, so we add an inline div */}
-                  {isActive && (
-                    <div style={{
-                      position: 'absolute', inset: 0, borderRadius: 10, pointerEvents: 'none',
-                      background: `radial-gradient(ellipse at 50% 30%, ${t.glowColor}18 0%, transparent 70%)`,
-                    }} />
-                  )}
-                  <div style={{ color: isActive ? t.glowColor : 'rgba(255,255,255,0.38)', transition: 'color 0.25s', position: 'relative' }}>
+                  {/* Sky gradient background */}
+                  <div style={{ position: 'absolute', inset: 0, background: t.skyGrad }} />
+
+                  {/* Subtle noise/grain overlay */}
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 80 58\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'80\' height=\'58\' filter=\'url(%23n)\' opacity=\'0.06\'/%3E%3C/svg%3E")',
+                    opacity: 0.5,
+                  }} />
+
+                  {/* Icon — centered in upper portion */}
+                  <div style={{
+                    position: 'absolute', top: 6, left: 0, right: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))',
+                  }}>
                     {t.icon}
                   </div>
+
+                  {/* Mountain silhouette at bottom */}
+                  <div style={{ position: 'absolute', bottom: 14, left: 0, right: 0 }}>
+                    <MtnPath fill={t.mtFill} />
+                  </div>
+
+                  {/* Dark gradient at very bottom for label readability */}
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0, height: 20,
+                    background: 'linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 100%)',
+                  }} />
+
+                  {/* Label */}
                   <span style={{
-                    fontSize: 8, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase',
-                    color: isActive ? t.glowColor : 'rgba(255,255,255,0.28)',
-                    transition: 'color 0.25s', position: 'relative',
+                    position: 'absolute', bottom: 4, left: 0, right: 0, textAlign: 'center',
+                    fontSize: 8.5, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase',
+                    color: 'rgba(255,255,255,0.88)',
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
                   }}>{t.label}</span>
+
+                  {/* Selected checkmark badge */}
+                  {isActive && (
+                    <div style={{
+                      position: 'absolute', top: 4, right: 4,
+                      width: 16, height: 16, borderRadius: '50%',
+                      background: '#F4884A',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
+                    }}>
+                      <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                        <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                  )}
                 </button>
               )
             })}
