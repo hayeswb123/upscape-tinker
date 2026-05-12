@@ -83,6 +83,11 @@ export default function DashboardPage() {
     await supabase.from('projects').delete().eq('id', id)
   }
 
+  async function deleteClient(clientName: string) {
+    setProjects(prev => prev.filter(p => (p.homeowner || p.name || '').trim() !== clientName))
+    await supabase.from('projects').delete().eq('homeowner', clientName)
+  }
+
   async function logout() {
     await supabase.auth.signOut()
     router.replace('/')
@@ -299,7 +304,7 @@ export default function DashboardPage() {
 
         {/* content */}
         <main style={{ flex: 1, overflowY: 'auto', padding: '28px 28px 60px' }}>
-          {section === 'projects' && <ProjectsSection projects={projects} loading={loading} confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} hoveredId={hoveredId} setHoveredId={setHoveredId} deleteProject={deleteProject} router={router} fmt={fmt} installedCount={installedCount} />}
+          {section === 'projects' && <ProjectsSection projects={projects} loading={loading} confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} hoveredId={hoveredId} setHoveredId={setHoveredId} deleteProject={deleteProject} deleteClient={deleteClient} router={router} fmt={fmt} installedCount={installedCount} />}
           {section === 'products' && <ProductsSection />}
           {section === 'settings' && <SettingsSection userEmail={userEmail} logout={logout} lightMode={L} toggleTheme={toggleTheme} ambientGlow={ambientGlow} setAmbientGlow={(v: number) => { setAmbientGlow(v); localStorage.setItem('upscape_glow', String(v)) }} />}
         </main>
@@ -389,7 +394,9 @@ function AvatarMenu({ initials, userEmail, logout, lightMode }: { initials: stri
 }
 
 // ── PROJECTS ──────────────────────────────────────────
-function ProjectsSection({ projects, loading, router, installedCount }: any) {
+function ProjectsSection({ projects, loading, router, installedCount, deleteClient }: any) {
+  const [confirmDeleteClient, setConfirmDeleteClient] = useState<string | null>(null)
+
   // Group projects by client
   const clientMap = React.useMemo(() => {
     const map = new Map<string, { name: string; address: string; projects: Project[] }>()
@@ -433,12 +440,29 @@ function ProjectsSection({ projects, loading, router, installedCount }: any) {
                 <div className="card-name" style={{ fontWeight:600,fontSize:14,letterSpacing:'-0.025em',color:'rgba(255,255,255,0.88)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',transition:'color .18s' }}>{client.name}</div>
                 <div style={{ color:'rgba(255,255,255,0.3)',fontSize:12,marginTop:2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',letterSpacing:'-0.01em' }}>{client.address || 'No address on file'}</div>
               </div>
-              <div style={{ display:'flex',alignItems:'center',gap:7,flexShrink:0 }}>
-                {allStatuses.slice(0,2).map((s:string)=>(
-                  <span key={s} style={{ background:STATUS_COLOR[s]+'16',color:STATUS_COLOR[s],borderRadius:5,fontSize:10,fontWeight:600,padding:'2px 6px',letterSpacing:'0.03em',textTransform:'uppercase' }}>{STATUS_LABEL[s]||s}</span>
-                ))}
-                <span style={{ fontSize:11,color:'rgba(255,255,255,0.2)',background:'rgba(255,255,255,0.055)',borderRadius:6,padding:'2px 8px',fontWeight:500,flexShrink:0 }}>{client.projects.length} project{client.projects.length!==1?'s':''}</span>
-                <span className="card-arrow" style={{ color:'rgba(255,255,255,0.22)',fontSize:17,lineHeight:1,opacity:.45 }}>›</span>
+              <div style={{ display:'flex',alignItems:'center',gap:7,flexShrink:0 }} onClick={e=>e.stopPropagation()}>
+                {confirmDeleteClient === key ? (
+                  <>
+                    <span style={{ fontSize:11,color:'rgba(255,255,255,0.45)' }}>Delete all projects?</span>
+                    <button onClick={()=>{ deleteClient(key); setConfirmDeleteClient(null) }}
+                      style={{ background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.35)',color:'#ef4444',borderRadius:6,fontSize:11,fontWeight:600,padding:'3px 9px',cursor:'pointer' }}>Delete</button>
+                    <button onClick={()=>setConfirmDeleteClient(null)}
+                      style={{ background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',color:'rgba(255,255,255,0.45)',borderRadius:6,fontSize:11,fontWeight:500,padding:'3px 9px',cursor:'pointer' }}>Cancel</button>
+                  </>
+                ) : (
+                  <>
+                    {allStatuses.slice(0,2).map((s:string)=>(
+                      <span key={s} style={{ background:STATUS_COLOR[s]+'16',color:STATUS_COLOR[s],borderRadius:5,fontSize:10,fontWeight:600,padding:'2px 6px',letterSpacing:'0.03em',textTransform:'uppercase' }}>{STATUS_LABEL[s]||s}</span>
+                    ))}
+                    <span style={{ fontSize:11,color:'rgba(255,255,255,0.2)',background:'rgba(255,255,255,0.055)',borderRadius:6,padding:'2px 8px',fontWeight:500,flexShrink:0 }}>{client.projects.length} project{client.projects.length!==1?'s':''}</span>
+                    <button onClick={()=>setConfirmDeleteClient(key)} title="Delete client"
+                      style={{ background:'none',border:'none',color:'rgba(255,255,255,0.18)',cursor:'pointer',padding:'3px 5px',borderRadius:6,display:'flex',alignItems:'center',transition:'color .15s' }}
+                      onMouseEnter={e=>(e.currentTarget.style.color='#ef4444')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,0.18)')}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                    </button>
+                    <span className="card-arrow" style={{ color:'rgba(255,255,255,0.22)',fontSize:17,lineHeight:1,opacity:.45 }}>›</span>
+                  </>
+                )}
               </div>
             </div>
           )
@@ -745,9 +769,10 @@ function InstallSection({ projects }: any) {
 }
 
 // ── SETTINGS ──────────────────────────────────────────
-function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+function Toggle({ on, onToggle, glow = 70 }: { on: boolean; onToggle: () => void; glow?: number }) {
+  const g = glow / 100
   return (
-    <div onClick={onToggle} style={{ width:44,height:24,borderRadius:12,background:on?'#F4884A':'rgba(255,255,255,0.12)',cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,boxShadow:on?'0 0 12px rgba(244,136,74,0.4)':'none' }}>
+    <div onClick={onToggle} style={{ width:44,height:24,borderRadius:12,background:on?'#F4884A':'rgba(255,255,255,0.12)',cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,boxShadow:on?`0 0 ${Math.round(14*g)}px rgba(244,136,74,${(0.45*g).toFixed(2)})`:'none' }}>
       <div style={{ position:'absolute',top:3,left:on?22:3,width:18,height:18,borderRadius:'50%',background:'#fff',transition:'left .18s',boxShadow:'0 1px 5px rgba(0,0,0,.35)' }} />
     </div>
   )
@@ -788,7 +813,7 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
   const tabBg = L ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.03)'
   const tabBorder = L ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'
 
-  const T = (on: boolean, fn: ()=>void) => <Toggle on={on} onToggle={fn} />
+  const T = (on: boolean, fn: ()=>void) => <Toggle on={on} onToggle={fn} glow={ambientGlow} />
 
   const row = (label: string, desc: string, right: React.ReactNode, last=false) => (
     <div className="settings-row" style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'15px 20px',borderBottom:last?'none':`1px solid ${border}`,gap:20 }}>
@@ -873,7 +898,7 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
           {row('Dark / Light mode','Toggle between dark and light interface.',(
             <div style={{ display:'flex',alignItems:'center',gap:10 }}>
               <span style={{ fontSize:11,color:muted,minWidth:28 }}>{lightMode?'Light':'Dark'}</span>
-              <Toggle on={lightMode} onToggle={toggleTheme} />
+              <Toggle on={lightMode} onToggle={toggleTheme} glow={ambientGlow} />
             </div>
           ))}
           {row('Ambient glow','Adjust the intensity of ambient glow.',(
