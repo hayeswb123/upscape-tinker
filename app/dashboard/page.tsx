@@ -419,8 +419,6 @@ function ProjectsSection({ projects, loading, router, installedCount }: any) {
 
       {loading && <div style={{ textAlign:'center',paddingTop:50 }}><div style={{ width:24,height:24,border:'2px solid rgba(244,136,74,0.25)',borderTopColor:'#F4884A',borderRadius:'50%',animation:'spin .8s linear infinite',margin:'0 auto 10px' }} /><p style={{ color:'rgba(255,255,255,0.2)',fontSize:12 }}>Loading…</p></div>}
 
-      {!loading && projects.length === 0 && <EmptyState onNew={() => router.push('/projects/new')} />}
-
       <div style={{ display:'flex',flexDirection:'column',gap:7 }}>
         {Array.from(clientMap.entries()).map(([key, client], ci) => {
           const initials = client.name.split(' ').map((w:string)=>w[0]).slice(0,2).join('').toUpperCase()
@@ -446,6 +444,9 @@ function ProjectsSection({ projects, loading, router, installedCount }: any) {
           )
         })}
       </div>
+
+      {/* Empty state — always shown below cards */}
+      {!loading && <EmptyState onNew={() => router.push('/projects/new')} hasClients={clientCount > 0} />}
     </div>
   )
 }
@@ -480,141 +481,72 @@ function QuotesSection({ projects, router, fmt }: any) {
 }
 
 // ── EMPTY STATE ───────────────────────────────────────
-function EmptyState({ onNew }: { onNew: () => void }) {
+function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boolean }) {
   return (
-    <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none', zIndex:0, overflow:'hidden' }}>
+    <div style={{
+      marginTop: hasClients ? 72 : 40,
+      marginBottom: 40,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      animation: 'emptyFadeIn 1s cubic-bezier(.16,1,.3,1) both',
+      animationDelay: hasClients ? '0.1s' : '0.3s',
+      position: 'relative',
+    }}>
+      {/* separator line — only shown when cards above exist */}
+      {hasClients && (
+        <div style={{ width: '100%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)', marginBottom: 72 }} />
+      )}
 
-      {/* deep atmospheric radial */}
-      <div style={{ position:'absolute', width:900, height:900, borderRadius:'50%', background:'radial-gradient(ellipse at 50% 55%, rgba(244,136,74,0.05) 0%, transparent 65%)', top:'50%', left:'50%', transform:'translate(-50%,-50%)', pointerEvents:'none', animation:'bgDrift 20s ease-in-out infinite' }} />
+      {/* ambient glow behind image */}
+      <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%, -54%)', width:380, height:280, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.09) 0%, transparent 65%)', pointerEvents:'none', animation:'glowPulse 6s ease-in-out infinite' }} />
 
-      {/* volumetric floor spotlight */}
-      <div style={{ position:'absolute', width:560, height:90, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.28) 0%, rgba(244,136,74,0.08) 40%, transparent 70%)', bottom:'calc(50% - 118px)', left:'50%', transform:'translateX(-50%)', animation:'glowPulse 5s ease-in-out infinite', pointerEvents:'none', filter:'blur(10px)' }} />
-      {/* tighter inner spotlight */}
-      <div style={{ position:'absolute', width:220, height:40, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.45) 0%, transparent 70%)', bottom:'calc(50% - 112px)', left:'50%', transform:'translateX(-50%)', animation:'glowPulse 4s ease-in-out infinite', animationDelay:'.6s', pointerEvents:'none', filter:'blur(5px)' }} />
+      {/* floor spotlight */}
+      <div style={{ position:'absolute', top:'calc(50% + 20px)', left:'50%', transform:'translateX(-50%)', width:440, height:60, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.18) 0%, transparent 70%)', filter:'blur(14px)', pointerEvents:'none', animation:'glowPulse 5s ease-in-out infinite', animationDelay:'1s' }} />
 
-      {/* 4-pointed star sparkles */}
-      {([
-        { x:-105, y:-60,  s:7,  op:0.7,  d:'drift1', delay:'0s'   },
-        { x: 110, y:-80,  s:5,  op:0.5,  d:'drift2', delay:'1.2s' },
-        { x:-140, y: 10,  s:4,  op:0.35, d:'drift3', delay:'2.4s' },
-        { x: 130, y: 30,  s:6,  op:0.55, d:'drift1', delay:'0.7s' },
-        { x:-55,  y:-110, s:4,  op:0.4,  d:'drift2', delay:'3.1s' },
-        { x:  75, y:-100, s:8,  op:0.65, d:'drift3', delay:'1.8s' },
-        { x:-165, y:-30,  s:3,  op:0.3,  d:'drift1', delay:'4.0s' },
-        { x: 155, y:-50,  s:5,  op:0.45, d:'drift2', delay:'0.5s' },
-      ] as {x:number,y:number,s:number,op:number,d:string,delay:string}[]).map((sp,i) => {
-        const h = sp.s, t = h*0.22, b = h*0.22
-        const star = `M0,${-h} C${t},${-t} ${t},${-t} ${h},0 C${t},${b} ${t},${b} 0,${h} C${-t},${b} ${-t},${b} ${-h},0 C${-t},${-t} ${-t},${-t} 0,${-h}Z`
-        return (
-          <div key={i} style={{ position:'absolute', top:'50%', left:'50%', marginLeft:sp.x, marginTop:sp.y, pointerEvents:'none', animation:`${sp.d} ${4+i*0.42}s ease-in infinite`, animationDelay:sp.delay }}>
-            <svg width={sp.s*2} height={sp.s*2} viewBox={`${-sp.s} ${-sp.s} ${sp.s*2} ${sp.s*2}`} style={{ overflow:'visible', filter:`drop-shadow(0 0 ${sp.s*0.8}px rgba(244,136,74,${sp.op}))` }}>
-              <path d={star} fill={`rgba(244,136,74,${sp.op})`}/>
-            </svg>
-          </div>
-        )
-      })}
-
-      {/* ── MAIN CONTENT ── */}
-      <div style={{ position:'relative', display:'flex', flexDirection:'column', alignItems:'center', animation:'emptyFadeIn 1.1s cubic-bezier(.16,1,.3,1) both', pointerEvents:'auto' }}>
-
-        {/* ── WIREFRAME INBOX TRAY ── */}
-        <div style={{ marginBottom: 48, animation:'float 6s ease-in-out infinite', position:'relative' }}>
-
-          {/* warm halo behind tray */}
-          <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:220, height:220, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.07) 0%, transparent 70%)', animation:'glowPulse 5s ease-in-out infinite', pointerEvents:'none' }} />
-
-          <svg width="174" height="148" viewBox="0 0 174 148" fill="none" xmlns="http://www.w3.org/2000/svg"
-            style={{ filter:'drop-shadow(0 0 8px rgba(244,136,74,0.55)) drop-shadow(0 0 22px rgba(244,136,74,0.25))' }}>
-
-            {/* ── TRAY BOX ──
-                Open-top rectangular tray with slight perspective depth.
-                Front face, back face visible above, two side walls, bottom floor. */}
-
-            {/* floor */}
-            <path d="M28 112 L146 112 L146 94 L28 94 Z" fill="rgba(244,136,74,0.04)" stroke="rgba(244,136,74,0.55)" strokeWidth="1.3" strokeLinejoin="round"/>
-
-            {/* back wall (visible above front) */}
-            <path d="M28 94 L28 60 L146 60 L146 94" fill="rgba(244,136,74,0.03)" stroke="rgba(244,136,74,0.45)" strokeWidth="1.3" strokeLinejoin="round"/>
-
-            {/* left side wall */}
-            <path d="M28 60 L28 112" stroke="rgba(244,136,74,0.55)" strokeWidth="1.3"/>
-            {/* right side wall */}
-            <path d="M146 60 L146 112" stroke="rgba(244,136,74,0.55)" strokeWidth="1.3"/>
-
-            {/* front top edge (open top) */}
-            <line x1="28" y1="60" x2="146" y2="60" stroke="rgba(244,136,74,0.7)" strokeWidth="1.6"/>
-
-            {/* bottom edge */}
-            <line x1="28" y1="112" x2="146" y2="112" stroke="rgba(244,136,74,0.5)" strokeWidth="1.3"/>
-
-            {/* subtle horizontal depth lines inside tray */}
-            <line x1="32" y1="75" x2="142" y2="75" stroke="rgba(244,136,74,0.14)" strokeWidth="0.8"/>
-            <line x1="32" y1="88" x2="142" y2="88" stroke="rgba(244,136,74,0.1)" strokeWidth="0.8"/>
-
-            {/* ── U-HANDLE ARCH ──
-                Rectangular arch rising from the back-top of the tray */}
-            {/* left upright */}
-            <line x1="62" y1="60" x2="62" y2="28" stroke="rgba(244,136,74,0.6)" strokeWidth="1.4"/>
-            {/* right upright */}
-            <line x1="112" y1="60" x2="112" y2="28" stroke="rgba(244,136,74,0.6)" strokeWidth="1.4"/>
-            {/* top crossbar */}
-            <line x1="62" y1="28" x2="112" y2="28" stroke="rgba(244,136,74,0.65)" strokeWidth="1.4"/>
-
-            {/* ── DOCUMENT CARD INSIDE TRAY ──
-                Frosted white card peeking above the tray front edge */}
-
-            {/* card body — sits behind arch, partially inside tray */}
-            <rect x="50" y="36" width="74" height="62" rx="5"
-              fill="rgba(255,255,255,0.07)"
-              stroke="rgba(255,255,255,0.28)"
-              strokeWidth="1.1"/>
-
-            {/* subtle card gloss */}
-            <rect x="50" y="36" width="74" height="14" rx="5"
-              fill="rgba(255,255,255,0.05)"/>
-            <line x1="50" y1="49.5" x2="124" y2="49.5" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8"/>
-
-            {/* two content lines on card */}
-            <line x1="62" y1="62" x2="112" y2="62" stroke="rgba(255,255,255,0.22)" strokeWidth="2" strokeLinecap="round"/>
-            <line x1="62" y1="72" x2="100" y2="72" stroke="rgba(255,255,255,0.13)" strokeWidth="2" strokeLinecap="round"/>
-
-            {/* corner crease on card */}
-            <path d="M109 36 L124 51" stroke="rgba(255,255,255,0.12)" strokeWidth="0.8"/>
-            <path d="M109 36 L109 51 L124 51" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.10)" strokeWidth="0.8"/>
-
-          </svg>
-
-          {/* bottom shadow cast on floor */}
-          <div style={{ position:'absolute', bottom:-10, left:'50%', transform:'translateX(-50%)', width:100, height:14, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.28) 0%, transparent 70%)', filter:'blur(5px)' }} />
-        </div>
-
-        {/* heading */}
-        <h2 style={{ margin:'0 0 10px', fontSize:26, fontWeight:700, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.85)', textAlign:'center', lineHeight:1.1 }}>No clients yet</h2>
-        <p style={{ margin:'0 0 36px', fontSize:13, color:'rgba(255,255,255,0.25)', textAlign:'center', letterSpacing:'-0.01em', lineHeight:1.65, maxWidth:220 }}>Add your first client to begin designing their lighting system.</p>
-
-        {/* CTA */}
-        <button
-          onClick={onNew}
-          style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 26px', borderRadius:11, background:'linear-gradient(135deg,#F4884A,#d96520)', border:'none', color:'#fff', fontSize:13, fontWeight:600, letterSpacing:'-0.01em', cursor:'pointer', boxShadow:'0 0 28px rgba(244,136,74,0.32), 0 4px 18px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.14) inset', transition:'transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-2px) scale(1.02)'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 48px rgba(244,136,74,0.48), 0 8px 28px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.18) inset' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform='none'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 28px rgba(244,136,74,0.32), 0 4px 18px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.14) inset' }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
-          New client
-        </button>
-
-        {/* grain texture overlay */}
-        <svg style={{ position:'fixed', inset:0, width:'100%', height:'100%', pointerEvents:'none', opacity:.018, zIndex:-1 }} xmlns="http://www.w3.org/2000/svg">
-          <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
-          <rect width="100%" height="100%" filter="url(#grain)" />
-        </svg>
+      {/* folder illustration */}
+      <div style={{ animation:'float 7s ease-in-out infinite', position:'relative', marginBottom: 44 }}>
+        {/* tight floor shadow under image */}
+        <div style={{ position:'absolute', bottom:-16, left:'50%', transform:'translateX(-50%)', width:160, height:20, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.3) 0%, transparent 70%)', filter:'blur(8px)' }} />
+        <img
+          src="/empty-folder.png"
+          alt="No projects yet"
+          style={{
+            width: 200,
+            height: 'auto',
+            display: 'block',
+            filter: 'drop-shadow(0 0 24px rgba(244,136,74,0.35)) drop-shadow(0 0 6px rgba(244,136,74,0.2))',
+          }}
+        />
       </div>
+
+      {/* text */}
+      <h2 style={{ margin:'0 0 10px', fontSize:24, fontWeight:700, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.82)', textAlign:'center', lineHeight:1.1 }}>
+        {hasClients ? 'Ready to add more?' : 'No clients yet'}
+      </h2>
+      <p style={{ margin:'0 0 32px', fontSize:13, color:'rgba(255,255,255,0.22)', textAlign:'center', letterSpacing:'-0.01em', lineHeight:1.7, maxWidth:240 }}>
+        {hasClients
+          ? 'Create a new client and start designing their landscape lighting.'
+          : 'Add your first client to begin designing their lighting system.'}
+      </p>
+
+      {/* CTA */}
+      <button
+        onClick={onNew}
+        style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 26px', borderRadius:11, background:'linear-gradient(135deg,#F4884A,#d96520)', border:'none', color:'#fff', fontSize:13, fontWeight:600, letterSpacing:'-0.01em', cursor:'pointer', boxShadow:'0 0 28px rgba(244,136,74,0.3), 0 4px 18px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.14) inset', transition:'transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-2px) scale(1.02)'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 48px rgba(244,136,74,0.45), 0 8px 28px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.18) inset' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform='none'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 28px rgba(244,136,74,0.3), 0 4px 18px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.14) inset' }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        New client
+      </button>
     </div>
   )
 }
 
 // ── PRODUCTS ──────────────────────────────────────────
-const PRODUCT_CATALOG: Record<string, { name: string; brand: 'AMP' | 'Sunvie'; img: string; sku?: string }[]> = {
+type ProdEntry = { name: string; brand: 'AMP' | 'Sunvie'; img: string }
+const PRODUCT_CATALOG: Record<string, ProdEntry[]> = {
   uplights: [
     { name: 'PinnaclePro MR16 Spotlight',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/c/b/cb59530c-88f8-4893-8792-01f33d6aad55_cb59530c-88f8-4893-8792-01f33d6aad55.jpg' },
     { name: 'G2 EcoPro MR16 Spotlight',          brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/e/c/ecopro-bbz_0006_pit_7733.png' },
