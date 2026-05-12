@@ -998,14 +998,6 @@ function Toggle({ on, onToggle, glow = 70 }: { on: boolean; onToggle: () => void
   )
 }
 
-const FIXTURE_PHOTO_TYPES = [
-  { id: 'uplight', label: 'Uplight' },
-  { id: 'path',    label: 'Path' },
-  { id: 'flood',   label: 'Flood' },
-  { id: 'well',    label: 'Well' },
-  { id: 'power',   label: 'Power' },
-]
-
 function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlow, setAmbientGlow }: any) {
   const [active, setActive]         = useState('general')
   const [mapStyle, setMapStyle]     = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_style') || 'satellite') : 'satellite')
@@ -1016,30 +1008,6 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
   const [gmailCount] = useState(0)
   const scrollRef = React.useRef<HTMLDivElement>(null)
 
-  // Fixture photos
-  const loadPhotos = () => typeof window !== 'undefined'
-    ? Object.fromEntries(FIXTURE_PHOTO_TYPES.map(f => [f.id, localStorage.getItem(`upscape_fx_photo_${f.id}`) || '']))
-    : {}
-  const [fixturePhotos, setFixturePhotos] = useState<Record<string,string>>(loadPhotos)
-  const fileInputRefs = React.useRef<Record<string, HTMLInputElement | null>>({})
-
-  function uploadFixturePhoto(id: string, file: File) {
-    const reader = new FileReader()
-    reader.onload = e => {
-      const url = e.target?.result as string
-      localStorage.setItem(`upscape_fx_photo_${id}`, url)
-      setFixturePhotos(prev => ({ ...prev, [id]: url }))
-      // Trigger storage event so MapClient picks it up in the same tab
-      window.dispatchEvent(new StorageEvent('storage', { key: `upscape_fx_photo_${id}`, newValue: url }))
-    }
-    reader.readAsDataURL(file)
-  }
-
-  function clearFixturePhoto(id: string) {
-    localStorage.removeItem(`upscape_fx_photo_${id}`)
-    setFixturePhotos(prev => ({ ...prev, [id]: '' }))
-    window.dispatchEvent(new StorageEvent('storage', { key: `upscape_fx_photo_${id}`, newValue: null }))
-  }
 
   function pickMapStyle(id: string) { setMapStyle(id); localStorage.setItem('upscape_map_style', id) }
   function pickMapTime(t: string) { setMapTime(t); localStorage.setItem('upscape_map_time', t) }
@@ -1161,58 +1129,6 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
             </div>
           ))}
           {row('Animations','Enable interface animations and transitions.',T(animations,()=>setAnimations(v=>!v)),true)}
-        </>)}
-
-        {block('fixtures','Fixture Photos', <>
-          <div style={{ padding:'14px 18px' }}>
-            <p style={{ margin:'0 0 14px',fontSize:11,color:muted,lineHeight:1.6 }}>
-              Assign a product photo to each fixture type. It shows as the icon in the map toolbar. PNG · WEBP · JPG supported.
-            </p>
-            <div style={{ display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10 }}>
-              {FIXTURE_PHOTO_TYPES.map(f => {
-                const photo = fixturePhotos[f.id]
-                return (
-                  <div key={f.id} style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:7 }}>
-                    {/* hidden file input */}
-                    <input
-                      ref={el => { fileInputRefs.current[f.id] = el }}
-                      type="file" accept="image/png,image/jpeg,image/webp"
-                      style={{ display:'none' }}
-                      onChange={e => { const file = e.target.files?.[0]; if (file) uploadFixturePhoto(f.id, file); e.target.value = '' }}
-                    />
-                    {/* photo slot */}
-                    <div
-                      onClick={() => fileInputRefs.current[f.id]?.click()}
-                      style={{
-                        width:52,height:52,borderRadius:'50%',overflow:'hidden',cursor:'pointer',
-                        border: photo ? '2px solid rgba(244,136,74,0.5)' : `1.5px dashed ${L?'rgba(0,0,0,0.2)':'rgba(255,255,255,0.18)'}`,
-                        background: photo ? 'transparent' : (L?'rgba(0,0,0,0.04)':'rgba(255,255,255,0.04)'),
-                        display:'flex',alignItems:'center',justifyContent:'center',
-                        transition:'border-color .18s, box-shadow .18s',
-                        boxShadow: photo ? '0 0 12px rgba(244,136,74,0.25)' : 'none',
-                        position:'relative',
-                      }}
-                      onMouseEnter={e=>(e.currentTarget as HTMLElement).style.borderColor='rgba(244,136,74,0.7)'}
-                      onMouseLeave={e=>(e.currentTarget as HTMLElement).style.borderColor=photo?'rgba(244,136,74,0.5)':(L?'rgba(0,0,0,0.2)':'rgba(255,255,255,0.18)')}
-                    >
-                      {photo ? (
-                        <img src={photo} alt={f.label} style={{ width:'100%',height:'100%',objectFit:'cover',filter:'brightness(0.9)' }} />
-                      ) : (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={L?'rgba(0,0,0,0.3)':'rgba(255,255,255,0.3)'} strokeWidth="1.5"><path d="M12 5v14M5 12h14"/></svg>
-                      )}
-                    </div>
-                    {/* label + clear */}
-                    <div style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:2 }}>
-                      <span style={{ fontSize:9,fontWeight:600,letterSpacing:'0.07em',textTransform:'uppercase',color:muted }}>{f.label}</span>
-                      {photo && (
-                        <button onClick={()=>clearFixturePhoto(f.id)} style={{ background:'none',border:'none',color:'rgba(239,68,68,0.5)',fontSize:9,cursor:'pointer',padding:0,letterSpacing:'0.04em' }}>clear</button>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
         </>)}
 
         {block('notifications','Notifications', <>

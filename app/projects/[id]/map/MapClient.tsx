@@ -949,6 +949,29 @@ function MarkerPopup({ marker, onChange, onSave, onDelete }: {
 }) {
   const color = FIXTURE_COLORS[marker.type] || '#F4884A'
   const fix = FIXTURES[marker.type as FixtureType]
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Load current photo for this fixture type
+  const [photo, setPhoto] = useState(() =>
+    typeof window !== 'undefined' ? (localStorage.getItem(`upscape_fx_photo_${marker.type}`) || '') : ''
+  )
+
+  function handlePhotoUpload(file: File) {
+    const reader = new FileReader()
+    reader.onload = e => {
+      const url = e.target?.result as string
+      localStorage.setItem(`upscape_fx_photo_${marker.type}`, url)
+      setPhoto(url)
+      window.dispatchEvent(new StorageEvent('storage', { key: `upscape_fx_photo_${marker.type}`, newValue: url }))
+    }
+    reader.readAsDataURL(file)
+  }
+
+  function clearPhoto() {
+    localStorage.removeItem(`upscape_fx_photo_${marker.type}`)
+    setPhoto('')
+    window.dispatchEvent(new StorageEvent('storage', { key: `upscape_fx_photo_${marker.type}`, newValue: null }))
+  }
 
   return (
     <div style={{
@@ -958,13 +981,70 @@ function MarkerPopup({ marker, onChange, onSave, onDelete }: {
       boxShadow: '0 12px 48px rgba(0,0,0,0.65), 0 1px 0 rgba(255,255,255,0.06) inset',
       overflow: 'hidden',
     }}>
+      {/* header */}
       <div style={{ padding: '13px 16px 11px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ width: 28, height: 28, borderRadius: 6, background: `${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
           dangerouslySetInnerHTML={{ __html: markerSVG(marker.type) }} />
         <span style={{ fontWeight: 500, fontSize: 13, letterSpacing: '-0.02em', color: 'rgba(255,255,255,0.88)' }}>{fix?.label || marker.type}</span>
         <button onClick={() => onSave(marker)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: 4, transition: 'color 0.15s' }}>✕</button>
       </div>
+
       <div style={{ padding: '13px 16px', display: 'flex', flexDirection: 'column', gap: 11 }}>
+
+        {/* Photo row */}
+        <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }}
+          onChange={e => { const f = e.target.files?.[0]; if (f) handlePhotoUpload(f); e.target.value = '' }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* Thumbnail / upload trigger */}
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              width: 44, height: 44, borderRadius: 10, flexShrink: 0,
+              overflow: 'hidden', cursor: 'pointer', position: 'relative',
+              background: photo ? 'transparent' : 'rgba(255,255,255,0.05)',
+              border: photo ? `1.5px solid ${color}55` : '1.5px dashed rgba(255,255,255,0.18)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: photo ? `0 0 10px ${color}33` : 'none',
+              transition: 'border-color .15s, box-shadow .15s',
+            }}
+          >
+            {photo ? (
+              <img src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.88)' }} />
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            )}
+          </div>
+
+          {/* Label / actions */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 4 }}>
+              Fixture Photo
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 500, padding: '4px 10px', cursor: 'pointer', letterSpacing: '-0.01em' }}
+              >
+                {photo ? 'Replace' : 'Upload'}
+              </button>
+              {photo && (
+                <button
+                  onClick={clearPhoto}
+                  style={{ background: 'none', border: 'none', color: 'rgba(239,68,68,0.5)', fontSize: 11, cursor: 'pointer', padding: 0 }}
+                >
+                  Remove
+                </button>
+              )}
+              {photo && <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>applies to all {fix?.label || marker.type}s</span>}
+            </div>
+          </div>
+        </div>
+
+        {/* Qty */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <label style={labelSt}>Qty</label>
           <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: 7, overflow: 'hidden' }}>
@@ -973,15 +1053,20 @@ function MarkerPopup({ marker, onChange, onSave, onDelete }: {
             <button onClick={() => onChange({ ...marker, qty: marker.qty + 1 })} style={{ width: 36, height: 34, background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: 18, cursor: 'pointer' }}>+</button>
           </div>
         </div>
+
+        {/* Label */}
         <div>
           <label style={labelSt}>Label</label>
           <input style={inputSt} value={marker.label} onChange={e => onChange({ ...marker, label: e.target.value })} placeholder="e.g. Front oak tree" />
         </div>
+
+        {/* Notes */}
         <div>
           <label style={labelSt}>Notes</label>
           <textarea style={{ ...inputSt, resize: 'none', height: 52 }} value={marker.notes} onChange={e => onChange({ ...marker, notes: e.target.value })} placeholder="Beam angle, color temp…" />
         </div>
       </div>
+
       <div style={{ padding: '0 16px 14px', display: 'flex', gap: 8 }}>
         <button onClick={() => onDelete(marker.id)} style={{ flex: 1, background: 'transparent', border: 'none', borderRadius: 8, color: 'rgba(239,68,68,0.6)', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer', letterSpacing: '-0.01em' }}>Remove</button>
         <button onClick={() => onSave(marker)} style={{ flex: 2, background: '#F4884A', border: 'none', borderRadius: 8, color: 'rgba(255,255,255,0.92)', fontSize: 12, fontWeight: 500, letterSpacing: '-0.01em', padding: 11, cursor: 'pointer' }}>Save</button>
