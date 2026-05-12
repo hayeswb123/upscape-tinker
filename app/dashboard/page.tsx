@@ -241,7 +241,7 @@ export default function DashboardPage() {
 
       {/* ── SIDEBAR ── */}
       <aside style={{
-        width: 220, flexShrink: 0,
+        width: 160, flexShrink: 0,
         display: 'flex', flexDirection: 'column',
         background: L ? 'rgba(255,255,255,0.62)' : 'rgba(12,10,8,0.55)',
         backdropFilter: 'blur(32px) saturate(180%)',
@@ -251,26 +251,26 @@ export default function DashboardPage() {
         transition: 'background .3s, border-color .3s',
       }}>
         {/* logo */}
-        <div style={{ padding: '18px 18px 15px', borderBottom: L ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.04)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src="/upscape-logo-mark.png" alt="" width={26} height={26} style={{ objectFit: 'contain', flexShrink: 0 }} />
+        <div style={{ padding: '16px 12px 13px', borderBottom: L ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img src="/upscape-logo-mark.png" alt="" width={24} height={24} style={{ objectFit: 'contain', flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: 12.5, fontWeight: 700, letterSpacing: '0.06em', color: L ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.9)', lineHeight: 1 }}>UPSCAPE</div>
-              <div style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.09em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.28)' : 'rgba(255,255,255,0.2)', marginTop: 3.5 }}>Field Designer</div>
+              <div style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '0.06em', color: L ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.9)', lineHeight: 1 }}>UPSCAPE</div>
+              <div style={{ fontSize: 8.5, fontWeight: 500, letterSpacing: '0.09em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.28)' : 'rgba(255,255,255,0.2)', marginTop: 3 }}>Field Designer</div>
             </div>
           </div>
         </div>
 
         {/* nav — flex column, main items grow, manage pinned at bottom */}
-        <nav style={{ flex: 1, padding: '12px 10px 12px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+        <nav style={{ flex: 1, padding: '10px 8px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
           {/* MAIN group */}
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.18)', padding: '0 14px 8px' }}>Main</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.18)', padding: '0 10px 6px' }}>Main</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {NAV_MAIN.map(item => {
               const active = section === item.id
               return (
-                <button key={item.id} className="nav-item" onClick={() => setSection(item.id)} style={{ display:'flex',alignItems:'center',gap:11, padding:'9px 14px',borderRadius:9,border:'none',cursor:'pointer',textAlign:'left',width:'100%', background:active?'rgba(244,136,74,0.1)':'transparent', color:active?(L?'rgba(0,0,0,0.85)':'rgba(255,255,255,0.92)'):(L?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.36)'), fontSize:13,fontWeight:active?500:400,letterSpacing:'-0.012em', boxShadow:active?'0 0 0 1px rgba(244,136,74,0.14) inset':'none',position:'relative' }}>
-                  {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:20,borderRadius:2,background:'rgba(244,136,74,0.85)',boxShadow:'0 0 8px rgba(244,136,74,0.5)' }} />}
+                <button key={item.id} className="nav-item" onClick={() => setSection(item.id)} style={{ display:'flex',alignItems:'center',gap:8, padding:'8px 10px',borderRadius:8,border:'none',cursor:'pointer',textAlign:'left',width:'100%', background:active?'rgba(244,136,74,0.1)':'transparent', color:active?(L?'rgba(0,0,0,0.85)':'rgba(255,255,255,0.92)'):(L?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.36)'), fontSize:12,fontWeight:active?500:400,letterSpacing:'-0.01em', boxShadow:active?'0 0 0 1px rgba(244,136,74,0.14) inset':'none',position:'relative' }}>
+                  {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:18,borderRadius:2,background:'rgba(244,136,74,0.85)',boxShadow:'0 0 8px rgba(244,136,74,0.5)' }} />}
                   <span style={{ color:active?'rgba(244,136,74,0.9)':(L?'rgba(0,0,0,0.28)':'rgba(255,255,255,0.26)'),flexShrink:0 }}>{item.icon(active)}</span>
                   {item.label}
                 </button>
@@ -282,13 +282,13 @@ export default function DashboardPage() {
           <div style={{ flex: 1 }} />
 
           {/* MANAGE group */}
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.18)', padding: '0 14px 8px' }}>Manage</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div style={{ fontSize: 8.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.18)', padding: '0 10px 6px' }}>Manage</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {NAV_MANAGE.map(item => {
               const active = section === item.id
               return (
-                <button key={item.id} className="nav-item" onClick={() => setSection(item.id)} style={{ display:'flex',alignItems:'center',gap:11, padding:'9px 14px',borderRadius:9,border:'none',cursor:'pointer',textAlign:'left',width:'100%', background:active?'rgba(244,136,74,0.1)':'transparent', color:active?(L?'rgba(0,0,0,0.85)':'rgba(255,255,255,0.92)'):(L?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.36)'), fontSize:13,fontWeight:active?500:400,letterSpacing:'-0.012em', boxShadow:active?'0 0 0 1px rgba(244,136,74,0.14) inset':'none',position:'relative' }}>
-                  {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:20,borderRadius:2,background:'rgba(244,136,74,0.85)',boxShadow:'0 0 8px rgba(244,136,74,0.5)' }} />}
+                <button key={item.id} className="nav-item" onClick={() => setSection(item.id)} style={{ display:'flex',alignItems:'center',gap:8, padding:'8px 10px',borderRadius:8,border:'none',cursor:'pointer',textAlign:'left',width:'100%', background:active?'rgba(244,136,74,0.1)':'transparent', color:active?(L?'rgba(0,0,0,0.85)':'rgba(255,255,255,0.92)'):(L?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.36)'), fontSize:12,fontWeight:active?500:400,letterSpacing:'-0.01em', boxShadow:active?'0 0 0 1px rgba(244,136,74,0.14) inset':'none',position:'relative' }}>
+                  {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:18,borderRadius:2,background:'rgba(244,136,74,0.85)',boxShadow:'0 0 8px rgba(244,136,74,0.5)' }} />}
                   <span style={{ color:active?'rgba(244,136,74,0.9)':(L?'rgba(0,0,0,0.28)':'rgba(255,255,255,0.26)'),flexShrink:0 }}>{item.icon(active)}</span>
                   {item.label}
                 </button>
@@ -298,18 +298,18 @@ export default function DashboardPage() {
         </nav>
 
         {/* profile at bottom */}
-        <div style={{ padding: '12px 10px 16px', borderTop: L ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.04)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, background: L ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)', border: L ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.06)', cursor: 'pointer' }}>
-            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#F4884A,#c0520a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0, boxShadow: '0 0 8px rgba(244,136,74,0.3)' }}>{initials}</div>
+        <div style={{ padding: '10px 8px 14px', borderTop: L ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 9, background: L ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)', border: L ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.06)', cursor: 'pointer' }}>
+            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#F4884A,#c0520a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0, boxShadow: '0 0 8px rgba(244,136,74,0.3)' }}>{initials}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 500, color: L ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.65)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail || 'Designer'}</div>
+              <div style={{ fontSize: 11, fontWeight: 500, color: L ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.65)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail || 'Designer'}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                 <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 4px #22c55e' }} />
-                <span style={{ fontSize: 10, color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.22)' }}>Online</span>
+                <span style={{ fontSize: 9.5, color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.22)' }}>Online</span>
               </div>
             </div>
             <button onClick={logout} title="Sign out" style={{ background: 'none', border: 'none', color: L ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.2)', cursor: 'pointer', padding: 2, fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
             </button>
           </div>
         </div>
@@ -347,7 +347,7 @@ export default function DashboardPage() {
         </header>
 
         {/* content */}
-        <main style={{ flex: 1, overflowY: 'auto', padding: '28px 28px 60px' }}>
+        <main style={{ flex: 1, overflowY: 'auto', padding: '28px 32px 60px' }}>
           {section === 'projects' && <ProjectsSection projects={projects} loading={loading} confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} hoveredId={hoveredId} setHoveredId={setHoveredId} deleteProject={deleteProject} deleteClient={deleteClient} router={router} fmt={fmt} installedCount={installedCount} />}
           {section === 'products' && <ProductsSection />}
           {section === 'gallery' && <GallerySection />}
@@ -459,7 +459,7 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
 
   // ── CLIENTS LIST VIEW ─────────────────────────────
   return (
-    <div style={{ maxWidth: 640, animation: 'fadeUp .3s ease both' }}>
+    <div style={{ maxWidth: 900, animation: 'fadeUp .3s ease both' }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 22 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>Clients</h1>
@@ -516,8 +516,8 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
         })}
       </div>
 
-      {/* Empty state — always shown below cards */}
-      {!loading && <EmptyState onNew={() => router.push('/projects/new')} hasClients={clientCount > 0} />}
+      {/* Empty state — only shown when no clients */}
+      {!loading && clientCount === 0 && <EmptyState onNew={() => router.push('/projects/new')} hasClients={false} />}
     </div>
   )
 }
@@ -526,7 +526,7 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
 function QuotesSection({ projects, router, fmt }: any) {
   const quoted = projects.filter((p: Project) => ['quoted','approved'].includes(p.status))
   return (
-    <div style={{ maxWidth: 640, animation: 'fadeUp .3s ease both' }}>
+    <div style={{ maxWidth: 900, animation: 'fadeUp .3s ease both' }}>
       <h1 style={{ margin:'0 0 6px',fontSize:22,fontWeight:700,letterSpacing:'-0.03em',color:'rgba(255,255,255,0.92)' }}>Quotes</h1>
       <p style={{ margin:'0 0 22px',fontSize:12,color:'rgba(255,255,255,0.25)' }}>Proposals, approvals, and pricing</p>
       {quoted.length === 0 ? (
@@ -705,7 +705,7 @@ function ProductsSection() {
   const products = PRODUCT_CATALOG[cat] || []
 
   return (
-    <div style={{ maxWidth: 760, animation: 'fadeUp .3s ease both' }}>
+    <div style={{ maxWidth: 1100, animation: 'fadeUp .3s ease both' }}>
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ margin: '0 0 3px', fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>Products</h1>
         <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>AMP Lighting · Sunvie — full fixture catalog</p>
@@ -791,7 +791,7 @@ function InstallSection({ projects }: any) {
     { label:'Install Report',       icon:'▤', desc:'Completed installation PDF' },
   ]
   return (
-    <div style={{ maxWidth: 640, animation:'fadeUp .3s ease both' }}>
+    <div style={{ maxWidth: 900, animation:'fadeUp .3s ease both' }}>
       <h1 style={{ margin:'0 0 6px',fontSize:22,fontWeight:700,letterSpacing:'-0.03em',color:'rgba(255,255,255,0.92)' }}>Install</h1>
       <p style={{ margin:'0 0 22px',fontSize:12,color:'rgba(255,255,255,0.25)' }}>Field tools for installation day</p>
       <div style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8,marginBottom:20 }}>
@@ -822,7 +822,7 @@ function GallerySection() {
   const [lightbox, setLightbox] = useState<string | null>(null)
 
   return (
-    <div style={{ maxWidth: 860, animation: 'fadeUp .3s ease both' }}>
+    <div style={{ maxWidth: 1100, animation: 'fadeUp .3s ease both' }}>
       <div style={{ marginBottom: 22 }}>
         <h1 style={{ margin: '0 0 3px', fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>Gallery</h1>
         <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>{GALLERY_PHOTOS.length} installed projects · click to enlarge</p>
@@ -944,7 +944,7 @@ function AISection() {
   }
 
   return (
-    <div style={{ maxWidth: 680, height: 'calc(100dvh - 140px)', display: 'flex', flexDirection: 'column', animation: 'fadeUp .3s ease both' }}>
+    <div style={{ maxWidth: 1100, height: 'calc(100dvh - 140px)', display: 'flex', flexDirection: 'column', animation: 'fadeUp .3s ease both' }}>
       <div style={{ marginBottom: 18 }}>
         <h1 style={{ margin: '0 0 3px', fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>AI Assistant</h1>
         <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>Powered by Claude · knows Upscape inside and out</p>
@@ -1153,7 +1153,7 @@ function DesignBotSection({ projects }: { projects: Project[] }) {
   const glow = STYLE_GLOW[style]
 
   return (
-    <div style={{ maxWidth: 780, animation: 'fadeUp .3s ease both' }}>
+    <div style={{ maxWidth: 1100, animation: 'fadeUp .3s ease both' }}>
       <div style={{ marginBottom: 22 }}>
         <h1 style={{ margin: '0 0 3px', fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>Design Bot</h1>
         <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>Upload a yard photo · AI identifies lighting zones · see your design lit up</p>
