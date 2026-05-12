@@ -117,7 +117,25 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const [project, setProject] = useState<Project | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
   const [tool, setTool] = useState<ToolId>('select')
+  const [hoveredTool, setHoveredTool] = useState<string | null>(null)
   const [accentColor] = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_accent') || '#F4884A') : '#F4884A')
+
+  // Fixture photo thumbnails — loaded from localStorage, live-updated via storage events
+  const FIXTURE_TOOL_IDS = ['uplight', 'path', 'flood', 'well', 'power']
+  const loadFixturePhotos = () => {
+    if (typeof window === 'undefined') return {}
+    return Object.fromEntries(
+      FIXTURE_TOOL_IDS.map(id => [id, localStorage.getItem(`upscape_fx_photo_${id}`) || ''])
+    )
+  }
+  const [fixturePhotos, setFixturePhotos] = useState<Record<string, string>>(loadFixturePhotos)
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key?.startsWith('upscape_fx_photo_')) setFixturePhotos(loadFixturePhotos())
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
   type MapMode = 'sat-day' | 'sat-night' | '3d-dawn' | '3d-day' | '3d-dusk' | '3d-night'
   const [mapMode, setMapMode] = useState<MapMode>(() => {
     if (typeof window === 'undefined') return 'sat-night'
@@ -618,6 +636,15 @@ export default function MapClient({ projectId }: { projectId: string }) {
       }}>
         <style>{`
           @keyframes spin { to { transform: rotate(360deg) } }
+          @keyframes ringPulse {
+            0%, 100% { box-shadow: 0 0 0 2px #F4884A88, 0 0 14px #F4884A44; }
+            50%       { box-shadow: 0 0 0 4px #F4884A44, 0 0 28px #F4884A66; }
+          }
+          @keyframes toolPop {
+            0%   { transform: scale(0.88); opacity: 0; }
+            60%  { transform: scale(1.06); }
+            100% { transform: scale(1); opacity: 1; }
+          }
           ${WIRE_NODE_CSS}
           .upscape-back:hover { opacity: 1 !important; transform: translateY(-1px); }
           .upscape-back { transition: opacity 0.2s, transform 0.2s; }
@@ -625,7 +652,13 @@ export default function MapClient({ projectId }: { projectId: string }) {
           .upscape-night { transition: opacity 0.2s; }
           .upscape-quote:hover { background: #e07030 !important; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important; }
           .upscape-quote { transition: background 0.2s, transform 0.2s, box-shadow 0.2s; }
-          .upscape-tool:hover { opacity: 1 !important; transform: translateY(-1px); }
+          .upscape-tool { transition: opacity 0.18s, transform 0.18s; }
+          .upscape-tool:hover { opacity: 1 !important; transform: scale(1.06) translateY(-1px) !important; }
+          .upscape-tool-active { transform: scale(1.08) !important; }
+          @media (hover: hover) {
+            .fx-tooltip { display: none; }
+            .upscape-tool:hover .fx-tooltip { display: flex; }
+          }
         `}</style>
         <button className="upscape-back" onClick={() => router.push('/dashboard')} style={{
           opacity: 0.55, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(12px)',
@@ -765,34 +798,96 @@ export default function MapClient({ projectId }: { projectId: string }) {
       {/* toolbar */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
-        background: 'linear-gradient(0deg, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0) 100%)',
+        background: 'linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0) 100%)',
         paddingBottom: 'env(safe-area-inset-bottom, 6px)',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 4, padding: '18px 16px 8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 2, padding: '20px 12px 10px' }}>
           {TOOLS.map(t => {
             const isActive = tool === t.id
             const Icon = t.icon
+            const isFixture = FIXTURE_TOOL_IDS.includes(t.id)
+            const photo = isFixture ? fixturePhotos[t.id] : ''
+            const isHovered = hoveredTool === t.id
+
             return (
               <button
                 key={t.id}
-                className="upscape-tool"
+                className={`upscape-tool${isActive ? ' upscape-tool-active' : ''}`}
                 onClick={() => setToolAndSync(t.id)}
+                onMouseEnter={() => setHoveredTool(t.id)}
+                onMouseLeave={() => setHoveredTool(null)}
                 style={{
-                  flex: 1, maxWidth: 52,
-                  opacity: isActive ? 1 : 0.38,
-                  background: isActive ? `${accentColor}18` : 'transparent',
-                  backdropFilter: isActive ? 'blur(12px)' : 'none',
+                  flex: 1, maxWidth: 56,
+                  opacity: isActive ? 1 : 0.42,
+                  background: 'none',
                   border: 'none',
-                  borderRadius: 8, padding: '8px 2px 6px',
-                  cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                  boxShadow: isActive ? `0 0 12px ${accentColor}44` : 'none',
-                  transition: 'opacity 0.15s, transform 0.15s, background 0.15s',
+                  borderRadius: 10, padding: '6px 2px 6px',
+                  cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+                  position: 'relative',
                 }}
               >
-                <div style={{ color: isActive ? accentColor : 'rgba(255,255,255,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20 }}>
-                  <Icon />
+                {/* Tooltip — desktop hover only */}
+                {isHovered && photo && (
+                  <div className="fx-tooltip" style={{
+                    position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)',
+                    background: 'rgba(10,8,6,0.92)', backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10,
+                    padding: '8px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.7)', zIndex: 50, whiteSpace: 'nowrap', pointerEvents: 'none',
+                  }}>
+                    <img src={photo} style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover', filter: 'brightness(0.9)' }} />
+                    <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{t.label}</span>
+                  </div>
+                )}
+
+                {/* Icon / photo area */}
+                <div style={{ position: 'relative', width: 36, height: 36 }}>
+                  {/* Active orange ring */}
+                  {isActive && (
+                    <div style={{
+                      position: 'absolute', inset: -3, borderRadius: '50%',
+                      animation: 'ringPulse 1.6s ease-in-out infinite',
+                      pointerEvents: 'none',
+                    }} />
+                  )}
+
+                  {photo ? (
+                    /* Real product photo */
+                    <div style={{
+                      width: 36, height: 36, borderRadius: isActive ? 10 : '50%',
+                      overflow: 'hidden',
+                      border: isActive ? `2px solid ${accentColor}` : '1.5px solid rgba(255,255,255,0.14)',
+                      boxShadow: isActive ? `0 0 18px ${accentColor}55, 0 0 6px ${accentColor}33` : '0 2px 8px rgba(0,0,0,0.5)',
+                      transition: 'border-radius 0.22s cubic-bezier(.22,1,.36,1), border-color 0.18s, box-shadow 0.18s',
+                    }}>
+                      <img src={photo} alt={t.label} style={{
+                        width: '100%', height: '100%', objectFit: 'cover',
+                        filter: `brightness(${isActive ? 0.95 : 0.75}) saturate(${isActive ? 1.1 : 0.9})`,
+                        transition: 'filter 0.18s',
+                      }} />
+                    </div>
+                  ) : (
+                    /* Fallback SVG icon */
+                    <div style={{
+                      width: 36, height: 36, borderRadius: '50%',
+                      background: isActive ? `${accentColor}20` : 'rgba(255,255,255,0.07)',
+                      border: isActive ? `1.5px solid ${accentColor}66` : '1.5px solid rgba(255,255,255,0.1)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: isActive ? `0 0 14px ${accentColor}44` : '0 2px 8px rgba(0,0,0,0.4)',
+                      transition: 'background 0.18s, border-color 0.18s, box-shadow 0.18s',
+                    }}>
+                      <div style={{ color: isActive ? accentColor : 'rgba(255,255,255,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Icon />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <span style={{ fontSize: 9, fontWeight: 500, color: isActive ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.55)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>{t.label}</span>
+
+                <span style={{
+                  fontSize: 9, fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase',
+                  color: isActive ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.4)',
+                  transition: 'color 0.18s',
+                }}>{t.label}</span>
               </button>
             )
           })}

@@ -232,37 +232,37 @@ export default function DashboardPage() {
 
       {/* ── SIDEBAR ── */}
       <aside style={{
-        width: 196, flexShrink: 0,
+        width: 220, flexShrink: 0,
         display: 'flex', flexDirection: 'column',
-        background: L ? 'rgba(255,255,255,0.6)' : 'rgba(12,10,8,0.55)',
+        background: L ? 'rgba(255,255,255,0.62)' : 'rgba(12,10,8,0.55)',
         backdropFilter: 'blur(32px) saturate(180%)',
         WebkitBackdropFilter: 'blur(32px) saturate(180%)',
         borderRight: L ? '1px solid rgba(0,0,0,0.07)' : '1px solid rgba(255,255,255,0.06)',
-        boxShadow: L ? '1px 0 0 rgba(0,0,0,0.03), 4px 0 20px rgba(0,0,0,.07)' : '1px 0 0 rgba(244,136,74,0.05), 4px 0 28px rgba(0,0,0,.35)',
+        boxShadow: L ? '1px 0 0 rgba(0,0,0,0.03), 4px 0 24px rgba(0,0,0,.07)' : '1px 0 0 rgba(244,136,74,0.05), 4px 0 32px rgba(0,0,0,.38)',
         transition: 'background .3s, border-color .3s',
       }}>
         {/* logo */}
-        <div style={{ padding: '16px 14px 13px', borderBottom: L ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.04)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <img src="/upscape-logo-mark.png" alt="" width={24} height={24} style={{ objectFit: 'contain', flexShrink: 0 }} />
+        <div style={{ padding: '18px 18px 15px', borderBottom: L ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img src="/upscape-logo-mark.png" alt="" width={26} height={26} style={{ objectFit: 'contain', flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.05em', color: L ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.88)', lineHeight: 1 }}>UPSCAPE</div>
-              <div style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.28)' : 'rgba(255,255,255,0.2)', marginTop: 3 }}>Field Designer</div>
+              <div style={{ fontSize: 12.5, fontWeight: 700, letterSpacing: '0.06em', color: L ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.9)', lineHeight: 1 }}>UPSCAPE</div>
+              <div style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.09em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.28)' : 'rgba(255,255,255,0.2)', marginTop: 3.5 }}>Field Designer</div>
             </div>
           </div>
         </div>
 
         {/* nav — flex column, main items grow, manage pinned at bottom */}
-        <nav style={{ flex: 1, padding: '10px 8px 10px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+        <nav style={{ flex: 1, padding: '12px 10px 12px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
           {/* MAIN group */}
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.2)', padding: '2px 10px 6px' }}>Main</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.18)', padding: '0 14px 8px' }}>Main</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {NAV_MAIN.map(item => {
               const active = section === item.id
               return (
-                <button key={item.id} className="nav-item" onClick={() => setSection(item.id)} style={{ display:'flex',alignItems:'center',gap:9, padding:'8px 10px',borderRadius:8,border:'none',cursor:'pointer',textAlign:'left',width:'100%', background:active?'rgba(244,136,74,0.1)':'transparent', color:active?(L?'rgba(0,0,0,0.85)':'rgba(255,255,255,0.92)'):(L?'rgba(0,0,0,0.42)':'rgba(255,255,255,0.36)'), fontSize:12.5,fontWeight:active?500:400,letterSpacing:'-0.01em', boxShadow:active?'0 0 0 1px rgba(244,136,74,0.16) inset':'none',position:'relative' }}>
-                  {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:18,borderRadius:2,background:'rgba(244,136,74,0.85)',boxShadow:'0 0 8px rgba(244,136,74,0.5)' }} />}
-                  <span style={{ color:active?'rgba(244,136,74,0.9)':(L?'rgba(0,0,0,0.3)':'rgba(255,255,255,0.28)'),flexShrink:0 }}>{item.icon(active)}</span>
+                <button key={item.id} className="nav-item" onClick={() => setSection(item.id)} style={{ display:'flex',alignItems:'center',gap:11, padding:'9px 14px',borderRadius:9,border:'none',cursor:'pointer',textAlign:'left',width:'100%', background:active?'rgba(244,136,74,0.1)':'transparent', color:active?(L?'rgba(0,0,0,0.85)':'rgba(255,255,255,0.92)'):(L?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.36)'), fontSize:13,fontWeight:active?500:400,letterSpacing:'-0.012em', boxShadow:active?'0 0 0 1px rgba(244,136,74,0.14) inset':'none',position:'relative' }}>
+                  {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:20,borderRadius:2,background:'rgba(244,136,74,0.85)',boxShadow:'0 0 8px rgba(244,136,74,0.5)' }} />}
+                  <span style={{ color:active?'rgba(244,136,74,0.9)':(L?'rgba(0,0,0,0.28)':'rgba(255,255,255,0.26)'),flexShrink:0 }}>{item.icon(active)}</span>
                   {item.label}
                 </button>
               )
@@ -273,14 +273,14 @@ export default function DashboardPage() {
           <div style={{ flex: 1 }} />
 
           {/* MANAGE group */}
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.2)', padding: '2px 10px 6px' }}>Manage</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.13em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.18)', padding: '0 14px 8px' }}>Manage</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {NAV_MANAGE.map(item => {
               const active = section === item.id
               return (
-                <button key={item.id} className="nav-item" onClick={() => setSection(item.id)} style={{ display:'flex',alignItems:'center',gap:9, padding:'8px 10px',borderRadius:8,border:'none',cursor:'pointer',textAlign:'left',width:'100%', background:active?'rgba(244,136,74,0.1)':'transparent', color:active?(L?'rgba(0,0,0,0.85)':'rgba(255,255,255,0.92)'):(L?'rgba(0,0,0,0.42)':'rgba(255,255,255,0.36)'), fontSize:12.5,fontWeight:active?500:400,letterSpacing:'-0.01em', boxShadow:active?'0 0 0 1px rgba(244,136,74,0.16) inset':'none',position:'relative' }}>
-                  {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:18,borderRadius:2,background:'rgba(244,136,74,0.85)',boxShadow:'0 0 8px rgba(244,136,74,0.5)' }} />}
-                  <span style={{ color:active?'rgba(244,136,74,0.9)':(L?'rgba(0,0,0,0.3)':'rgba(255,255,255,0.28)'),flexShrink:0 }}>{item.icon(active)}</span>
+                <button key={item.id} className="nav-item" onClick={() => setSection(item.id)} style={{ display:'flex',alignItems:'center',gap:11, padding:'9px 14px',borderRadius:9,border:'none',cursor:'pointer',textAlign:'left',width:'100%', background:active?'rgba(244,136,74,0.1)':'transparent', color:active?(L?'rgba(0,0,0,0.85)':'rgba(255,255,255,0.92)'):(L?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.36)'), fontSize:13,fontWeight:active?500:400,letterSpacing:'-0.012em', boxShadow:active?'0 0 0 1px rgba(244,136,74,0.14) inset':'none',position:'relative' }}>
+                  {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:20,borderRadius:2,background:'rgba(244,136,74,0.85)',boxShadow:'0 0 8px rgba(244,136,74,0.5)' }} />}
+                  <span style={{ color:active?'rgba(244,136,74,0.9)':(L?'rgba(0,0,0,0.28)':'rgba(255,255,255,0.26)'),flexShrink:0 }}>{item.icon(active)}</span>
                   {item.label}
                 </button>
               )
@@ -289,17 +289,17 @@ export default function DashboardPage() {
         </nav>
 
         {/* profile at bottom */}
-        <div style={{ padding: '10px 8px 14px', borderTop: L ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.04)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}>
+        <div style={{ padding: '12px 10px 16px', borderTop: L ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, background: L ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)', border: L ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.06)', cursor: 'pointer' }}>
             <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#F4884A,#c0520a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0, boxShadow: '0 0 8px rgba(244,136,74,0.3)' }}>{initials}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.7)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail || 'Designer'}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: L ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.65)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail || 'Designer'}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                 <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 4px #22c55e' }} />
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>Online</span>
+                <span style={{ fontSize: 10, color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.22)' }}>Online</span>
               </div>
             </div>
-            <button onClick={logout} title="Sign out" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', cursor: 'pointer', padding: 2, fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
+            <button onClick={logout} title="Sign out" style={{ background: 'none', border: 'none', color: L ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.2)', cursor: 'pointer', padding: 2, fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
             </button>
           </div>
@@ -998,6 +998,14 @@ function Toggle({ on, onToggle, glow = 70 }: { on: boolean; onToggle: () => void
   )
 }
 
+const FIXTURE_PHOTO_TYPES = [
+  { id: 'uplight', label: 'Uplight' },
+  { id: 'path',    label: 'Path' },
+  { id: 'flood',   label: 'Flood' },
+  { id: 'well',    label: 'Well' },
+  { id: 'power',   label: 'Power' },
+]
+
 function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlow, setAmbientGlow }: any) {
   const [active, setActive]         = useState('general')
   const [mapStyle, setMapStyle]     = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_style') || 'satellite') : 'satellite')
@@ -1007,6 +1015,31 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
   const [projectUpdates, setProjectUpdates] = useState(true)
   const [gmailCount] = useState(0)
   const scrollRef = React.useRef<HTMLDivElement>(null)
+
+  // Fixture photos
+  const loadPhotos = () => typeof window !== 'undefined'
+    ? Object.fromEntries(FIXTURE_PHOTO_TYPES.map(f => [f.id, localStorage.getItem(`upscape_fx_photo_${f.id}`) || '']))
+    : {}
+  const [fixturePhotos, setFixturePhotos] = useState<Record<string,string>>(loadPhotos)
+  const fileInputRefs = React.useRef<Record<string, HTMLInputElement | null>>({})
+
+  function uploadFixturePhoto(id: string, file: File) {
+    const reader = new FileReader()
+    reader.onload = e => {
+      const url = e.target?.result as string
+      localStorage.setItem(`upscape_fx_photo_${id}`, url)
+      setFixturePhotos(prev => ({ ...prev, [id]: url }))
+      // Trigger storage event so MapClient picks it up in the same tab
+      window.dispatchEvent(new StorageEvent('storage', { key: `upscape_fx_photo_${id}`, newValue: url }))
+    }
+    reader.readAsDataURL(file)
+  }
+
+  function clearFixturePhoto(id: string) {
+    localStorage.removeItem(`upscape_fx_photo_${id}`)
+    setFixturePhotos(prev => ({ ...prev, [id]: '' }))
+    window.dispatchEvent(new StorageEvent('storage', { key: `upscape_fx_photo_${id}`, newValue: null }))
+  }
 
   function pickMapStyle(id: string) { setMapStyle(id); localStorage.setItem('upscape_map_style', id) }
   function pickMapTime(t: string) { setMapTime(t); localStorage.setItem('upscape_map_time', t) }
@@ -1128,6 +1161,58 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
             </div>
           ))}
           {row('Animations','Enable interface animations and transitions.',T(animations,()=>setAnimations(v=>!v)),true)}
+        </>)}
+
+        {block('fixtures','Fixture Photos', <>
+          <div style={{ padding:'14px 18px' }}>
+            <p style={{ margin:'0 0 14px',fontSize:11,color:muted,lineHeight:1.6 }}>
+              Assign a product photo to each fixture type. It shows as the icon in the map toolbar. PNG · WEBP · JPG supported.
+            </p>
+            <div style={{ display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10 }}>
+              {FIXTURE_PHOTO_TYPES.map(f => {
+                const photo = fixturePhotos[f.id]
+                return (
+                  <div key={f.id} style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:7 }}>
+                    {/* hidden file input */}
+                    <input
+                      ref={el => { fileInputRefs.current[f.id] = el }}
+                      type="file" accept="image/png,image/jpeg,image/webp"
+                      style={{ display:'none' }}
+                      onChange={e => { const file = e.target.files?.[0]; if (file) uploadFixturePhoto(f.id, file); e.target.value = '' }}
+                    />
+                    {/* photo slot */}
+                    <div
+                      onClick={() => fileInputRefs.current[f.id]?.click()}
+                      style={{
+                        width:52,height:52,borderRadius:'50%',overflow:'hidden',cursor:'pointer',
+                        border: photo ? '2px solid rgba(244,136,74,0.5)' : `1.5px dashed ${L?'rgba(0,0,0,0.2)':'rgba(255,255,255,0.18)'}`,
+                        background: photo ? 'transparent' : (L?'rgba(0,0,0,0.04)':'rgba(255,255,255,0.04)'),
+                        display:'flex',alignItems:'center',justifyContent:'center',
+                        transition:'border-color .18s, box-shadow .18s',
+                        boxShadow: photo ? '0 0 12px rgba(244,136,74,0.25)' : 'none',
+                        position:'relative',
+                      }}
+                      onMouseEnter={e=>(e.currentTarget as HTMLElement).style.borderColor='rgba(244,136,74,0.7)'}
+                      onMouseLeave={e=>(e.currentTarget as HTMLElement).style.borderColor=photo?'rgba(244,136,74,0.5)':(L?'rgba(0,0,0,0.2)':'rgba(255,255,255,0.18)')}
+                    >
+                      {photo ? (
+                        <img src={photo} alt={f.label} style={{ width:'100%',height:'100%',objectFit:'cover',filter:'brightness(0.9)' }} />
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={L?'rgba(0,0,0,0.3)':'rgba(255,255,255,0.3)'} strokeWidth="1.5"><path d="M12 5v14M5 12h14"/></svg>
+                      )}
+                    </div>
+                    {/* label + clear */}
+                    <div style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:2 }}>
+                      <span style={{ fontSize:9,fontWeight:600,letterSpacing:'0.07em',textTransform:'uppercase',color:muted }}>{f.label}</span>
+                      {photo && (
+                        <button onClick={()=>clearFixturePhoto(f.id)} style={{ background:'none',border:'none',color:'rgba(239,68,68,0.5)',fontSize:9,cursor:'pointer',padding:0,letterSpacing:'0.04em' }}>clear</button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         </>)}
 
         {block('notifications','Notifications', <>
