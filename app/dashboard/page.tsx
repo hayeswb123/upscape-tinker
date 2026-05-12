@@ -1107,42 +1107,47 @@ function AIChatPane({ projects }: { projects: Project[] }) {
     setInput('')
     setLoading(true)
 
-    // ── IMAGE ATTACHED → Claude sees it and responds; optionally generates DALL-E ──
+    // ── IMAGE ATTACHED → gpt-image-1 edits the actual photo with landscape lighting ──
     if (pendingImg) {
       const snap = pendingImg
       setPendingImg(null)
-      const displayMsg = msg || 'What do you see in this yard?'
+      const displayMsg = msg || 'Add landscape lighting to this yard'
       setMessages(prev => [...prev, { role:'user', content: displayMsg, attachPreview: snap.preview }])
 
-      const claudeKey = process.env.NEXT_PUBLIC_ANTHROPIC_KEY || ''
       const openaiKey = process.env.NEXT_PUBLIC_OPENAI_KEY || ''
 
       try {
-        // Always: Claude reads the photo → builds a DALL-E prompt grounded in what it sees → DALL-E generates
-        setIsGenerating(true); setGenStage('Reading your yard…')
-        const visionRes = await fetch('https://api.anthropic.com/v1/messages', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json','x-api-key':claudeKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true' },
-          body: JSON.stringify({ model:'claude-haiku-4-5', max_tokens:400,
-            messages:[{ role:'user', content:[
-              { type:'image', source:{ type:'base64', media_type: snap.mime, data: snap.b64 } },
-              { type:'text', text:`Look carefully at this photo of a residential property. Describe the specific details you see: the architecture style, trees (species/size if visible), driveway material, pathways, garden beds, fences, and any other landscape features. Be very specific so a photorealistic rendering can replicate this exact yard.\n\nThen on a new line write:\nDALLE_PROMPT: [photorealistic rendering of THIS specific yard at night with professional landscape lighting installed — warm amber uplights illuminating the exact trees you described, path lights along the walkways, accent lights highlighting the architecture — same camera angle as the original photo, high-end residential, no people, cinematic photography${msg ? `, ${msg}` : ''}]` },
-            ]}] }),
-        })
-        const visionData = await visionRes.json()
-        const visionText: string = visionData.content?.[0]?.text || ''
-        const promptIdx = visionText.indexOf('DALLE_PROMPT:')
-        const promptMatch = promptIdx >= 0 ? [null, visionText.slice(promptIdx + 13).trim()] : null
-        const dallePrompt = (promptMatch && promptMatch[1]) ? promptMatch[1].trim() : `Photorealistic nighttime rendering of a residential yard with professional warm amber landscape lighting — uplights on trees, path lights along walkways, accent lights on architecture. Cinematic, high-end residential photography.`
+        setIsGenerating(true); setGenStage('Analyzing your yard…')
 
-        setGenStage('Generating lighting visualization…')
-        const imgRes = await fetch('https://api.openai.com/v1/images/generations', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${openaiKey}` },
-          body: JSON.stringify({ model:'dall-e-3', prompt: dallePrompt, n:1, size:'1024x1024', quality:'standard' }),
+        // Convert base64 → Blob → File for multipart upload
+        const byteStr = atob(snap.b64)
+        const ab = new ArrayBuffer(byteStr.length)
+        const ia = new Uint8Array(ab)
+        for (let i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i)
+        const blob = new Blob([ab], { type: snap.mime })
+        const file = new File([blob], 'yard.png', { type: snap.mime })
+
+        const editPrompt = `Add professional residential landscape lighting to this exact yard. Install warm amber uplights at the base of trees to illuminate their canopy, low path lights along walkways and driveways, and accent lights highlighting the home's architecture. Keep the exact same yard, same camera angle, same plants, trees, structures, and layout — only add the lighting. Make it look like a real after-dark professional lighting installation photo.${msg ? ` Additional note: ${msg}` : ''}`
+
+        setGenStage('Applying lighting to your yard…')
+        const formData = new FormData()
+        formData.append('model', 'gpt-image-1')
+        formData.append('image[]', file)
+        formData.append('prompt', editPrompt)
+        formData.append('n', '1')
+        formData.append('size', '1024x1024')
+
+        const imgRes = await fetch('https://api.openai.com/v1/images/edits', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${openaiKey}` },
+          body: formData,
         })
         const imgData = await imgRes.json()
-        const imageUrl = imgData.data?.[0]?.url
+
+        // gpt-image-1 returns b64_json
+        const b64 = imgData.data?.[0]?.b64_json
+        const imageUrl = b64 ? `data:image/png;base64,${b64}` : imgData.data?.[0]?.url
+
         if (imageUrl) {
           setGenStage('Rendering…')
           setTimeout(() => {
@@ -1151,7 +1156,7 @@ function AIChatPane({ projects }: { projects: Project[] }) {
           }, 400)
         } else {
           setIsGenerating(false); setGenStage('')
-          setMessages(prev => [...prev, { role:'assistant', content:'Image generation failed — ' + (imgData.error?.message || 'unknown error') }])
+          setMessages(prev => [...prev, { role:'assistant', content:'Image generation failed — ' + (imgData.error?.message || JSON.stringify(imgData.error) || 'unknown error') }])
         }
       } catch(e: any) {
         setIsGenerating(false); setGenStage('')
