@@ -1027,7 +1027,7 @@ const STYLE_GLOW: Record<string,{color:string;opacity:number}> = {
   'high-contrast':  { color: '#ff6000', opacity: 0.95 },
 }
 
-type AIMessage    = { role: 'user' | 'assistant'; content: string }
+type AIMessage    = { role: 'user' | 'assistant'; content: string; imageUrl?: string }
 type DesignZone   = { id:string; type:string; name:string; description:string; x:number; y:number; radius:number; qty:number; wattage:number }
 type DesignSummary = { totalFixtures:number; totalWattage:number; transformerSize:string; wireEstimate:string; difficulty:string; designNotes:string }
 type DesignAnalysis = { zones:DesignZone[]; summary:DesignSummary }
@@ -1091,33 +1091,70 @@ function AIChatPane({ projects }: { projects: Project[] }) {
   async function send(text?: string) {
     const msg = (text || input).trim()
     if ((!msg && !pendingImg) || loading) return
-    const apiKey = process.env.NEXT_PUBLIC_ANTHROPIC_KEY || ''
-    if (!apiKey || apiKey.startsWith('REPLACE')) {
-      setMessages(prev => [...prev, { role:'user', content: msg || '(photo)' }, { role:'assistant', content:'⚠️ No API key set. Add NEXT_PUBLIC_ANTHROPIC_KEY to Vercel environment variables.' }])
-      setInput(''); setPendingImg(null)
+    setInput('')
+    setLoading(true)
+
+    // ── IMAGE DROPPED → Claude describes yard → DALL-E visualizes lighting ──
+    if (pendingImg) {
+      const snap = pendingImg
+      setPendingImg(null)
+      const displayMsg = msg ? `📷 ${msg}` : '📷 Generate a lighting visualization for this yard'
+      setMessages(prev => [...prev, { role:'user', content: displayMsg }])
+
+      const claudeKey = process.env.NEXT_PUBLIC_ANTHROPIC_KEY || ''
+      const openaiKey = process.env.NEXT_PUBLIC_OPENAI_KEY || ''
+
+      try {
+        // Step 1: Claude reads the photo and writes a DALL-E prompt
+        const visionRes = await fetch('https://api.anthropic.com/v1/messages', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json','x-api-key':claudeKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true' },
+          body: JSON.stringify({ model:'claude-haiku-4-5', max_tokens:300,
+            messages:[{ role:'user', content:[
+              { type:'image', source:{ type:'base64', media_type: snap.mime, data: snap.b64 } },
+              { type:'text', text:`Describe this residential yard in 2-3 sentences for an image generation prompt. Focus on the architecture, trees, driveway, pathways, and garden features. Be specific about materials and layout. Then on a new line write: DALLE_PROMPT: [a photorealistic nighttime rendering of this exact yard with professional warm amber landscape lighting — uplights on trees, path lights along walkways, accent lights on architecture — cinematic, high-end residential, no people]${msg ? ` User note: ${msg}` : ''}` },
+            ]}] }),
+        })
+        const visionData = await visionRes.json()
+        const visionText: string = visionData.content?.[0]?.text || ''
+        const promptIdx = visionText.indexOf('DALLE_PROMPT:')
+        const promptMatch = promptIdx >= 0 ? [null, visionText.slice(promptIdx + 13).trim()] : null
+        const dallePrompt = (promptMatch && promptMatch[1]) ? promptMatch[1].trim() : `Photorealistic nighttime rendering of a residential yard with professional warm amber landscape lighting — uplights on trees, path lights along walkways, accent lights on architecture. Cinematic, high-end residential photography.`
+
+        // Step 2: DALL-E 3 generates the visualization
+        const imgRes = await fetch('https://api.openai.com/v1/images/generations', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${openaiKey}` },
+          body: JSON.stringify({ model:'dall-e-3', prompt: dallePrompt, n:1, size:'1024x1024', quality:'standard' }),
+        })
+        const imgData = await imgRes.json()
+        const imageUrl = imgData.data?.[0]?.url
+        if (imageUrl) {
+          setMessages(prev => [...prev, { role:'assistant', content:'Here\'s your lighting visualization:', imageUrl }])
+        } else {
+          setMessages(prev => [...prev, { role:'assistant', content:'Image generation failed — ' + (imgData.error?.message || 'unknown error') }])
+        }
+      } catch(e: any) {
+        setMessages(prev => [...prev, { role:'assistant', content:'Error: ' + e.message }])
+      }
+      setLoading(false)
       return
     }
 
-    // Build user message content for API
-    const userContent: any[] = []
-    if (pendingImg) userContent.push({ type:'image', source:{ type:'base64', media_type: pendingImg.mime, data: pendingImg.b64 } })
-    if (msg) userContent.push({ type:'text', text: msg })
-    else if (pendingImg) userContent.push({ type:'text', text: 'Please analyse this yard photo and suggest a landscape lighting design.' })
-
-    // Display message (show image thumbnail + text)
-    const displayContent = (pendingImg ? `📷 Photo attached\n` : '') + (msg || '')
-    const next: AIMessage[] = [...messages, { role:'user', content: displayContent.trim() }]
+    // ── TEXT ONLY → Claude ──────────────────────────────────────────────────
+    const claudeKey = process.env.NEXT_PUBLIC_ANTHROPIC_KEY || ''
+    if (!claudeKey || claudeKey.startsWith('REPLACE')) {
+      setMessages(prev => [...prev, { role:'user', content: msg }, { role:'assistant', content:'⚠️ Add NEXT_PUBLIC_ANTHROPIC_KEY to use the AI assistant.' }])
+      setLoading(false)
+      return
+    }
+    const next: AIMessage[] = [...messages, { role:'user', content: msg }]
     setMessages(next)
-    setInput(''); setPendingImg(null)
-    setLoading(true)
-
     try {
-      const apiMessages: any[] = next.slice(0,-1).map(m => ({ role: m.role, content: m.content }))
-      apiMessages.push({ role:'user', content: userContent })
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method:'POST',
-        headers:{ 'Content-Type':'application/json', 'x-api-key':apiKey, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
-        body: JSON.stringify({ model: pendingImg ? 'claude-opus-4-5' : 'claude-haiku-4-5', max_tokens:900, system:UPSCAPE_SYSTEM, messages: apiMessages }),
+        headers:{ 'Content-Type':'application/json','x-api-key':claudeKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true' },
+        body: JSON.stringify({ model:'claude-haiku-4-5', max_tokens:900, system:UPSCAPE_SYSTEM, messages: next.map(m=>({ role:m.role, content:m.content })) }),
       })
       const data = await res.json()
       setMessages(prev => [...prev, { role:'assistant', content: data.content?.[0]?.text || 'Sorry, try again.' }])
@@ -1139,7 +1176,10 @@ function AIChatPane({ projects }: { projects: Project[] }) {
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F4884A" strokeWidth="1.8"><path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-4 4H8a4 4 0 01-4-4v-1H3a3 3 0 01-3-3V10a3 3 0 013-3h1V6a4 4 0 014-4h4z" strokeLinejoin="round"/><circle cx="9" cy="11" r="1" fill="#F4884A" stroke="none"/><circle cx="15" cy="11" r="1" fill="#F4884A" stroke="none"/></svg>
               </div>
             )}
-            <div style={{ maxWidth:'78%', background: m.role==='user'?'linear-gradient(135deg,#F4884A,#df6f28)':'rgba(255,255,255,0.05)', border: m.role==='assistant'?'1px solid rgba(255,255,255,0.08)':'none', borderRadius: m.role==='user'?'14px 14px 4px 14px':'14px 14px 14px 4px', padding:'11px 14px', fontSize:13, lineHeight:1.6, color: m.role==='user'?'#fff':'rgba(255,255,255,0.82)', whiteSpace:'pre-wrap' }}>{m.content}</div>
+            <div style={{ maxWidth:'78%', background: m.role==='user'?'linear-gradient(135deg,#F4884A,#df6f28)':'rgba(255,255,255,0.05)', border: m.role==='assistant'?'1px solid rgba(255,255,255,0.08)':'none', borderRadius: m.role==='user'?'14px 14px 4px 14px':'14px 14px 14px 4px', padding: m.imageUrl ? '10px 10px 6px' : '11px 14px', fontSize:13, lineHeight:1.6, color: m.role==='user'?'#fff':'rgba(255,255,255,0.82)', whiteSpace:'pre-wrap' }}>
+                {m.content}
+                {m.imageUrl && <img src={m.imageUrl} alt="lighting visualization" style={{ display:'block', width:'100%', borderRadius:10, marginTop:8, border:'1px solid rgba(255,255,255,0.08)' }} />}
+              </div>
           </div>
         ))}
         {loading && (
