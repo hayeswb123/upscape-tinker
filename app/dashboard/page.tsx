@@ -1107,52 +1107,70 @@ function AIChatPane({ projects }: { projects: Project[] }) {
     setInput('')
     setLoading(true)
 
-    // ── IMAGE DROPPED → Claude describes yard → DALL-E visualizes lighting ──
+    // ── IMAGE ATTACHED → Claude sees it and responds; optionally generates DALL-E ──
     if (pendingImg) {
       const snap = pendingImg
       setPendingImg(null)
-      const displayMsg = msg || 'Generate a lighting visualization for this yard'
+      const displayMsg = msg || 'What do you see in this yard?'
       setMessages(prev => [...prev, { role:'user', content: displayMsg, attachPreview: snap.preview }])
 
       const claudeKey = process.env.NEXT_PUBLIC_ANTHROPIC_KEY || ''
       const openaiKey = process.env.NEXT_PUBLIC_OPENAI_KEY || ''
 
-      try {
-        setIsGenerating(true); setGenStage('Reading your yard…')
-        // Step 1: Claude reads the photo and writes a DALL-E prompt
-        const visionRes = await fetch('https://api.anthropic.com/v1/messages', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json','x-api-key':claudeKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true' },
-          body: JSON.stringify({ model:'claude-haiku-4-5', max_tokens:300,
-            messages:[{ role:'user', content:[
-              { type:'image', source:{ type:'base64', media_type: snap.mime, data: snap.b64 } },
-              { type:'text', text:`Describe this residential yard in 2-3 sentences for an image generation prompt. Focus on the architecture, trees, driveway, pathways, and garden features. Be specific about materials and layout. Then on a new line write: DALLE_PROMPT: [a photorealistic nighttime rendering of this exact yard with professional warm amber landscape lighting — uplights on trees, path lights along walkways, accent lights on architecture — cinematic, high-end residential, no people]${msg ? ` User note: ${msg}` : ''}` },
-            ]}] }),
-        })
-        const visionData = await visionRes.json()
-        const visionText: string = visionData.content?.[0]?.text || ''
-        const promptIdx = visionText.indexOf('DALLE_PROMPT:')
-        const promptMatch = promptIdx >= 0 ? [null, visionText.slice(promptIdx + 13).trim()] : null
-        const dallePrompt = (promptMatch && promptMatch[1]) ? promptMatch[1].trim() : `Photorealistic nighttime rendering of a residential yard with professional warm amber landscape lighting — uplights on trees, path lights along walkways, accent lights on architecture. Cinematic, high-end residential photography.`
+      // Detect if user wants a DALL-E visualization
+      const wantsVisualization = /generat|visuali[sz]|render|lighting design|show me|what.*look/i.test(displayMsg)
 
-        // Step 2: DALL-E 3 generates the visualization
-        setGenStage('Generating lighting visualization…')
-        const imgRes = await fetch('https://api.openai.com/v1/images/generations', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${openaiKey}` },
-          body: JSON.stringify({ model:'dall-e-3', prompt: dallePrompt, n:1, size:'1024x1024', quality:'standard' }),
-        })
-        const imgData = await imgRes.json()
-        const imageUrl = imgData.data?.[0]?.url
-        if (imageUrl) {
-          setGenStage('Rendering…')
-          setTimeout(() => {
+      try {
+        if (wantsVisualization && openaiKey && !openaiKey.startsWith('REPLACE')) {
+          // DALL-E flow: Claude reads photo → DALL-E generates
+          setIsGenerating(true); setGenStage('Reading your yard…')
+          const visionRes = await fetch('https://api.anthropic.com/v1/messages', {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json','x-api-key':claudeKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true' },
+            body: JSON.stringify({ model:'claude-haiku-4-5', max_tokens:300,
+              messages:[{ role:'user', content:[
+                { type:'image', source:{ type:'base64', media_type: snap.mime, data: snap.b64 } },
+                { type:'text', text:`Describe this residential yard in 2-3 sentences for an image generation prompt. Focus on the architecture, trees, driveway, pathways, and garden features. Be specific about materials and layout. Then on a new line write: DALLE_PROMPT: [a photorealistic nighttime rendering of this exact yard with professional warm amber landscape lighting — uplights on trees, path lights along walkways, accent lights on architecture — cinematic, high-end residential, no people]${msg ? ` User note: ${msg}` : ''}` },
+              ]}] }),
+          })
+          const visionData = await visionRes.json()
+          const visionText: string = visionData.content?.[0]?.text || ''
+          const promptIdx = visionText.indexOf('DALLE_PROMPT:')
+          const promptMatch = promptIdx >= 0 ? [null, visionText.slice(promptIdx + 13).trim()] : null
+          const dallePrompt = (promptMatch && promptMatch[1]) ? promptMatch[1].trim() : `Photorealistic nighttime rendering of a residential yard with professional warm amber landscape lighting — uplights on trees, path lights along walkways, accent lights on architecture. Cinematic, high-end residential photography.`
+
+          setGenStage('Generating lighting visualization…')
+          const imgRes = await fetch('https://api.openai.com/v1/images/generations', {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${openaiKey}` },
+            body: JSON.stringify({ model:'dall-e-3', prompt: dallePrompt, n:1, size:'1024x1024', quality:'standard' }),
+          })
+          const imgData = await imgRes.json()
+          const imageUrl = imgData.data?.[0]?.url
+          if (imageUrl) {
+            setGenStage('Rendering…')
+            setTimeout(() => {
+              setIsGenerating(false); setGenStage('')
+              setMessages(prev => [...prev, { role:'assistant', content:'Here\'s your lighting visualization:', imageUrl }])
+            }, 400)
+          } else {
             setIsGenerating(false); setGenStage('')
-            setMessages(prev => [...prev, { role:'assistant', content:'Here\'s your lighting visualization:', imageUrl }])
-          }, 400)
+            setMessages(prev => [...prev, { role:'assistant', content:'Image generation failed — ' + (imgData.error?.message || 'unknown error') }])
+          }
         } else {
-          setIsGenerating(false); setGenStage('')
-          setMessages(prev => [...prev, { role:'assistant', content:'Image generation failed — ' + (imgData.error?.message || 'unknown error') }])
+          // Chat flow: Claude sees the photo and responds conversationally
+          const res = await fetch('https://api.anthropic.com/v1/messages', {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json','x-api-key':claudeKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true' },
+            body: JSON.stringify({ model:'claude-haiku-4-5', max_tokens:600, system: UPSCAPE_SYSTEM,
+              messages:[{ role:'user', content:[
+                { type:'image', source:{ type:'base64', media_type: snap.mime, data: snap.b64 } },
+                { type:'text', text: displayMsg + '\n\nNote: if the user asks you to generate or visualize lighting, let them know they can ask you to "generate a lighting visualization" and you\'ll create one with DALL-E.' },
+              ]}] }),
+          })
+          const data = await res.json()
+          const reply = data.content?.[0]?.text || 'Sorry, I couldn\'t analyze that image.'
+          setMessages(prev => [...prev, { role:'assistant', content: reply }])
         }
       } catch(e: any) {
         setIsGenerating(false); setGenStage('')
