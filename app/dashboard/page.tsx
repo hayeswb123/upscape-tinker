@@ -487,9 +487,11 @@ function AvatarMenu({ initials, userEmail, logout, lightMode }: { initials: stri
 
 // ── PROJECTS ──────────────────────────────────────────
 function ProjectsSection({ projects, loading, router, installedCount, deleteClient }: any) {
-  const [confirmDeleteClient, setConfirmDeleteClient] = useState<string | null>(null)
+  const [expanded, setExpanded]   = useState<Set<string>>(new Set())
+  const [selected, setSelected]   = useState<string | null>(null)
+  const [hovered, setHovered]     = useState<string | null>(null)
+  const [confirmDel, setConfirmDel] = useState<string | null>(null)
 
-  // Group projects by client
   const clientMap = React.useMemo(() => {
     const map = new Map<string, { name: string; address: string; projects: Project[] }>()
     projects.forEach((p: Project) => {
@@ -502,66 +504,159 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
 
   const clientCount = clientMap.size
 
-  // ── CLIENTS LIST VIEW ─────────────────────────────
+  function toggleClient(key: string) {
+    setExpanded(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
+  }
+
+  // auto-expand all on first load
+  useEffect(() => {
+    if (projects.length > 0) {
+      const keys = new Set<string>()
+      projects.forEach((p: Project) => keys.add((p.homeowner || p.address || p.name || 'Unknown').trim()))
+      setExpanded(keys)
+    }
+  }, [projects.length])
+
   return (
     <div style={{ maxWidth: 900, animation: 'fadeUp .3s ease both' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 22 }}>
+
+      {/* ── header ── */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:28 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>Clients</h1>
-          <p style={{ margin: '3px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>{clientCount} client{clientCount!==1?'s':''} · {projects.length} project{projects.length!==1?'s':''} · {installedCount} installed</p>
+          <h1 style={{ margin:0, fontSize:20, fontWeight:700, letterSpacing:'-0.035em', color:'rgba(255,255,255,0.9)' }}>Projects</h1>
+          <p style={{ margin:'3px 0 0', fontSize:11, color:'rgba(255,255,255,0.22)', letterSpacing:'-0.01em' }}>
+            {clientCount} client{clientCount!==1?'s':''} · {projects.length} project{projects.length!==1?'s':''} · {installedCount} installed
+          </p>
         </div>
-        <button className="new-btn" onClick={() => router.push('/projects/new')} style={{ background: 'linear-gradient(135deg,#F4884A,#df6f28)', border: 'none', borderRadius: 9, color: '#fff', fontWeight: 600, fontSize: 12, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, letterSpacing: '-0.02em', boxShadow: '0 2px 10px rgba(244,136,74,0.25), 0 1px 0 rgba(255,255,255,0.1) inset', flexShrink: 0 }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        <button className="new-btn" onClick={() => router.push('/projects/new')} style={{ background:'linear-gradient(135deg,#F4884A,#df6f28)', border:'none', borderRadius:8, color:'#fff', fontWeight:600, fontSize:11, padding:'7px 14px', cursor:'pointer', display:'flex', alignItems:'center', gap:5, letterSpacing:'-0.01em', boxShadow:'0 0 18px rgba(244,136,74,0.28), 0 2px 8px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.1) inset', flexShrink:0 }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
           New client
         </button>
       </div>
 
-      {loading && <div style={{ textAlign:'center',paddingTop:50 }}><div style={{ width:24,height:24,border:'2px solid rgba(244,136,74,0.25)',borderTopColor:'#F4884A',borderRadius:'50%',animation:'spin .8s linear infinite',margin:'0 auto 10px' }} /><p style={{ color:'rgba(255,255,255,0.2)',fontSize:12 }}>Loading…</p></div>}
+      {/* ── loading ── */}
+      {loading && (
+        <div style={{ display:'flex', alignItems:'center', gap:10, padding:'20px 0', color:'rgba(255,255,255,0.2)', fontSize:12 }}>
+          <div style={{ width:16,height:16,border:'1.5px solid rgba(244,136,74,0.2)',borderTopColor:'#F4884A',borderRadius:'50%',animation:'spin .8s linear infinite',flexShrink:0 }} />
+          Loading projects…
+        </div>
+      )}
 
-      <div style={{ display:'flex',flexDirection:'column',gap:7 }}>
-        {Array.from(clientMap.entries()).map(([key, client], ci) => {
-          const initials = client.name.split(' ').map((w:string)=>w[0]).slice(0,2).join('').toUpperCase()
-          const allStatuses = [...new Set(client.projects.map((p:Project)=>p.status))]
-          return (
-            <div key={key} className="dash-card" onClick={()=>router.push(`/clients/${encodeURIComponent(key)}`)}
-              style={{ background:'rgba(255,255,255,0.025)',border:'1px solid rgba(255,255,255,0.065)',borderRadius:13,padding:'14px 16px',cursor:'pointer',display:'flex',alignItems:'center',gap:13,boxShadow:'0 2px 14px rgba(0,0,0,.3)',animation:'fadeUp .3s ease both',animationDelay:`${ci*.05}s`,position:'relative',overflow:'hidden' }}>
-              <div style={{ position:'absolute',left:0,top:10,bottom:10,width:2.5,borderRadius:2,background:STATUS_COLOR[client.projects[0].status]||'#6b7280',opacity:.65 }} />
-              {/* initials avatar */}
-              <div style={{ width:40,height:40,borderRadius:10,background:'linear-gradient(135deg,rgba(244,136,74,0.18),rgba(244,136,74,0.06))',border:'1px solid rgba(244,136,74,0.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:13,fontWeight:700,color:'rgba(244,136,74,0.9)',letterSpacing:'-0.02em',marginLeft:7 }}>{initials}</div>
-              <div style={{ flex:1,minWidth:0 }}>
-                <div className="card-name" style={{ fontWeight:600,fontSize:14,letterSpacing:'-0.025em',color:'rgba(255,255,255,0.88)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',transition:'color .18s' }}>{client.name}</div>
-                <div style={{ color:'rgba(255,255,255,0.3)',fontSize:12,marginTop:2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',letterSpacing:'-0.01em' }}>{client.address || 'No address on file'}</div>
-              </div>
-              <div style={{ display:'flex',alignItems:'center',gap:7,flexShrink:0 }} onClick={e=>e.stopPropagation()}>
-                {confirmDeleteClient === key ? (
-                  <>
-                    <span style={{ fontSize:11,color:'rgba(255,255,255,0.45)' }}>Delete all projects?</span>
-                    <button onClick={()=>{ deleteClient(key); setConfirmDeleteClient(null) }}
-                      style={{ background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.35)',color:'#ef4444',borderRadius:6,fontSize:11,fontWeight:600,padding:'3px 9px',cursor:'pointer' }}>Delete</button>
-                    <button onClick={()=>setConfirmDeleteClient(null)}
-                      style={{ background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',color:'rgba(255,255,255,0.45)',borderRadius:6,fontSize:11,fontWeight:500,padding:'3px 9px',cursor:'pointer' }}>Cancel</button>
-                  </>
-                ) : (
-                  <>
-                    {allStatuses.slice(0,2).map((s:string)=>(
-                      <span key={s} style={{ background:STATUS_COLOR[s]+'16',color:STATUS_COLOR[s],borderRadius:5,fontSize:10,fontWeight:600,padding:'2px 6px',letterSpacing:'0.03em',textTransform:'uppercase' }}>{STATUS_LABEL[s]||s}</span>
-                    ))}
-                    <span style={{ fontSize:11,color:'rgba(255,255,255,0.2)',background:'rgba(255,255,255,0.055)',borderRadius:6,padding:'2px 8px',fontWeight:500,flexShrink:0 }}>{client.projects.length} project{client.projects.length!==1?'s':''}</span>
-                    <button onClick={()=>setConfirmDeleteClient(key)} title="Delete client"
-                      style={{ background:'none',border:'none',color:'rgba(255,255,255,0.18)',cursor:'pointer',padding:'3px 5px',borderRadius:6,display:'flex',alignItems:'center',transition:'color .15s' }}
-                      onMouseEnter={e=>(e.currentTarget.style.color='#ef4444')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,0.18)')}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-                    </button>
-                    <span className="card-arrow" style={{ color:'rgba(255,255,255,0.22)',fontSize:17,lineHeight:1,opacity:.45 }}>›</span>
-                  </>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {/* ── tree ── */}
+      {!loading && (
+        <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+          {Array.from(clientMap.entries()).map(([key, client], ci) => {
+            const isOpen    = expanded.has(key)
+            const initials  = client.name.split(' ').map((w:string)=>w[0]).slice(0,2).join('').toUpperCase()
+            const topStatus = client.projects[0]?.status || 'draft'
+            const isHov     = hovered === key
+            const isDel     = confirmDel === key
 
-      {/* Empty state — only shown when no clients */}
+            return (
+              <div key={key} style={{ animation:`fadeUp .25s ease both`, animationDelay:`${ci*.04}s` }}>
+
+                {/* ── CLIENT ROW ── */}
+                <div
+                  onMouseEnter={() => setHovered(key)}
+                  onMouseLeave={() => setHovered(null)}
+                  style={{ position:'relative', display:'flex', alignItems:'center', gap:0, borderRadius:10, transition:'background .15s', background: isHov ? 'rgba(255,255,255,0.032)' : 'transparent', cursor:'pointer' }}
+                >
+                  {/* expand chevron */}
+                  <button onClick={() => toggleClient(key)} style={{ width:32, height:36, display:'flex', alignItems:'center', justifyContent:'center', background:'none', border:'none', cursor:'pointer', flexShrink:0, color:'rgba(255,255,255,0.25)', transition:'color .15s', padding:0 }}>
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition:'transform .2s cubic-bezier(.4,0,.2,1)' }}><path d="M9 18l6-6-6-6"/></svg>
+                  </button>
+
+                  {/* folder icon */}
+                  <div onClick={() => toggleClient(key)} style={{ width:28, height:28, borderRadius:7, background: isOpen ? 'rgba(244,136,74,0.14)' : 'rgba(255,255,255,0.05)', border:`1px solid ${isOpen ? 'rgba(244,136,74,0.25)' : 'rgba(255,255,255,0.08)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all .15s', boxShadow: isOpen ? '0 0 10px rgba(244,136,74,0.12)' : 'none' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isOpen ? '#F4884A' : 'rgba(255,255,255,0.35)'} strokeWidth="1.6" style={{ transition:'stroke .15s' }}>
+                      {isOpen
+                        ? <><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/><line x1="8" y1="13" x2="16" y2="13" strokeOpacity=".5"/></>
+                        : <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+                      }
+                    </svg>
+                  </div>
+
+                  {/* name + address */}
+                  <div onClick={() => toggleClient(key)} style={{ flex:1, minWidth:0, padding:'0 10px' }}>
+                    <div style={{ fontSize:13, fontWeight:600, color: isOpen ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.7)', letterSpacing:'-0.02em', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', transition:'color .15s' }}>{client.name}</div>
+                    <div style={{ fontSize:10.5, color:'rgba(255,255,255,0.22)', marginTop:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', letterSpacing:'-0.005em' }}>{client.address || 'No address'}</div>
+                  </div>
+
+                  {/* right side — status + count + actions (visible on hover) */}
+                  <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0, paddingRight:8, opacity: isHov ? 1 : 0.45, transition:'opacity .15s' }} onClick={e => e.stopPropagation()}>
+                    {isDel ? (
+                      <>
+                        <span style={{ fontSize:10, color:'rgba(255,255,255,0.4)' }}>Delete client?</span>
+                        <button onClick={() => { deleteClient(key); setConfirmDel(null) }} style={{ background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.3)', color:'#ef4444', borderRadius:5, fontSize:10, fontWeight:600, padding:'2px 8px', cursor:'pointer' }}>Delete</button>
+                        <button onClick={() => setConfirmDel(null)} style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.4)', borderRadius:5, fontSize:10, padding:'2px 8px', cursor:'pointer' }}>Cancel</button>
+                      </>
+                    ) : (
+                      <>
+                        <span style={{ fontSize:10, color:'rgba(255,255,255,0.18)', background:'rgba(255,255,255,0.05)', borderRadius:4, padding:'2px 7px', fontWeight:500 }}>{client.projects.length} project{client.projects.length!==1?'s':''}</span>
+                        <div style={{ width:6, height:6, borderRadius:'50%', background:STATUS_COLOR[topStatus]||'#6b7280', boxShadow:`0 0 5px ${STATUS_COLOR[topStatus]||'#6b7280'}`, flexShrink:0 }} />
+                        <button onClick={() => setConfirmDel(key)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.18)', cursor:'pointer', padding:'2px 4px', borderRadius:5, display:'flex', alignItems:'center', transition:'color .12s' }}
+                          onMouseEnter={e=>(e.currentTarget.style.color='#ef4444')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,0.18)')}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── PROJECT CHILDREN ── */}
+                <div style={{ overflow:'hidden', maxHeight: isOpen ? `${client.projects.length * 56}px` : '0px', transition:'max-height .28s cubic-bezier(.4,0,.2,1), opacity .2s', opacity: isOpen ? 1 : 0 }}>
+                  <div style={{ paddingBottom: isOpen ? 6 : 0 }}>
+                    {client.projects.map((p: Project, pi: number) => {
+                      const projKey  = p.id
+                      const isSel    = selected === projKey
+                      const isProjHov = hovered === projKey
+                      const isLast   = pi === client.projects.length - 1
+
+                      return (
+                        <div key={p.id}
+                          onMouseEnter={() => setHovered(projKey)}
+                          onMouseLeave={() => setHovered(null)}
+                          onClick={() => { setSelected(projKey); router.push(`/projects/${p.id}/map`) }}
+                          style={{ position:'relative', display:'flex', alignItems:'center', marginLeft:14, paddingLeft:18, cursor:'pointer', borderRadius:8, background: isSel ? 'rgba(244,136,74,0.07)' : isProjHov ? 'rgba(255,255,255,0.025)' : 'transparent', transition:'background .12s', boxShadow: isSel ? '0 0 0 1px rgba(244,136,74,0.18) inset, 0 0 14px rgba(244,136,74,0.06)' : 'none' }}>
+
+                          {/* connector line */}
+                          <div style={{ position:'absolute', left:0, top:0, bottom: isLast ? '50%' : 0, width:1, background:'rgba(255,255,255,0.07)' }} />
+                          <div style={{ position:'absolute', left:0, top:'50%', width:14, height:1, background:'rgba(255,255,255,0.07)' }} />
+
+                          {/* active glow indicator */}
+                          {isSel && <div style={{ position:'absolute', left:18, top:'50%', transform:'translateY(-50%)', width:2, height:18, borderRadius:1, background:'#F4884A', boxShadow:'0 0 8px rgba(244,136,74,0.7)' }} />}
+
+                          {/* project icon */}
+                          <div style={{ width:24, height:24, borderRadius:6, background: isSel ? 'rgba(244,136,74,0.15)' : 'rgba(255,255,255,0.04)', border:`1px solid ${isSel ? 'rgba(244,136,74,0.3)' : 'rgba(255,255,255,0.06)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginLeft:10, transition:'all .12s' }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isSel ? '#F4884A' : 'rgba(255,255,255,0.3)'} strokeWidth="1.7" style={{ transition:'stroke .12s' }}>
+                              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+                            </svg>
+                          </div>
+
+                          {/* name + meta */}
+                          <div style={{ flex:1, minWidth:0, padding:'9px 10px' }}>
+                            <div style={{ fontSize:12, fontWeight: isSel ? 600 : 500, color: isSel ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.6)', letterSpacing:'-0.015em', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', transition:'color .12s' }}>{p.name || p.address}</div>
+                            <div style={{ fontSize:10, color:'rgba(255,255,255,0.18)', marginTop:1, letterSpacing:'-0.005em' }}>{p.address}</div>
+                          </div>
+
+                          {/* status + open arrow */}
+                          <div style={{ display:'flex', alignItems:'center', gap:7, flexShrink:0, paddingRight:10, opacity: isProjHov || isSel ? 1 : 0.4, transition:'opacity .12s' }}>
+                            <span style={{ background:STATUS_COLOR[p.status]+'18', color:STATUS_COLOR[p.status], borderRadius:4, fontSize:9, fontWeight:700, padding:'2px 6px', letterSpacing:'0.05em', textTransform:'uppercase' }}>{STATUS_LABEL[p.status]}</span>
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={isSel ? '#F4884A' : 'rgba(255,255,255,0.25)'} strokeWidth="2" style={{ transition:'stroke .12s' }}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* ── empty state ── */}
       {!loading && clientCount === 0 && <EmptyState onNew={() => router.push('/projects/new')} hasClients={false} />}
     </div>
   )
