@@ -663,6 +663,35 @@ function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boo
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
         New client
       </button>
+
+      {/* Feature row */}
+      <div style={{ display:'flex', alignItems:'flex-start', gap:0, marginTop:48, width:'100%', maxWidth:480 }}>
+        {[
+          {
+            icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.7)" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>,
+            title: 'Organize clients',
+            desc: 'Keep every project in one place.',
+          },
+          {
+            icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.7)" strokeWidth="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>,
+            title: 'Design beautifully',
+            desc: 'Plan and visualize with precision.',
+          },
+          {
+            icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.7)" strokeWidth="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+            title: 'Deliver effortlessly',
+            desc: 'Install with confidence every time.',
+          },
+        ].map((f, i) => (
+          <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'flex-start', padding:'0 20px', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
+            <div style={{ width:34, height:34, borderRadius:9, background:'rgba(244,136,74,0.08)', border:'1px solid rgba(244,136,74,0.12)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
+              {f.icon}
+            </div>
+            <div style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.65)', marginBottom:4, letterSpacing:'-0.01em' }}>{f.title}</div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.22)', lineHeight:1.5 }}>{f.desc}</div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
