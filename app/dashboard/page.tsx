@@ -100,7 +100,42 @@ export default function DashboardPage() {
   }
 
   const [ambientGlow, setAmbientGlow] = useState(() => typeof window !== 'undefined' ? +(localStorage.getItem('upscape_glow') || 70) : 70)
+  const [soundOn, setSoundOn] = useState(() => typeof window !== 'undefined' ? localStorage.getItem('upscape_sound') === 'true' : false)
+  const introAudioRef = React.useRef<HTMLAudioElement | null>(null)
+  const introTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const L = lightMode
+
+  // Intro sound — play for 60 s when soundOn, volume tracks ambientGlow
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!introAudioRef.current) {
+      const audio = new Audio('/intro-sound.mp3')
+      audio.loop = true
+      introAudioRef.current = audio
+    }
+    const audio = introAudioRef.current
+    audio.volume = soundOn ? Math.max(0.02, ambientGlow / 100) : 0
+    if (soundOn) {
+      audio.play().catch(() => {})
+      if (introTimerRef.current) clearTimeout(introTimerRef.current)
+      introTimerRef.current = setTimeout(() => {
+        audio.pause()
+        audio.currentTime = 0
+      }, 60_000)
+    } else {
+      audio.pause()
+      audio.currentTime = 0
+      if (introTimerRef.current) clearTimeout(introTimerRef.current)
+    }
+    return () => { /* keep audio alive between renders */ }
+  }, [soundOn])
+
+  // Live volume tracking via ambientGlow slider (no restart)
+  useEffect(() => {
+    if (introAudioRef.current && soundOn) {
+      introAudioRef.current.volume = Math.max(0.02, ambientGlow / 100)
+    }
+  }, [ambientGlow])
 
   useEffect(() => {
     fetchProjects()
@@ -353,7 +388,7 @@ export default function DashboardPage() {
           {section === 'gallery' && <GallerySection />}
           {section === 'ai' && <AISection />}
           {section === 'design' && <DesignBotSection projects={projects} />}
-          {section === 'settings' && <SettingsSection userEmail={userEmail} logout={logout} lightMode={L} toggleTheme={toggleTheme} ambientGlow={ambientGlow} setAmbientGlow={(v: number) => { setAmbientGlow(v); localStorage.setItem('upscape_glow', String(v)) }} />}
+          {section === 'settings' && <SettingsSection userEmail={userEmail} logout={logout} lightMode={L} toggleTheme={toggleTheme} ambientGlow={ambientGlow} setAmbientGlow={(v: number) => { setAmbientGlow(v); localStorage.setItem('upscape_glow', String(v)) }} soundOn={soundOn} setSoundOn={(v: boolean) => { setSoundOn(v); localStorage.setItem('upscape_sound', String(v)) }} />}
         </main>
       </div>
     </div>
@@ -1420,7 +1455,7 @@ function Toggle({ on, onToggle, glow = 70 }: { on: boolean; onToggle: () => void
   )
 }
 
-function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlow, setAmbientGlow }: any) {
+function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlow, setAmbientGlow, soundOn, setSoundOn }: any) {
   const [active, setActive]         = useState('general')
   const [mapStyle, setMapStyle]     = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_style') || 'satellite') : 'satellite')
   const [mapTime, setMapTime]       = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_time') || 'day') : 'day')
@@ -1550,6 +1585,7 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
               <span style={{ fontSize:11,color:muted,minWidth:30,textAlign:'right' }}>{ambientGlow}%</span>
             </div>
           ))}
+          {row('Intro sound','Play ambient intro sound for 1 minute on load.',T(soundOn,()=>setSoundOn(!soundOn)))}
           {row('Animations','Enable interface animations and transitions.',T(animations,()=>setAnimations(v=>!v)),true)}
         </>)}
 
