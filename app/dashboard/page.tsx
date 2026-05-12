@@ -11,7 +11,7 @@ function UpscapeMark({ size = 36 }: { size?: number }) {
   return <img src="/upscape-logo-mark.png" alt="Upscape" width={size} height={size} style={{ objectFit: 'contain', display: 'block' }} />
 }
 
-type Section = 'projects' | 'products' | 'gallery' | 'ai' | 'settings'
+type Section = 'projects' | 'products' | 'gallery' | 'ai' | 'design' | 'settings'
 
 // Main nav items (top section)
 const NAV_MAIN = [
@@ -50,6 +50,15 @@ const NAV_MAIN = [
     icon: (active: boolean) => (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.9 : 1.5}>
         <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'design' as Section,
+    label: 'Design Bot',
+    icon: (active: boolean) => (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.9 : 1.5}>
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
       </svg>
     ),
   },
@@ -343,6 +352,7 @@ export default function DashboardPage() {
           {section === 'products' && <ProductsSection />}
           {section === 'gallery' && <GallerySection />}
           {section === 'ai' && <AISection />}
+          {section === 'design' && <DesignBotSection projects={projects} />}
           {section === 'settings' && <SettingsSection userEmail={userEmail} logout={logout} lightMode={L} toggleTheme={toggleTheme} ambientGlow={ambientGlow} setAmbientGlow={(v: number) => { setAmbientGlow(v); localStorage.setItem('upscape_glow', String(v)) }} />}
         </main>
       </div>
@@ -984,6 +994,418 @@ function AISection() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
+    </div>
+  )
+}
+
+// ── DESIGN BOT ────────────────────────────────────────
+const DESIGN_STYLES = [
+  { id: 'warm-luxury',       label: 'Warm Luxury',       desc: 'Rich amber tones, layered depth',    color: '#F4884A' },
+  { id: 'modern-minimal',    label: 'Modern Minimal',    desc: 'Clean white accents, precise lines', color: '#94a3b8' },
+  { id: 'soft-natural',      label: 'Soft Natural',      desc: 'Diffused moonlight, gentle glow',    color: '#86efac' },
+  { id: 'high-contrast',     label: 'High Contrast',     desc: 'Bold shadows, dramatic uplighting',  color: '#c084fc' },
+]
+
+const ZONE_COLORS: Record<string, string> = {
+  uplight:    '#F4884A', path:      '#fbbf24', flood:    '#f87171',
+  wall_wash:  '#a78bfa', accent:    '#fb923c', step:     '#34d399',
+  patio:      '#60a5fa', downlight: '#e879f9',
+}
+const ZONE_ICONS: Record<string, string> = {
+  uplight:'▲', path:'●', flood:'◆', wall_wash:'▬', accent:'★', step:'⬛', patio:'○', downlight:'▼',
+}
+
+const STYLE_FILTER: Record<string, string> = {
+  'warm-luxury':    'brightness(0.18) sepia(0.3)',
+  'modern-minimal': 'brightness(0.15) saturate(0.4)',
+  'soft-natural':   'brightness(0.22) sepia(0.15)',
+  'high-contrast':  'brightness(0.10) contrast(1.2)',
+}
+const STYLE_GLOW: Record<string, { color: string; opacity: number }> = {
+  'warm-luxury':    { color: '#ff8c00', opacity: 0.85 },
+  'modern-minimal': { color: '#e0f0ff', opacity: 0.55 },
+  'soft-natural':   { color: '#ffe4a0', opacity: 0.60 },
+  'high-contrast':  { color: '#ff6000', opacity: 0.95 },
+}
+
+const DESIGN_PROMPT = `You are a professional Upscape landscape lighting designer analyzing a residential property photo.
+
+Return ONLY valid JSON (no markdown fences, no extra text) in exactly this format:
+{
+  "zones": [
+    {
+      "id": "z1",
+      "type": "uplight",
+      "name": "Front oak tree",
+      "description": "Multi-point uplighting showcases canopy structure",
+      "x": 30,
+      "y": 45,
+      "radius": 14,
+      "qty": 2,
+      "wattage": 5
+    }
+  ],
+  "summary": {
+    "totalFixtures": 10,
+    "totalWattage": 72,
+    "transformerSize": "150W",
+    "wireEstimate": "160–200 ft across 3 zones",
+    "difficulty": "moderate",
+    "designNotes": "Warm uplighting on the mature trees anchors the design. Pathway lights guide guests while the facade wash creates architectural presence after dark."
+  }
+}
+
+Types allowed: uplight, path, flood, wall_wash, accent, step, patio, downlight
+x and y are percentages (0–100) of image width/height for zone center placement.
+radius is glow radius as % of image width (6–18 range).
+Identify 5–9 zones. Be specific to what you actually see in the image.`
+
+type DesignZone = { id: string; type: string; name: string; description: string; x: number; y: number; radius: number; qty: number; wattage: number }
+type DesignSummary = { totalFixtures: number; totalWattage: number; transformerSize: string; wireEstimate: string; difficulty: string; designNotes: string }
+type DesignAnalysis = { zones: DesignZone[]; summary: DesignSummary }
+
+function DesignBotSection({ projects }: { projects: Project[] }) {
+  const [phase, setPhase]           = useState<'upload' | 'ready' | 'analyzing' | 'results'>('upload')
+  const [imageUrl, setImageUrl]     = useState('')
+  const [imageB64, setImageB64]     = useState('')
+  const [imageMime, setImageMime]   = useState('image/jpeg')
+  const [style, setStyle]           = useState('warm-luxury')
+  const [analysis, setAnalysis]     = useState<DesignAnalysis | null>(null)
+  const [activeZones, setActiveZones] = useState<Set<string>>(new Set())
+  const [view, setView]             = useState<'before' | 'after'>('after')
+  const [error, setError]           = useState('')
+  const [statusMsg, setStatusMsg]   = useState('')
+  const [showSavePicker, setShowSavePicker] = useState(false)
+  const [savedTo, setSavedTo]       = useState('')
+  const fileRef = React.useRef<HTMLInputElement>(null)
+  const dropRef = React.useRef<HTMLDivElement>(null)
+
+  function handleFile(file: File) {
+    if (!file.type.startsWith('image/')) return
+    const reader = new FileReader()
+    reader.onload = e => {
+      const result = e.target?.result as string
+      // resize to max 1024px for API efficiency
+      const img = new Image()
+      img.onload = () => {
+        const MAX = 1024
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height))
+        const w = Math.round(img.width * scale)
+        const h = Math.round(img.height * scale)
+        const canvas = document.createElement('canvas')
+        canvas.width = w; canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+        const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+        const b64Full = canvas.toDataURL(mime)
+        setImageUrl(b64Full)
+        setImageB64(b64Full.split(',')[1])
+        setImageMime(mime)
+        setPhase('ready')
+        setAnalysis(null)
+        setError('')
+      }
+      img.src = result
+    }
+    reader.readAsDataURL(file)
+  }
+
+  async function analyze() {
+    const key = process.env.NEXT_PUBLIC_ANTHROPIC_KEY || ''
+    if (!key || key.startsWith('REPLACE')) { setError('Add NEXT_PUBLIC_ANTHROPIC_KEY to use Design Bot.'); return }
+    setPhase('analyzing')
+    setError('')
+    const msgs = ['Reading your yard…', 'Identifying lighting zones…', 'Building your design…', 'Calculating fixtures…']
+    let mi = 0
+    setStatusMsg(msgs[0])
+    const interval = setInterval(() => { mi = (mi + 1) % msgs.length; setStatusMsg(msgs[mi]) }, 1800)
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({
+          model: 'claude-opus-4-5',
+          max_tokens: 1200,
+          messages: [{ role: 'user', content: [
+            { type: 'image', source: { type: 'base64', media_type: imageMime, data: imageB64 } },
+            { type: 'text', text: DESIGN_PROMPT },
+          ]}],
+        }),
+      })
+      const data = await res.json()
+      let text = data.content?.[0]?.text || ''
+      // strip any accidental markdown fences
+      text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+      const parsed: DesignAnalysis = JSON.parse(text)
+      setAnalysis(parsed)
+      setActiveZones(new Set(parsed.zones.map(z => z.id)))
+      setView('after')
+      setPhase('results')
+    } catch (e: any) {
+      setError('Analysis failed — ' + (e.message || 'unknown error'))
+      setPhase('ready')
+    } finally { clearInterval(interval) }
+  }
+
+  function toggleZone(id: string) {
+    setActiveZones(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
+
+  const glow = STYLE_GLOW[style]
+
+  return (
+    <div style={{ maxWidth: 780, animation: 'fadeUp .3s ease both' }}>
+      <div style={{ marginBottom: 22 }}>
+        <h1 style={{ margin: '0 0 3px', fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>Design Bot</h1>
+        <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>Upload a yard photo · AI identifies lighting zones · see your design lit up</p>
+      </div>
+
+      {/* ── UPLOAD PHASE ── */}
+      {(phase === 'upload' || phase === 'ready') && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* drop zone */}
+          <div
+            ref={dropRef}
+            onClick={() => fileRef.current?.click()}
+            onDragOver={e => { e.preventDefault(); (dropRef.current as any).style.borderColor = '#F4884A' }}
+            onDragLeave={() => { (dropRef.current as any).style.borderColor = 'rgba(255,255,255,0.1)' }}
+            onDrop={e => { e.preventDefault(); (dropRef.current as any).style.borderColor = 'rgba(255,255,255,0.1)'; const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
+            style={{
+              border: '1.5px dashed rgba(255,255,255,0.1)', borderRadius: 16, cursor: 'pointer',
+              overflow: 'hidden', position: 'relative', transition: 'border-color .2s',
+              minHeight: phase === 'ready' ? 0 : 220,
+              background: phase === 'ready' ? 'transparent' : 'rgba(255,255,255,0.02)',
+            }}
+          >
+            {phase === 'ready' ? (
+              /* preview */
+              <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden' }}>
+                {/* filtered dark layer */}
+                <img src={imageUrl} alt="" style={{ width: '100%', display: 'block', maxHeight: 380, objectFit: 'cover', filter: view === 'after' ? STYLE_FILTER[style] : 'none', transition: 'filter .4s' }} />
+                {/* glow overlays */}
+                {view === 'after' && analysis && analysis.zones.filter(z => activeZones.has(z.id)).map(z => (
+                  <div key={z.id} style={{
+                    position: 'absolute', pointerEvents: 'none',
+                    left: `${z.x}%`, top: `${z.y}%`,
+                    width: `${z.radius * 2}%`, height: `${z.radius * 2}%`,
+                    transform: 'translate(-50%, -50%)',
+                    borderRadius: '50%',
+                    background: `radial-gradient(circle, ${glow.color}${Math.round(glow.opacity * 255).toString(16).padStart(2,'0')} 0%, ${glow.color}44 40%, transparent 70%)`,
+                    filter: 'blur(4px)',
+                  }} />
+                ))}
+                {/* before/after tab */}
+                <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 2, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', borderRadius: 8, padding: 3 }}>
+                  {(['before','after'] as const).map(v => (
+                    <button key={v} onClick={e => { e.stopPropagation(); setView(v) }} style={{ background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', borderRadius: 6, color: view === v ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 500, padding: '4px 10px', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{v}</button>
+                  ))}
+                </div>
+                {/* change photo button */}
+                <button onClick={e => { e.stopPropagation(); fileRef.current?.click() }} style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 7, color: 'rgba(255,255,255,0.6)', fontSize: 11, padding: '5px 10px', cursor: 'pointer' }}>Change photo</button>
+              </div>
+            ) : (
+              /* empty state */
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: 12 }}>
+                <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(244,136,74,0.1)', border: '1px solid rgba(244,136,74,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.7)" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.7)', marginBottom: 4 }}>Drop a yard photo here</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>Daytime or nighttime · JPG / PNG / WEBP</div>
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(244,136,74,0.55)', background: 'rgba(244,136,74,0.06)', border: '1px solid rgba(244,136,74,0.12)', borderRadius: 6, padding: '4px 12px' }}>or click to browse</div>
+              </div>
+            )}
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }} />
+
+          {phase === 'ready' && (
+            <>
+              {/* Style selector */}
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 10 }}>Lighting Style</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
+                  {DESIGN_STYLES.map(s => (
+                    <button key={s.id} onClick={() => setStyle(s.id)} style={{
+                      background: style === s.id ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.025)',
+                      border: `1px solid ${style === s.id ? s.color + '66' : 'rgba(255,255,255,0.07)'}`,
+                      borderRadius: 10, padding: '10px 10px 9px', cursor: 'pointer', textAlign: 'left', transition: 'all .18s',
+                      boxShadow: style === s.id ? `0 0 14px ${s.color}22` : 'none',
+                    }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, marginBottom: 7, boxShadow: style === s.id ? `0 0 8px ${s.color}` : 'none' }} />
+                      <div style={{ fontSize: 12, fontWeight: 600, color: style === s.id ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.45)', letterSpacing: '-0.01em', marginBottom: 2 }}>{s.label}</div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', lineHeight: 1.4 }}>{s.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {error && <div style={{ fontSize: 12, color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '9px 13px' }}>{error}</div>}
+
+              <button onClick={analyze} style={{ background: 'linear-gradient(135deg,#F4884A,#df6f28)', border: 'none', borderRadius: 11, color: '#fff', fontWeight: 600, fontSize: 14, padding: '13px', cursor: 'pointer', boxShadow: '0 0 24px rgba(244,136,74,0.3), 0 4px 16px rgba(0,0,0,0.4)', letterSpacing: '-0.01em', transition: 'transform .18s, box-shadow .18s' }}
+                onMouseEnter={e=>(e.currentTarget.style.transform='translateY(-1px)')} onMouseLeave={e=>(e.currentTarget.style.transform='none')}>
+                ✦ Analyze &amp; Design
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── ANALYZING ── */}
+      {phase === 'analyzing' && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, padding: '60px 0' }}>
+          <div style={{ position: 'relative', width: 64, height: 64 }}>
+            <div style={{ position: 'absolute', inset: 0, border: '2px solid rgba(244,136,74,0.15)', borderTopColor: '#F4884A', borderRadius: '50%', animation: 'spin .9s linear infinite' }} />
+            <div style={{ position: 'absolute', inset: 8, border: '2px solid rgba(244,136,74,0.08)', borderBottomColor: 'rgba(244,136,74,0.5)', borderRadius: '50%', animation: 'spin 1.4s linear infinite reverse' }} />
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.7)', marginBottom: 6, transition: 'opacity .3s' }}>{statusMsg}</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>Claude is reading your property</div>
+          </div>
+        </div>
+      )}
+
+      {/* ── RESULTS ── */}
+      {phase === 'results' && analysis && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* Image with overlays */}
+          <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', boxShadow: '0 8px 40px rgba(0,0,0,0.6)' }}>
+            <img src={imageUrl} alt="" style={{ width: '100%', display: 'block', maxHeight: 400, objectFit: 'cover', filter: view === 'after' ? STYLE_FILTER[style] : 'none', transition: 'filter .4s' }} />
+            {view === 'after' && analysis.zones.filter(z => activeZones.has(z.id)).map(z => (
+              <div key={z.id} style={{
+                position: 'absolute', pointerEvents: 'none',
+                left: `${z.x}%`, top: `${z.y}%`,
+                width: `${z.radius * 2}%`, height: `${z.radius * 2}%`,
+                transform: 'translate(-50%, -50%)',
+                borderRadius: '50%',
+                background: `radial-gradient(circle, ${glow.color}${Math.round(glow.opacity * 255).toString(16).padStart(2,'0')} 0%, ${glow.color}44 40%, transparent 70%)`,
+                filter: 'blur(3px)',
+              }} />
+            ))}
+            {/* Zone pins */}
+            {view === 'after' && analysis.zones.map(z => (
+              <button key={z.id} onClick={() => toggleZone(z.id)} style={{
+                position: 'absolute', left: `${z.x}%`, top: `${z.y}%`,
+                transform: 'translate(-50%,-50%)',
+                width: 22, height: 22, borderRadius: '50%',
+                background: activeZones.has(z.id) ? (ZONE_COLORS[z.type] || '#F4884A') : 'rgba(0,0,0,0.5)',
+                border: `2px solid ${activeZones.has(z.id) ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.25)'}`,
+                cursor: 'pointer', fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', boxShadow: activeZones.has(z.id) ? `0 0 10px ${ZONE_COLORS[z.type] || '#F4884A'}88` : 'none',
+                transition: 'all .18s', zIndex: 5,
+              }} title={z.name}>{ZONE_ICONS[z.type] || '●'}</button>
+            ))}
+            {/* Before/After tabs */}
+            <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 2, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', borderRadius: 8, padding: 3 }}>
+              {(['before','after'] as const).map(v => (
+                <button key={v} onClick={() => setView(v)} style={{ background: view === v ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', borderRadius: 6, color: view === v ? '#fff' : 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 500, padding: '4px 10px', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{v}</button>
+              ))}
+            </div>
+            {/* Style quick-switch */}
+            <div style={{ position: 'absolute', bottom: 10, left: 10, display: 'flex', gap: 4 }}>
+              {DESIGN_STYLES.map(s => (
+                <button key={s.id} onClick={() => setStyle(s.id)} title={s.label} style={{ width: 18, height: 18, borderRadius: '50%', background: s.color, border: `2px solid ${style === s.id ? '#fff' : 'transparent'}`, cursor: 'pointer', padding: 0, boxShadow: style === s.id ? `0 0 8px ${s.color}` : 'none', transition: 'all .15s' }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Design notes */}
+          <div style={{ background: 'rgba(244,136,74,0.06)', border: '1px solid rgba(244,136,74,0.14)', borderRadius: 11, padding: '12px 16px' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(244,136,74,0.6)', marginBottom: 5 }}>Design Vision</div>
+            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.72)', lineHeight: 1.65, letterSpacing: '-0.01em' }}>{analysis.summary.designNotes}</p>
+          </div>
+
+          {/* Zones */}
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', marginBottom: 10 }}>Lighting Zones · click to toggle</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 8 }}>
+              {analysis.zones.map(z => {
+                const c = ZONE_COLORS[z.type] || '#F4884A'
+                const on = activeZones.has(z.id)
+                return (
+                  <button key={z.id} onClick={() => toggleZone(z.id)} style={{
+                    background: on ? `${c}12` : 'rgba(255,255,255,0.025)',
+                    border: `1px solid ${on ? c + '44' : 'rgba(255,255,255,0.07)'}`,
+                    borderRadius: 10, padding: '10px 12px', cursor: 'pointer', textAlign: 'left',
+                    transition: 'all .18s', opacity: on ? 1 : 0.45,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: c, flexShrink: 0, boxShadow: on ? `0 0 6px ${c}` : 'none' }} />
+                      <span style={{ fontSize: 11, fontWeight: 600, color: on ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.4)', letterSpacing: '-0.01em' }}>{z.name}</span>
+                      <span style={{ marginLeft: 'auto', fontSize: 9, color: on ? c : 'rgba(255,255,255,0.2)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{z.type.replace('_',' ')}</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', lineHeight: 1.5 }}>{z.description}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', marginTop: 5 }}>{z.qty} fixture{z.qty !== 1 ? 's' : ''} · {z.qty * z.wattage}W</div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Summary metrics */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 8 }}>
+            {[
+              { label: 'Total Fixtures', value: analysis.summary.totalFixtures, unit: 'fixtures' },
+              { label: 'Total Wattage',  value: analysis.summary.totalWattage,  unit: 'watts' },
+              { label: 'Transformer',    value: analysis.summary.transformerSize,unit: '' },
+              { label: 'Wire Run',       value: analysis.summary.wireEstimate,   unit: '' },
+              { label: 'Difficulty',     value: analysis.summary.difficulty,     unit: '' },
+            ].map(m => (
+              <div key={m.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '11px 13px' }}>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.22)', marginBottom: 5 }}>{m.label}</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: 'rgba(255,255,255,0.82)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{m.value}{m.unit ? <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginLeft: 3 }}>{m.unit}</span> : null}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => { setPhase('ready'); setAnalysis(null) }} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 500, padding: 12, cursor: 'pointer' }}>↺ Try Another Style</button>
+            <button onClick={() => { setPhase('upload'); setImageUrl(''); setAnalysis(null); setSavedTo('') }} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 500, padding: 12, cursor: 'pointer' }}>New Photo</button>
+            <button onClick={() => setShowSavePicker(true)} style={{ flex: 1, background: savedTo ? 'rgba(34,197,94,0.15)' : 'linear-gradient(135deg,#F4884A,#df6f28)', border: savedTo ? '1px solid rgba(34,197,94,0.3)' : 'none', borderRadius: 10, color: savedTo ? '#22c55e' : '#fff', fontSize: 12, fontWeight: 600, padding: 12, cursor: 'pointer', boxShadow: savedTo ? 'none' : '0 0 16px rgba(244,136,74,0.3)', transition: 'all .2s' }}>{savedTo ? `✓ Saved to ${savedTo}` : 'Save to Project'}</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── SAVE TO PROJECT PICKER ── */}
+      {showSavePicker && createPortal(
+        <div onClick={() => setShowSavePicker(false)} style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.65)',backdropFilter:'blur(6px)',zIndex:2000,display:'flex',alignItems:'center',justifyContent:'center',padding:20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'#1c1917',border:'1px solid rgba(255,255,255,0.08)',borderRadius:16,padding:24,width:'100%',maxWidth:400,maxHeight:'80vh',overflowY:'auto',boxShadow:'0 24px 60px rgba(0,0,0,0.6)' }}>
+            <div style={{ fontWeight:700,fontSize:15,color:'rgba(255,255,255,0.9)',marginBottom:4,letterSpacing:'-0.02em' }}>Save to Project</div>
+            <div style={{ fontSize:11,color:'rgba(255,255,255,0.3)',marginBottom:18 }}>Choose which project to attach this design to.</div>
+            {projects.length === 0 && (
+              <div style={{ fontSize:13,color:'rgba(255,255,255,0.3)',textAlign:'center',padding:'20px 0' }}>No projects yet — create one first.</div>
+            )}
+            <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
+              {projects.map(p => {
+                const label = p.homeowner || p.name || p.id
+                const addr  = p.address || ''
+                return (
+                  <button key={p.id} onClick={() => {
+                    // store design in localStorage keyed by project id
+                    const payload = { style, analysis, imageUrl, savedAt: new Date().toISOString() }
+                    localStorage.setItem(`upscape_design_${p.id}`, JSON.stringify(payload))
+                    setSavedTo(label)
+                    setShowSavePicker(false)
+                  }} style={{ display:'flex',alignItems:'center',gap:12,padding:'13px 16px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:10,cursor:'pointer',textAlign:'left',transition:'all .15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor='rgba(244,136,74,0.4)')}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor='rgba(255,255,255,0.07)')}>
+                    <div style={{ width:36,height:36,borderRadius:9,background:'rgba(244,136,74,0.08)',border:'1px solid rgba(244,136,74,0.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F4884A" strokeWidth="1.7"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                    </div>
+                    <div style={{ minWidth:0 }}>
+                      <div style={{ fontSize:13,fontWeight:600,color:'rgba(255,255,255,0.85)',letterSpacing:'-0.01em',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{label}</div>
+                      {addr && <div style={{ fontSize:11,color:'rgba(255,255,255,0.28)',marginTop:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{addr}</div>}
+                    </div>
+                    <div style={{ marginLeft:'auto',fontSize:10,fontWeight:600,color:STATUS_COLOR[p.status]||'#6b7280',textTransform:'uppercase',letterSpacing:'0.06em',flexShrink:0 }}>{p.status}</div>
+                  </button>
+                )
+              })}
+            </div>
+            <button onClick={() => setShowSavePicker(false)} style={{ marginTop:16,width:'100%',background:'transparent',border:'1px solid rgba(255,255,255,0.07)',borderRadius:9,color:'rgba(255,255,255,0.35)',fontSize:12,padding:'10px',cursor:'pointer' }}>Cancel</button>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
