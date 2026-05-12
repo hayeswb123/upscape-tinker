@@ -1693,20 +1693,69 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
             <div style={{ fontSize:11,color:muted,marginBottom:12 }}>Sets the lighting when you open a project.</div>
             <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8 }}>
               {[
-                { id:'dawn',  label:'Dawn',  sky:'linear-gradient(160deg,#1a0a2e,#6b2f7a,#e8836a)', dot:'#c97bd4' },
-                { id:'day',   label:'Day',   sky:'linear-gradient(160deg,#1a3a6b,#4a8fd4,#f5d876)', dot:'#f5d876' },
-                { id:'dusk',  label:'Dusk',  sky:'linear-gradient(160deg,#0d0a1a,#6b2510,#f4884a)', dot:'#f4884a' },
-                { id:'night', label:'Night', sky:'linear-gradient(160deg,#020408,#060d1a,#0d1e35)', dot:'#3b82f6' },
-              ].map(opt => (
-                <div key={opt.id} onClick={() => pickMapTime(opt.id)}
-                  style={{ borderRadius:10, border:`1.5px solid ${optBorder(mapTime===opt.id,opt.dot)}`, overflow:'hidden', cursor:'pointer', transition:'border-color .15s', background:mapTime===opt.id?(L?'rgba(0,0,0,0.03)':'rgba(255,255,255,0.04)'):'transparent' }}>
-                  <div style={{ height:44, background:opt.sky }} />
-                  <div style={{ padding:'7px 8px', display:'flex', alignItems:'center', gap:5, background:L?'#fff':'transparent' }}>
-                    <div style={{ width:6, height:6, borderRadius:'50%', background:opt.dot, flexShrink:0, boxShadow:mapTime===opt.id?`0 0 6px ${opt.dot}`:'none' }} />
-                    <span style={{ fontSize:11, fontWeight: mapTime===opt.id?600:400, color: mapTime===opt.id?txt:muted, letterSpacing:'-0.01em' }}>{opt.label}</span>
+                {
+                  id:'dawn', label:'Dawn', dot:'#c084fc',
+                  skyGrad:'linear-gradient(180deg,#1a0a2e 0%,#3d1f5c 35%,#7b3f6e 65%,#c47a8a 85%,#e8a87c 100%)',
+                  mtFill:'#150820cc',
+                  icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><line x1="4" y1="17" x2="20" y2="17" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/><path d="M12 17 A5 5 0 0 1 7 17" stroke="white" strokeWidth="1.4" fill="none" strokeLinecap="round"/><path d="M12 17 A5 5 0 0 0 17 17" stroke="white" strokeWidth="1.4" fill="none" strokeLinecap="round"/><line x1="12" y1="9" x2="12" y2="7" stroke="white" strokeWidth="1.4" strokeLinecap="round"/><line x1="7.8" y1="11.2" x2="6.4" y2="9.8" stroke="white" strokeWidth="1.2" strokeLinecap="round"/><line x1="16.2" y1="11.2" x2="17.6" y2="9.8" stroke="white" strokeWidth="1.2" strokeLinecap="round"/></svg>,
+                },
+                {
+                  id:'day', label:'Day', dot:'#fde047',
+                  skyGrad:'linear-gradient(180deg,#0d3b6e 0%,#1565c0 30%,#1e88e5 60%,#64b5f6 85%,#bbdefb 100%)',
+                  mtFill:'#0a2540cc',
+                  icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="11" r="4" stroke="white" strokeWidth="1.4"/><line x1="12" y1="3" x2="12" y2="5" stroke="white" strokeWidth="1.4" strokeLinecap="round"/><line x1="12" y1="17" x2="12" y2="19" stroke="white" strokeWidth="1.4" strokeLinecap="round"/><line x1="4" y1="11" x2="6" y2="11" stroke="white" strokeWidth="1.4" strokeLinecap="round"/><line x1="18" y1="11" x2="20" y2="11" stroke="white" strokeWidth="1.4" strokeLinecap="round"/><line x1="6.3" y1="5.3" x2="7.7" y2="6.7" stroke="white" strokeWidth="1.2" strokeLinecap="round"/><line x1="17.7" y1="5.3" x2="16.3" y2="6.7" stroke="white" strokeWidth="1.2" strokeLinecap="round"/></svg>,
+                },
+                {
+                  id:'dusk', label:'Dusk', dot:'#fb923c',
+                  skyGrad:'linear-gradient(180deg,#1a0a00 0%,#5c2200 25%,#b84400 50%,#e8720a 72%,#f5a623 88%,#fdd87a 100%)',
+                  mtFill:'#150800cc',
+                  icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><line x1="4" y1="17" x2="20" y2="17" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/><path d="M12 17 A4.5 4.5 0 0 1 7.5 17" stroke="white" strokeWidth="1.4" fill="none" strokeLinecap="round"/><path d="M12 17 A4.5 4.5 0 0 0 16.5 17" stroke="white" strokeWidth="1.4" fill="none" strokeLinecap="round"/><line x1="4.5" y1="14" x2="6" y2="14" stroke="white" strokeWidth="1.2" strokeLinecap="round"/><line x1="18" y1="14" x2="19.5" y2="14" stroke="white" strokeWidth="1.2" strokeLinecap="round"/></svg>,
+                },
+                {
+                  id:'night', label:'Night', dot:'#60a5fa',
+                  skyGrad:'linear-gradient(180deg,#000005 0%,#050a1a 30%,#0a1535 60%,#0f1f4a 80%,#162454 100%)',
+                  mtFill:'#03060fcc',
+                  icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.5 6.5 0 0 0 9.5 9.5z" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="17.5" cy="5.5" r="0.8" fill="white"/><circle cx="20" cy="9" r="0.55" fill="white"/></svg>,
+                },
+              ].map(opt => {
+                const isActive = mapTime === opt.id
+                return (
+                  <div key={opt.id} onClick={() => pickMapTime(opt.id)} style={{
+                    borderRadius:11, overflow:'hidden', cursor:'pointer', position:'relative',
+                    outline: isActive ? `2px solid ${opt.dot}` : '2px solid transparent',
+                    outlineOffset:'-2px',
+                    boxShadow: isActive ? `0 0 12px ${opt.dot}55` : 'none',
+                    transition:'outline-color .18s,box-shadow .18s',
+                  }}>
+                    {/* sky */}
+                    <div style={{ height:72, background:opt.skyGrad, position:'relative' }}>
+                      {/* icon */}
+                      <div style={{ position:'absolute',top:10,left:0,right:0,display:'flex',alignItems:'center',justifyContent:'center',filter:'drop-shadow(0 1px 3px rgba(0,0,0,0.7))' }}>
+                        {opt.icon}
+                      </div>
+                      {/* mountains */}
+                      <div style={{ position:'absolute',bottom:12,left:0,right:0 }}>
+                        <svg width="100%" height="22" viewBox="0 0 80 22" preserveAspectRatio="none">
+                          <path d="M0 22 L0 14 L10 7 L18 12 L26 4 L34 10 L42 2 L50 9 L58 5 L66 11 L74 7 L80 12 L80 22 Z" fill={opt.mtFill}/>
+                        </svg>
+                      </div>
+                      {/* bottom fade for label */}
+                      <div style={{ position:'absolute',bottom:0,left:0,right:0,height:18,background:'linear-gradient(0deg,rgba(0,0,0,0.65) 0%,transparent 100%)' }} />
+                      {/* checkmark */}
+                      {isActive && (
+                        <div style={{ position:'absolute',top:5,right:5,width:15,height:15,borderRadius:'50%',background:opt.dot,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 4px rgba(0,0,0,0.4)' }}>
+                          <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </div>
+                      )}
+                    </div>
+                    {/* label row */}
+                    <div style={{ padding:'6px 8px',display:'flex',alignItems:'center',gap:5,background:L?'#fff':'rgba(10,10,14,0.85)' }}>
+                      <div style={{ width:6,height:6,borderRadius:'50%',background:opt.dot,flexShrink:0,boxShadow:isActive?`0 0 6px ${opt.dot}`:'none' }} />
+                      <span style={{ fontSize:11,fontWeight:isActive?600:400,color:isActive?txt:muted,letterSpacing:'-0.01em' }}>{opt.label}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </>)}
