@@ -315,6 +315,13 @@ export default function DashboardPage() {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
             </button>
           </div>
+          <a href="https://getupscaped.com" target="_blank" rel="noopener noreferrer"
+            style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:4, padding:'6px 0 2px', textDecoration:'none', opacity:0.35, transition:'opacity .15s' }}
+            onMouseEnter={e=>(e.currentTarget.style.opacity='0.7')}
+            onMouseLeave={e=>(e.currentTarget.style.opacity='0.35')}>
+            <span style={{ fontSize:10, color: L ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)', letterSpacing:'0.02em' }}>getupscaped.com</span>
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={L ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)'} strokeWidth="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
         </div>
       </aside>
 
