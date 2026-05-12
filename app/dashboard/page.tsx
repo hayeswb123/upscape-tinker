@@ -187,6 +187,12 @@ export default function DashboardPage() {
         @keyframes drift3 { 0%{transform:translate(0,0) scale(1);opacity:.5} 50%{transform:translate(-6px,-20px) scale(.5);opacity:.2} 100%{transform:translate(8px,-32px) scale(.2);opacity:0} }
         @keyframes bgDrift { 0%,100%{transform:translate(0,0)} 33%{transform:translate(20px,-10px)} 66%{transform:translate(-12px,14px)} }
         @keyframes emptyFadeIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fogDrift { 0%{transform:translateX(-18%) scaleY(1)} 50%{transform:translateX(18%) scaleY(1.07)} 100%{transform:translateX(-18%) scaleY(1)} }
+        @keyframes floatFolder { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-3px)} }
+        @keyframes folderGlow { 0%,100%{opacity:.55;transform:translateX(-50%) scaleX(1)} 50%{opacity:.8;transform:translateX(-50%) scaleX(1.12)} }
+        @keyframes volRay { 0%,100%{opacity:.04} 50%{opacity:.09} }
+        @keyframes grainAnim { 0%{transform:translate(0,0)} 25%{transform:translate(-2px,1px)} 50%{transform:translate(1px,-2px)} 75%{transform:translate(-1px,2px)} 100%{transform:translate(0,0)} }
+        @keyframes dustFloat { 0%{transform:translate(var(--dx0),var(--dy0));opacity:0} 15%{opacity:var(--op)} 85%{opacity:var(--op)} 100%{transform:translate(var(--dx1),var(--dy1));opacity:0} }
 
         /* ── DARK DEFAULTS ── */
         .nav-item { transition: background .18s ease, color .18s ease; }
@@ -639,6 +645,21 @@ function QuotesSection({ projects, router, fmt }: any) {
 
 // ── EMPTY STATE ───────────────────────────────────────
 function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boolean }) {
+  // Dust particles — stable positions via useMemo
+  const dust = React.useMemo(() => Array.from({ length: 18 }, (_, i) => ({
+    id: i,
+    left: 10 + (i * 37 + i * i * 13) % 80,
+    top:  15 + (i * 53 + i * 7)      % 70,
+    size: 1.5 + (i % 3) * 0.7,
+    delay: (i * 0.9) % 7,
+    dur:   6 + (i * 1.3) % 6,
+    dx0: ((i * 17) % 30) - 15,
+    dy0: ((i * 11) % 20) - 10,
+    dx1: ((i * 23) % 30) - 15,
+    dy1: ((i * 19) % 20) - 10,
+    op: 0.12 + (i % 4) * 0.05,
+  })), [])
+
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -652,12 +673,78 @@ function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boo
         <div style={{ width:'100%', height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent)', marginBottom:64 }} />
       )}
 
-      {/* wide floor glow */}
-      <div style={{ position:'absolute', bottom:'28%', left:'50%', transform:'translateX(-50%)', width:500, height:70, borderRadius:'50%', background:'radial-gradient(ellipse,rgba(244,136,74,0.13) 0%,transparent 70%)', filter:'blur(22px)', pointerEvents:'none', animation:'glowPulse 5s ease-in-out infinite' }} />
+      {/* ── CINEMATIC ATMOSPHERE CONTAINER ── */}
+      <div style={{ position:'relative', width:440, height:320, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:12 }}>
 
-      {/* folder */}
-      <div style={{ animation:'float 7s ease-in-out infinite', position:'relative', marginBottom:38 }}>
-        <img src="/empty-folder.png" alt="" style={{ width:220, height:'auto', display:'block' }} />
+        {/* Layer 1: animated grain texture */}
+        <div style={{
+          position:'absolute', inset:0, borderRadius:20, overflow:'hidden', pointerEvents:'none', zIndex:1,
+          opacity: 0.18,
+        }}>
+          <svg width="100%" height="100%" style={{ position:'absolute', inset:0, animation:'grainAnim 0.18s steps(1) infinite' }}>
+            <filter id="grain-es"><feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="4" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+            <rect width="100%" height="100%" filter="url(#grain-es)" opacity="1"/>
+          </svg>
+        </div>
+
+        {/* Layer 2: slow drifting orange fog */}
+        <div style={{
+          position:'absolute', inset:'-20%', borderRadius:'50%', pointerEvents:'none', zIndex:2,
+          background:'radial-gradient(ellipse 70% 45% at 50% 60%, rgba(244,136,74,0.09) 0%, rgba(180,80,20,0.05) 45%, transparent 75%)',
+          filter:'blur(32px)',
+          animation:'fogDrift 18s ease-in-out infinite',
+        }} />
+        <div style={{
+          position:'absolute', inset:'-20%', borderRadius:'50%', pointerEvents:'none', zIndex:2,
+          background:'radial-gradient(ellipse 50% 30% at 60% 70%, rgba(244,136,74,0.06) 0%, transparent 65%)',
+          filter:'blur(48px)',
+          animation:'fogDrift 24s ease-in-out infinite reverse',
+        }} />
+
+        {/* Layer 3: dust particles */}
+        {dust.map(p => (
+          <div key={p.id} style={{
+            position:'absolute',
+            left:`${p.left}%`, top:`${p.top}%`,
+            width:p.size, height:p.size, borderRadius:'50%',
+            background:'rgba(244,160,80,1)',
+            pointerEvents:'none', zIndex:3,
+            ['--dx0' as any]:`${p.dx0}px`, ['--dy0' as any]:`${p.dy0}px`,
+            ['--dx1' as any]:`${p.dx1}px`, ['--dy1' as any]:`${p.dy1}px`,
+            ['--op' as any]:p.op,
+            animation:`dustFloat ${p.dur}s ease-in-out ${p.delay}s infinite`,
+          }} />
+        ))}
+
+        {/* Volumetric rays from below */}
+        <div style={{ position:'absolute', bottom:'8%', left:'50%', transform:'translateX(-50%)', pointerEvents:'none', zIndex:2 }}>
+          {[[-22,110],[-10,120],[0,130],[10,120],[22,110]].map(([angle, h], i) => (
+            <div key={i} style={{
+              position:'absolute', bottom:0,
+              left:'50%', transform:`translateX(-50%) rotate(${angle}deg)`,
+              transformOrigin:'50% 100%',
+              width:2 + (i===2?2:0), height:h,
+              background:`linear-gradient(to top, rgba(244,136,74,0.11), transparent)`,
+              filter:'blur(4px)',
+              animation:`volRay ${5+i*0.7}s ease-in-out ${i*0.4}s infinite`,
+            }} />
+          ))}
+        </div>
+
+        {/* Reflective floor pool */}
+        <div style={{
+          position:'absolute', bottom:'12%', left:'50%', transform:'translateX(-50%)',
+          width:180, height:22, borderRadius:'50%',
+          background:'radial-gradient(ellipse, rgba(244,136,74,0.18) 0%, transparent 70%)',
+          filter:'blur(8px)',
+          pointerEvents:'none', zIndex:4,
+          animation:'folderGlow 4s ease-in-out infinite',
+        }} />
+
+        {/* Folder — gentle float */}
+        <div style={{ animation:'floatFolder 4s ease-in-out infinite', position:'relative', zIndex:5 }}>
+          <img src="/empty-folder.png" alt="" style={{ width:200, height:'auto', display:'block', filter:'drop-shadow(0 0 22px rgba(244,136,74,0.35))' }} />
+        </div>
       </div>
 
       <h2 style={{ margin:'0 0 10px', fontSize:24, fontWeight:700, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.82)', textAlign:'center', lineHeight:1.1 }}>
