@@ -11,7 +11,7 @@ function UpscapeMark({ size = 36 }: { size?: number }) {
   return <img src="/upscape-logo-mark.png" alt="Upscape" width={size} height={size} style={{ objectFit: 'contain', display: 'block' }} />
 }
 
-type Section = 'projects' | 'products' | 'settings'
+type Section = 'projects' | 'products' | 'gallery' | 'ai' | 'settings'
 
 const NAV = [
   {
@@ -30,6 +30,26 @@ const NAV = [
     icon: (active: boolean) => (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.8 : 1.5}>
         <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'gallery' as Section,
+    label: 'Gallery',
+    icon: (active: boolean) => (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.8 : 1.5}>
+        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'ai' as Section,
+    label: 'AI Assistant',
+    icon: (active: boolean) => (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.8 : 1.5}>
+        <path d="M12 2a9 9 0 019 9c0 4.97-4.03 9-9 9a9 9 0 01-9-9 9 9 0 019-9z"/>
+        <path d="M8 12s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
       </svg>
     ),
   },
@@ -306,6 +326,8 @@ export default function DashboardPage() {
         <main style={{ flex: 1, overflowY: 'auto', padding: '28px 28px 60px' }}>
           {section === 'projects' && <ProjectsSection projects={projects} loading={loading} confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} hoveredId={hoveredId} setHoveredId={setHoveredId} deleteProject={deleteProject} deleteClient={deleteClient} router={router} fmt={fmt} installedCount={installedCount} />}
           {section === 'products' && <ProductsSection />}
+          {section === 'gallery' && <GallerySection />}
+          {section === 'ai' && <AISection />}
           {section === 'settings' && <SettingsSection userEmail={userEmail} logout={logout} lightMode={L} toggleTheme={toggleTheme} ambientGlow={ambientGlow} setAmbientGlow={(v: number) => { setAmbientGlow(v); localStorage.setItem('upscape_glow', String(v)) }} />}
         </main>
       </div>
@@ -577,13 +599,11 @@ const PRODUCT_CATALOG: Record<string, ProdEntry[]> = {
     { name: 'ONE G2 ControlPro™ 300 Spotlight',  brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/a/aal-3000-4-bbz_013_jpg_1.jpg' },
     { name: 'ONE G2 ControlPro™ 500 Spotlight',  brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/a/aal-3001-4-bbz_010_jpg_1.jpg' },
     { name: 'G5 ControlPro™ RF Spotlight',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/g/5/g5_cw_hero_1.png' },
-    { name: 'RGBW G5 ControlPro™ Spotlight',     brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/a/aal-3003ir-b-bz_hero-color__1_3.jpg' },
     { name: 'Nano LED Spotlight',                brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/n/a/nano.8_1.png' },
     { name: 'Mini PinnaclePro MR11 Spotlight',   brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/3/d/3d6e43e5-ad71-4fe6-ad90-65677e67f1fe_3d6e43e5-ad71-4fe6-ad90-65677e67f1fe.jpg' },
     { name: 'Waterproof LED Spotlights 4-Pack',  brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/6_2.jpg' },
     { name: '6W Anti-Glare Spotlights 8-Pack',   brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_a63910cb-1abc-491f-bd24-8558dc2317c3.jpg' },
     { name: '5" Solid Brass Spotlights 4-Pack',  brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_1_50bf3f20-0d39-44cd-b202-ff3b2fd76924.jpg' },
-    { name: '12W RGB Color Changing Lights',     brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_895b8298-95ca-4652-ad0a-6e2440774442.jpg' },
   ],
   pathway: [
     { name: 'MagnumPro™ Path Light',             brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/h/aht-3309-bbz_002_jpg_1_3.jpg' },
@@ -608,7 +628,6 @@ const PRODUCT_CATALOG: Record<string, ProdEntry[]> = {
     { name: 'G2 Nano LED Flood Light',           brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/n/a/nano_led_flood_light_1_.png' },
     { name: 'SpectrumPro R7S Flood Light',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/b/v/bvn-vfl-4007-bbz-illuminated-resized_1.png' },
     { name: 'StoutPro PAR36 Flood Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/v/f/vfl-4501-4-bbz_3__1.png' },
-    { name: 'RGBCW LED Wall Wash Light Bar',     brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/r/g/rgbcw_led_light_bar_2.jpg' },
   ],
   downlights: [
     { name: 'PinnaclePro MR16 Downlight',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/d/3/d359f3f4-6721-4693-953a-a3eee3f9620f_d359f3f4-6721-4693-953a-a3eee3f9620f.jpg' },
@@ -624,11 +643,9 @@ const PRODUCT_CATALOG: Record<string, ProdEntry[]> = {
     { name: 'HydraPro™ MR11 Well Light',         brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/w/awl-5005-4-b-bz-illuminated.jpg' },
     { name: 'Nano LED Well Light',               brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/n/a/nano-well-light_0003_pit_3167-3_1.png' },
     { name: 'Core Drill MR11 Well Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/c/o/core-well-light_0006__mg_4967_1.png' },
-    { name: 'Smart RGBCW LED Well Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/b/r/bronze_hero_iq_well_ingrade.png' },
     { name: 'In-Ground Well Lights 12-Pack',     brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_8d11c97d-4374-42cd-b48e-f99b14c5e143.jpg' },
     { name: 'Shielded In-Ground Lights 12-Pack', brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/81JY2TXNeAL._AC_SL1500.jpg' },
     { name: '12W Waterproof Well Lights 10-Pack',brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_69f19edb-415f-4ff8-b641-5d6d57472fef.jpg' },
-    { name: 'RGBW Color-Changing Well Lights',   brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/LowVoltage12WRGBWColorChangingLEDGratedTopInGroundLights8PackMDRG-12-08C_2_40aeecfd-f831-4d35-a003-15ddb4394443.jpg' },
     { name: '5W Anti-Glare Well Lights 6-Pack',  brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/LowVoltage5WLEDAnti-GlareGroundLandscapeWellLights6PackMDWY-05-06C_1_1f45f200-1e04-4b1d-97a4-54cb9ddb9f43.jpg' },
   ],
   transformers: [
@@ -763,6 +780,194 @@ function InstallSection({ projects }: any) {
       </div>
       <div style={{ padding:'14px 18px',background:'rgba(244,136,74,0.05)',border:'1px solid rgba(244,136,74,0.1)',borderRadius:12 }}>
         <p style={{ margin:0,fontSize:12,color:'rgba(255,255,255,0.35)' }}>Install workflow tools are coming soon. {active.length > 0 ? `${active.length} project${active.length!==1?'s':''} ready for install.` : ''}</p>
+      </div>
+    </div>
+  )
+}
+
+// ── GALLERY ───────────────────────────────────────────
+const GALLERY_PHOTOS = [
+  'IMG_4265.JPG','IMG_4271.JPG','IMG_4274.JPG','IMG_4275.JPG','IMG_4276.JPG',
+  'IMG_4277.JPG','IMG_4278.JPG','IMG_4279.JPG','IMG_4280.JPG','IMG_4281.JPG',
+  'IMG_4282.JPG','IMG_4283.JPG','IMG_4284.JPG','IMG_4285.JPG','IMG_4286.JPG',
+  'IMG_4287.JPG','IMG_4288.JPG','IMG_4289.JPG','IMG_4290.JPG','IMG_4291.JPG',
+]
+
+function GallerySection() {
+  const [lightbox, setLightbox] = useState<string | null>(null)
+
+  return (
+    <div style={{ maxWidth: 860, animation: 'fadeUp .3s ease both' }}>
+      <div style={{ marginBottom: 22 }}>
+        <h1 style={{ margin: '0 0 3px', fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>Gallery</h1>
+        <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>{GALLERY_PHOTOS.length} installed projects · click to enlarge</p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+        {GALLERY_PHOTOS.map((file, i) => (
+          <div key={file} onClick={() => setLightbox(file)}
+            style={{ aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden', cursor: 'zoom-in', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', animation: 'fadeUp .3s ease both', animationDelay: `${i * 0.025}s`, transition: 'transform .2s, box-shadow .2s' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.02)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(244,136,74,0.2)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.boxShadow = 'none' }}
+          >
+            <img src={`/gallery/${file}`} alt={`Project ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          </div>
+        ))}
+      </div>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div onClick={() => setLightbox(null)} style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out', backdropFilter: 'blur(8px)', animation: 'fadeUp .15s ease both' }}>
+          <img src={`/gallery/${lightbox}`} alt="" onClick={e => e.stopPropagation()}
+            style={{ maxWidth: '92vw', maxHeight: '90vh', objectFit: 'contain', borderRadius: 14, boxShadow: '0 30px 80px rgba(0,0,0,0.8)', cursor: 'default' }} />
+          <button onClick={() => setLightbox(null)} style={{ position: 'fixed', top: 20, right: 24, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontSize: 18, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+          {/* prev / next */}
+          {(() => {
+            const idx = GALLERY_PHOTOS.indexOf(lightbox)
+            return (
+              <>
+                {idx > 0 && <button onClick={e => { e.stopPropagation(); setLightbox(GALLERY_PHOTOS[idx - 1]) }} style={{ position: 'fixed', left: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontSize: 22, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>}
+                {idx < GALLERY_PHOTOS.length - 1 && <button onClick={e => { e.stopPropagation(); setLightbox(GALLERY_PHOTOS[idx + 1]) }} style={{ position: 'fixed', right: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontSize: 22, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>}
+              </>
+            )
+          })()}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── AI ASSISTANT ──────────────────────────────────────
+const UPSCAPE_SYSTEM = `You are the Upscape AI assistant, built into the Upscape Field Designer app used by area managers in the field.
+
+About Upscape:
+Upscape is a national landscape lighting franchise founded by Hayes and Ross Bauer. Corporate owns the brand, technology, and supply chain. Area Managers (franchisees) buy exclusive territories for $100,000 and handle all local sales, design, and installer routing. Installers are licensed electricians who show up and follow color-coded flags — no quoting, no design decisions required from them.
+
+How jobs work:
+1. Area Manager visits property, opens the app, creates a project with the satellite map.
+2. Manager drops icons on the map — uplights, path lights, power points, wire runs — which auto-build a live quote.
+3. The system generates three quote tiers: Good (Sunvie), Better (VOLT), Best (AMP Lighting).
+4. Homeowner approves and picks a tier. Equipment is ordered automatically.
+5. Manager returns to place color-coded flags matching the map.
+6. Installer follows the flags and installs.
+7. Manager returns for a quality check and photos.
+
+Product tiers:
+- Good: Sunvie — budget, Amazon-sourced, solid entry-level fixtures
+- Better: VOLT — mid-range, most popular, great weather resistance
+- Best: AMP Lighting — premium, industry-leading warranty, highest output. Long-term acquisition target for Upscaped.
+
+Franchise economics:
+- $100k buy-in, 8% royalty on revenue, 2% national marketing fund, $400/mo tech fee
+- Typical territory: 50 jobs/year × $6k avg = $300k revenue for franchisee
+- Corporate collects ~$52,800/year per active franchise
+
+You can answer questions about: job process, pricing quotes, product selection, how to use the app, franchise operations, equipment, troubleshooting installs, homeowner communication, and anything else related to running an Upscape territory.
+
+Be concise, practical, and direct. You're talking to a field professional.`
+
+type AIMessage = { role: 'user' | 'assistant'; content: string }
+
+function AISection() {
+  const [messages, setMessages] = useState<AIMessage[]>([
+    { role: 'assistant', content: "Hey! I'm your Upscape AI — ask me anything about jobs, products, quotes, or running your territory." }
+  ])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const bottomRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  async function send() {
+    const text = input.trim()
+    if (!text || loading) return
+    const apiKey = process.env.NEXT_PUBLIC_ANTHROPIC_KEY || ''
+    if (!apiKey || apiKey.startsWith('REPLACE')) {
+      setMessages(prev => [...prev, { role: 'user', content: text }, { role: 'assistant', content: '⚠️ No API key set. Add NEXT_PUBLIC_ANTHROPIC_KEY to your .env.local file and redeploy.' }])
+      setInput('')
+      return
+    }
+    setInput('')
+    const next: AIMessage[] = [...messages, { role: 'user', content: text }]
+    setMessages(next)
+    setLoading(true)
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5',
+          max_tokens: 600,
+          system: UPSCAPE_SYSTEM,
+          messages: next.map(m => ({ role: m.role, content: m.content })),
+        }),
+      })
+      const data = await res.json()
+      const reply = data.content?.[0]?.text || 'Sorry, I had trouble responding. Try again.'
+      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Network error — check your connection and try again.' }])
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div style={{ maxWidth: 680, height: 'calc(100dvh - 140px)', display: 'flex', flexDirection: 'column', animation: 'fadeUp .3s ease both' }}>
+      <div style={{ marginBottom: 18 }}>
+        <h1 style={{ margin: '0 0 3px', fontSize: 22, fontWeight: 700, letterSpacing: '-0.03em', color: 'rgba(255,255,255,0.92)' }}>AI Assistant</h1>
+        <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>Powered by Claude · knows Upscape inside and out</p>
+      </div>
+
+      {/* Message thread */}
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14, paddingRight: 4 }}>
+        {messages.map((m, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
+            <div style={{
+              maxWidth: '80%',
+              background: m.role === 'user'
+                ? 'linear-gradient(135deg,#F4884A,#df6f28)'
+                : 'rgba(255,255,255,0.055)',
+              border: m.role === 'assistant' ? '1px solid rgba(255,255,255,0.08)' : 'none',
+              borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+              padding: '11px 15px',
+              fontSize: 13,
+              lineHeight: 1.6,
+              color: m.role === 'user' ? '#fff' : 'rgba(255,255,255,0.82)',
+              whiteSpace: 'pre-wrap',
+            }}>{m.content}</div>
+          </div>
+        ))}
+        {loading && (
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <div style={{ background: 'rgba(255,255,255,0.055)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px 14px 14px 4px', padding: '11px 15px', display: 'flex', gap: 5, alignItems: 'center' }}>
+              {[0,1,2].map(j => <div key={j} style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(244,136,74,0.6)', animation: `ambientPulse 1.2s ease-in-out ${j * 0.2}s infinite` }} />)}
+            </div>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <div style={{ marginTop: 16, display: 'flex', gap: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 14, padding: '10px 12px', alignItems: 'flex-end' }}>
+        <textarea
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+          placeholder="Ask anything about Upscape, products, jobs, quotes…"
+          rows={1}
+          style={{ flex: 1, background: 'none', border: 'none', outline: 'none', resize: 'none', color: 'rgba(255,255,255,0.82)', fontSize: 13, lineHeight: 1.5, fontFamily: 'inherit', overflowY: 'hidden' }}
+          onInput={e => { const t = e.currentTarget; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px' }}
+        />
+        <button onClick={send} disabled={!input.trim() || loading} style={{ background: input.trim() ? 'linear-gradient(135deg,#F4884A,#df6f28)' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 9, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() ? 'pointer' : 'default', flexShrink: 0, transition: 'background .2s' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
       </div>
     </div>
   )
