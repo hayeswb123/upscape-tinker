@@ -288,6 +288,27 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
               )
             })}
           </div>
+
+          {/* Always-visible cinematic folder below projects */}
+          {!loading && projects.length > 0 && (
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', paddingTop:56, paddingBottom:20, animation:'fadeUp .6s ease both', animationDelay:'.2s' }}>
+              <div style={{ width:1, height:40, background:'linear-gradient(to bottom,rgba(255,255,255,0.06),transparent)', marginBottom:32 }} />
+              <div style={{ animation:'floatFolder 5s ease-in-out infinite' }}>
+                <img src="/empty-folder.png" alt="" style={{
+                  width:180, height:'auto', display:'block',
+                  mixBlendMode:'screen',
+                  WebkitMaskImage:'linear-gradient(to bottom, black 60%, transparent 100%)',
+                  maskImage:'linear-gradient(to bottom, black 60%, transparent 100%)',
+                }} />
+              </div>
+              <p style={{ margin:'4px 0 0', fontSize:12, color:'rgba(255,255,255,0.14)', letterSpacing:'-0.01em' }}>Ready to add more?</p>
+              <button onClick={() => router.push(`/projects/new?homeowner=${encodeURIComponent(clientName)}&address=${encodeURIComponent(address)}`)}
+                style={{ marginTop:16, display:'flex', alignItems:'center', gap:6, padding:'9px 20px', borderRadius:9, background:'linear-gradient(135deg,#F4884A,#df6f28)', border:'none', color:'#fff', fontSize:12, fontWeight:600, cursor:'pointer', letterSpacing:'-0.01em', boxShadow:'0 0 20px rgba(244,136,74,0.2), 0 4px 12px rgba(0,0,0,0.35)' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                New project
+              </button>
+            </div>
+          )}
         </main>
       </div>
     </div>
