@@ -1097,22 +1097,10 @@ function AIChatPane() {
   }
 
   return (
-    <>
-      {/* quick prompts — only when fresh */}
-      {messages.length === 1 && (
-        <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:14, flexShrink:0 }}>
-          {QUICK.map(q => (
-            <button key={q} onClick={() => send(q)} style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, color:'rgba(255,255,255,0.45)', fontSize:11, padding:'6px 12px', cursor:'pointer', letterSpacing:'-0.01em', transition:'all .15s', fontFamily:'inherit' }}
-              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(244,136,74,0.3)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.75)'}}
-              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.08)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.45)'}}>
-              {q}
-            </button>
-          ))}
-        </div>
-      )}
+    <div style={{ flex:1, display:'flex', flexDirection:'column', minHeight:0 }}>
 
       {/* thread */}
-      <div style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column', gap:12, paddingRight:4 }}>
+      <div style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column', gap:12, paddingRight:4, paddingBottom:4 }}>
         {messages.map((m,i) => (
           <div key={i} style={{ display:'flex', justifyContent: m.role==='user'?'flex-end':'flex-start', alignItems:'flex-end', gap:8 }}>
             {m.role === 'assistant' && (
@@ -1120,7 +1108,7 @@ function AIChatPane() {
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F4884A" strokeWidth="1.8"><path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-4 4H8a4 4 0 01-4-4v-1H3a3 3 0 01-3-3V10a3 3 0 013-3h1V6a4 4 0 014-4h4z" strokeLinejoin="round"/><circle cx="9" cy="11" r="1" fill="#F4884A" stroke="none"/><circle cx="15" cy="11" r="1" fill="#F4884A" stroke="none"/></svg>
               </div>
             )}
-            <div style={{ maxWidth:'78%', background: m.role==='user' ? 'linear-gradient(135deg,#F4884A,#df6f28)' : 'rgba(255,255,255,0.05)', border: m.role==='assistant' ? '1px solid rgba(255,255,255,0.08)' : 'none', borderRadius: m.role==='user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px', padding:'11px 14px', fontSize:13, lineHeight:1.6, color: m.role==='user' ? '#fff' : 'rgba(255,255,255,0.82)', whiteSpace:'pre-wrap' }}>{m.content}</div>
+            <div style={{ maxWidth:'78%', background: m.role==='user'?'linear-gradient(135deg,#F4884A,#df6f28)':'rgba(255,255,255,0.05)', border: m.role==='assistant'?'1px solid rgba(255,255,255,0.08)':'none', borderRadius: m.role==='user'?'14px 14px 4px 14px':'14px 14px 14px 4px', padding:'11px 14px', fontSize:13, lineHeight:1.6, color: m.role==='user'?'#fff':'rgba(255,255,255,0.82)', whiteSpace:'pre-wrap' }}>{m.content}</div>
           </div>
         ))}
         {loading && (
@@ -1129,45 +1117,68 @@ function AIChatPane() {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F4884A" strokeWidth="1.8"><path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-4 4H8a4 4 0 01-4-4v-1H3a3 3 0 01-3-3V10a3 3 0 013-3h1V6a4 4 0 014-4h4z" strokeLinejoin="round"/><circle cx="9" cy="11" r="1" fill="#F4884A" stroke="none"/><circle cx="15" cy="11" r="1" fill="#F4884A" stroke="none"/></svg>
             </div>
             <div style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'14px 14px 14px 4px', padding:'12px 16px', display:'flex', gap:5, alignItems:'center' }}>
-              {[0,1,2].map(j => <div key={j} style={{ width:6,height:6,borderRadius:'50%',background:'rgba(244,136,74,0.6)',animation:`ambientPulse 1.2s ease-in-out ${j*.2}s infinite` }} />)}
+              {[0,1,2].map(j=><div key={j} style={{ width:6,height:6,borderRadius:'50%',background:'rgba(244,136,74,0.6)',animation:`ambientPulse 1.2s ease-in-out ${j*.2}s infinite` }} />)}
             </div>
           </div>
         )}
         <div ref={bottomRef} />
       </div>
 
-      {/* input */}
-      <div style={{ marginTop:14, display:'flex', gap:10, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:14, padding:'10px 12px', alignItems:'flex-end', flexShrink:0 }}>
+      {/* quick prompts — shown below thread when fresh */}
+      {messages.length === 1 && (
+        <div style={{ display:'flex', gap:6, flexWrap:'wrap', padding:'10px 0 12px', flexShrink:0 }}>
+          {QUICK.map(q => (
+            <button key={q} onClick={()=>send(q)} style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, color:'rgba(255,255,255,0.45)', fontSize:11, padding:'6px 12px', cursor:'pointer', letterSpacing:'-0.01em', transition:'all .15s', fontFamily:'inherit' }}
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(244,136,74,0.3)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.75)'}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.08)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.45)'}}>
+              {q}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* input bar */}
+      <div style={{ display:'flex', gap:10, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:14, padding:'10px 12px', alignItems:'flex-end', flexShrink:0 }}>
         <textarea value={input} onChange={e=>setInput(e.target.value)}
           onKeyDown={e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()} }}
           placeholder="Ask about design, products, jobs, troubleshooting…"
           rows={1}
-          style={{ flex:1, background:'none', border:'none', outline:'none', resize:'none', color:'rgba(255,255,255,0.82)', fontSize:13, lineHeight:1.5, fontFamily:'inherit', overflowY:'hidden' }}
+          style={{ flex:1, background:'none', border:'none', outline:'none', resize:'none', color:'rgba(255,255,255,0.82)', fontSize:13, lineHeight:1.5, fontFamily:'inherit', overflowY:'hidden', minHeight:22 }}
           onInput={e=>{ const t=e.currentTarget; t.style.height='auto'; t.style.height=Math.min(t.scrollHeight,120)+'px' }} />
         <button onClick={()=>send()} disabled={!input.trim()||loading} style={{ background:input.trim()?'linear-gradient(135deg,#F4884A,#df6f28)':'rgba(255,255,255,0.08)', border:'none', borderRadius:9, width:34, height:34, display:'flex', alignItems:'center', justifyContent:'center', cursor:input.trim()?'pointer':'default', flexShrink:0, transition:'background .2s' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
-    </>
+    </div>
   )
 }
 
 // ── DESIGN VISION PANE ────────────────────────────────
 function AIDesignPane({ projects }: { projects: Project[] }) {
-  const [phase, setPhase]     = useState<'upload'|'ready'|'analyzing'|'results'>('upload')
-  const [imageUrl, setImageUrl] = useState('')
-  const [imageB64, setImageB64] = useState('')
-  const [imageMime, setImageMime] = useState('image/jpeg')
-  const [style, setStyle]     = useState('warm-luxury')
-  const [analysis, setAnalysis] = useState<DesignAnalysis|null>(null)
+  const [imageUrl, setImageUrl]     = useState('')
+  const [imageB64, setImageB64]     = useState('')
+  const [imageMime, setImageMime]   = useState('image/jpeg')
+  const [style, setStyle]           = useState('warm-luxury')
+  const [analysis, setAnalysis]     = useState<DesignAnalysis|null>(null)
   const [activeZones, setActiveZones] = useState<Set<string>>(new Set())
-  const [view, setView]       = useState<'before'|'after'>('after')
-  const [error, setError]     = useState('')
-  const [statusMsg, setStatusMsg] = useState('')
+  const [view, setView]             = useState<'before'|'after'>('after')
+  const [analyzing, setAnalyzing]   = useState(false)
+  const [statusMsg, setStatusMsg]   = useState('')
+  const [error, setError]           = useState('')
+  const [input, setInput]           = useState('')
   const [showSavePicker, setShowSavePicker] = useState(false)
-  const [savedTo, setSavedTo] = useState('')
-  const fileRef = React.useRef<HTMLInputElement>(null)
-  const dropRef = React.useRef<HTMLDivElement>(null)
+  const [savedTo, setSavedTo]       = useState('')
+  const fileRef   = React.useRef<HTMLInputElement>(null)
+  const dropRef   = React.useRef<HTMLDivElement>(null)
+  const bottomRef = React.useRef<HTMLDivElement>(null)
+
+  const DESIGN_PROMPTS = [
+    'Analyse the lighting zones',
+    'Warm luxury style',
+    'Modern minimal style',
+    'Soft natural style',
+    'High contrast dramatic',
+  ]
 
   function handleFile(file: File) {
     if (!file.type.startsWith('image/')) return
@@ -1185,20 +1196,29 @@ function AIDesignPane({ projects }: { projects: Project[] }) {
         const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
         const b64Full = canvas.toDataURL(mime)
         setImageUrl(b64Full); setImageB64(b64Full.split(',')[1]); setImageMime(mime)
-        setPhase('ready'); setAnalysis(null); setError('')
+        setAnalysis(null); setError('')
       }
       img.src = result
     }
     reader.readAsDataURL(file)
   }
 
-  async function analyze() {
+  async function analyze(promptOverride?: string) {
+    if (!imageB64) return
     const key = process.env.NEXT_PUBLIC_ANTHROPIC_KEY || ''
     if (!key || key.startsWith('REPLACE')) { setError('Add NEXT_PUBLIC_ANTHROPIC_KEY to use Design Vision.'); return }
-    setPhase('analyzing'); setError('')
+
+    // pick style from prompt if user typed/clicked a style keyword
+    const txt = (promptOverride || input || '').toLowerCase()
+    if (txt.includes('warm')) setStyle('warm-luxury')
+    else if (txt.includes('minimal') || txt.includes('modern')) setStyle('modern-minimal')
+    else if (txt.includes('natural') || txt.includes('soft')) setStyle('soft-natural')
+    else if (txt.includes('contrast') || txt.includes('dramatic')) setStyle('high-contrast')
+
+    setInput(''); setAnalyzing(true); setError('')
     const msgs = ['Reading your yard…','Identifying lighting zones…','Building your design…','Calculating fixtures…']
     let mi = 0; setStatusMsg(msgs[0])
-    const interval = setInterval(() => { mi=(mi+1)%msgs.length; setStatusMsg(msgs[mi]) }, 1800)
+    const interval = setInterval(()=>{ mi=(mi+1)%msgs.length; setStatusMsg(msgs[mi]) }, 1800)
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method:'POST',
@@ -1206,7 +1226,7 @@ function AIDesignPane({ projects }: { projects: Project[] }) {
         body: JSON.stringify({ model:'claude-opus-4-5', max_tokens:1200,
           messages:[{ role:'user', content:[
             { type:'image', source:{ type:'base64', media_type:imageMime, data:imageB64 } },
-            { type:'text', text:DESIGN_PROMPT },
+            { type:'text', text: DESIGN_PROMPT + (promptOverride||input ? `\n\nUser note: ${promptOverride||input}` : '') },
           ]}],
         }),
       })
@@ -1214,218 +1234,186 @@ function AIDesignPane({ projects }: { projects: Project[] }) {
       let text = data.content?.[0]?.text || ''
       text = text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim()
       const parsed: DesignAnalysis = JSON.parse(text)
-      setAnalysis(parsed); setActiveZones(new Set(parsed.zones.map(z=>z.id))); setView('after'); setPhase('results')
+      setAnalysis(parsed); setActiveZones(new Set(parsed.zones.map(z=>z.id))); setView('after')
     } catch(e:any) {
-      setError('Analysis failed — '+(e.message||'unknown error')); setPhase('ready')
-    } finally { clearInterval(interval) }
+      setError('Analysis failed — '+(e.message||'unknown error'))
+    } finally { clearInterval(interval); setAnalyzing(false) }
+    setTimeout(()=>bottomRef.current?.scrollIntoView({behavior:'smooth'}), 100)
   }
 
   function toggleZone(id: string) {
-    setActiveZones(prev => { const n=new Set(prev); n.has(id)?n.delete(id):n.add(id); return n })
+    setActiveZones(prev=>{ const n=new Set(prev); n.has(id)?n.delete(id):n.add(id); return n })
   }
 
   const glow = STYLE_GLOW[style]
 
   return (
-    <div style={{ flex:1, overflowY:'auto', paddingRight:4 }}>
+    <div style={{ flex:1, display:'flex', flexDirection:'column', minHeight:0 }}>
 
-      {/* ── UPLOAD / READY ── */}
-      {(phase==='upload'||phase==='ready') && (
-        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+      {/* scrollable results area */}
+      <div style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column', gap:14, paddingRight:4, paddingBottom:4 }}>
 
-          {/* drop zone */}
-          <div ref={dropRef} onClick={()=>fileRef.current?.click()}
-            onDragOver={e=>{e.preventDefault();(dropRef.current as HTMLElement).style.borderColor='rgba(244,136,74,0.5)'}}
-            onDragLeave={()=>{(dropRef.current as HTMLElement).style.borderColor='rgba(255,255,255,0.08)'}}
-            onDrop={e=>{e.preventDefault();(dropRef.current as HTMLElement).style.borderColor='rgba(255,255,255,0.08)';const f=e.dataTransfer.files[0];if(f)handleFile(f)}}
-            style={{ position:'relative', borderRadius:16, border:'1.5px dashed rgba(255,255,255,0.1)', cursor:'pointer', overflow:'hidden', minHeight: phase==='ready'?0:180, transition:'border-color .15s, min-height .3s' }}>
-            {phase==='ready' && imageUrl ? (
-              <>
-                <img src={imageUrl} style={{ width:'100%', maxHeight:340, objectFit:'cover', display:'block', filter: view==='after'?`${STYLE_FILTER[style]} saturate(1.1)`:'none', transition:'filter .4s ease' }} alt="" />
-                {/* before/after tabs on image */}
-                <div style={{ position:'absolute', top:10, left:10, display:'flex', gap:2, background:'rgba(0,0,0,0.55)', backdropFilter:'blur(12px)', borderRadius:8, padding:3 }}>
-                  {(['before','after'] as const).map(v=>(
-                    <button key={v} onClick={e=>{e.stopPropagation();setView(v)}} style={{ padding:'4px 11px', borderRadius:6, border:'none', background:view===v?'rgba(244,136,74,0.25)':'transparent', color:view===v?'#F4884A':'rgba(255,255,255,0.4)', fontSize:11, fontWeight:600, cursor:'pointer', textTransform:'capitalize', transition:'all .15s' }}>{v}</button>
-                  ))}
-                </div>
-                {/* style dots */}
-                <div style={{ position:'absolute', top:10, right:10, display:'flex', gap:5 }}>
-                  {DESIGN_STYLES.map(s=>(
-                    <div key={s.id} onClick={e=>{e.stopPropagation();setStyle(s.id)}} title={s.label}
-                      style={{ width:14, height:14, borderRadius:'50%', background:s.color, cursor:'pointer', border:`2px solid ${style===s.id?'#fff':'transparent'}`, transition:'border .15s', boxShadow:style===s.id?`0 0 8px ${s.color}`:'none' }} />
-                  ))}
-                </div>
-                <button onClick={e=>{e.stopPropagation();fileRef.current?.click()}} style={{ position:'absolute', bottom:10, right:10, background:'rgba(0,0,0,0.55)', backdropFilter:'blur(12px)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, color:'rgba(255,255,255,0.6)', fontSize:11, padding:'5px 10px', cursor:'pointer' }}>Change photo</button>
-              </>
-            ) : (
-              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:10, padding:'48px 20px' }}>
-                <div style={{ width:48, height:48, borderRadius:13, background:'rgba(244,136,74,0.07)', border:'1px solid rgba(244,136,74,0.14)', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.6)" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                </div>
-                <div style={{ fontSize:13, fontWeight:500, color:'rgba(255,255,255,0.5)', letterSpacing:'-0.01em' }}>Drop a yard photo here</div>
-                <div style={{ fontSize:11, color:'rgba(255,255,255,0.2)' }}>or click to browse · JPG, PNG, HEIC</div>
+        {/* photo drop zone — always visible, compact when image loaded */}
+        <div ref={dropRef}
+          onClick={()=>fileRef.current?.click()}
+          onDragOver={e=>{e.preventDefault();if(dropRef.current)(dropRef.current as HTMLElement).style.borderColor='rgba(244,136,74,0.5)'}}
+          onDragLeave={()=>{if(dropRef.current)(dropRef.current as HTMLElement).style.borderColor=imageUrl?'rgba(255,255,255,0.06)':'rgba(255,255,255,0.1)'}}
+          onDrop={e=>{e.preventDefault();if(dropRef.current)(dropRef.current as HTMLElement).style.borderColor='rgba(255,255,255,0.06)';const f=e.dataTransfer.files[0];if(f)handleFile(f)}}
+          style={{ position:'relative', borderRadius:14, border:`1.5px dashed ${imageUrl?'rgba(255,255,255,0.06)':'rgba(255,255,255,0.1)'}`, cursor:'pointer', overflow:'hidden', transition:'border-color .15s', flexShrink:0 }}>
+          {imageUrl ? (
+            <>
+              <img src={imageUrl} style={{ width:'100%', maxHeight:320, objectFit:'cover', display:'block', filter:view==='after'?`${STYLE_FILTER[style]} saturate(1.1)`:'none', transition:'filter .4s ease' }} alt="" />
+              {/* before/after */}
+              <div style={{ position:'absolute', top:10, left:10, display:'flex', gap:2, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(12px)', borderRadius:8, padding:3 }}>
+                {(['before','after'] as const).map(v=>(
+                  <button key={v} onClick={e=>{e.stopPropagation();setView(v)}} style={{ padding:'4px 11px', borderRadius:6, border:'none', background:view===v?'rgba(244,136,74,0.25)':'transparent', color:view===v?'#F4884A':'rgba(255,255,255,0.4)', fontSize:11, fontWeight:600, cursor:'pointer', textTransform:'capitalize', transition:'all .15s' }}>{v}</button>
+                ))}
               </div>
-            )}
-          </div>
-
-          <input ref={fileRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>{ const f=e.target.files?.[0]; if(f)handleFile(f) }} />
-
-          {/* style selector */}
-          {phase==='ready' && (
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
-              {DESIGN_STYLES.map(s=>(
-                <button key={s.id} onClick={()=>setStyle(s.id)} style={{ padding:'11px 10px', borderRadius:10, border:`1.5px solid ${style===s.id?s.color+'55':'rgba(255,255,255,0.07)'}`, background:style===s.id?s.color+'0f':'rgba(255,255,255,0.02)', cursor:'pointer', textAlign:'left', transition:'all .15s', boxShadow:style===s.id?`0 0 14px ${s.color}22`:'none' }}>
-                  <div style={{ width:10, height:10, borderRadius:'50%', background:s.color, marginBottom:7, boxShadow:style===s.id?`0 0 8px ${s.color}`:'none' }} />
-                  <div style={{ fontSize:11, fontWeight:600, color:style===s.id?'rgba(255,255,255,0.9)':'rgba(255,255,255,0.5)', marginBottom:2, letterSpacing:'-0.01em' }}>{s.label}</div>
-                  <div style={{ fontSize:10, color:'rgba(255,255,255,0.22)', lineHeight:1.4 }}>{s.desc}</div>
-                </button>
+              {/* style dots */}
+              <div style={{ position:'absolute', top:10, right:44, display:'flex', gap:5 }}>
+                {DESIGN_STYLES.map(s=>(
+                  <div key={s.id} onClick={e=>{e.stopPropagation();setStyle(s.id);if(analysis)setView('after')}} title={s.label}
+                    style={{ width:13,height:13,borderRadius:'50%',background:s.color,cursor:'pointer',border:`2px solid ${style===s.id?'#fff':'transparent'}`,transition:'border .15s',boxShadow:style===s.id?`0 0 8px ${s.color}`:'none' }} />
+                ))}
+              </div>
+              <button onClick={e=>{e.stopPropagation();fileRef.current?.click()}} style={{ position:'absolute', top:10, right:10, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(8px)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, color:'rgba(255,255,255,0.6)', fontSize:10, padding:'4px 8px', cursor:'pointer' }}>↑</button>
+              {/* zone overlays */}
+              {view==='after' && analysis && analysis.zones.filter(z=>activeZones.has(z.id)).map(z=>(
+                <div key={z.id} style={{ position:'absolute', left:`${z.x}%`, top:`${z.y}%`, transform:'translate(-50%,-50%)', width:`${z.radius*2}%`, aspectRatio:'1', borderRadius:'50%', background:`radial-gradient(circle,${glow.color}${Math.round(glow.opacity*255).toString(16).padStart(2,'0')} 0%,${glow.color}33 45%,transparent 72%)`, pointerEvents:'none', mixBlendMode:'screen', filter:`blur(${z.radius*0.3}px)` }} />
               ))}
-            </div>
-          )}
-
-          {error && <div style={{ fontSize:12, color:'#f87171', background:'rgba(248,113,113,0.08)', border:'1px solid rgba(248,113,113,0.2)', borderRadius:8, padding:'10px 14px' }}>{error}</div>}
-
-          {phase==='ready' && (
-            <button onClick={analyze} style={{ background:'linear-gradient(135deg,#F4884A,#df6f28)', border:'none', borderRadius:11, color:'#fff', fontSize:13, fontWeight:700, padding:'13px', cursor:'pointer', letterSpacing:'-0.01em', boxShadow:'0 0 24px rgba(244,136,74,0.35), 0 4px 14px rgba(0,0,0,0.4)' }}>
-              Analyse &amp; Generate Lighting Design →
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* ── ANALYZING ── */}
-      {phase==='analyzing' && (
-        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16, paddingTop:60 }}>
-          <div style={{ position:'relative', width:56, height:56 }}>
-            <div style={{ position:'absolute', inset:0, borderRadius:'50%', border:'2px solid rgba(244,136,74,0.15)', borderTopColor:'#F4884A', animation:'spin .9s linear infinite' }} />
-            <div style={{ position:'absolute', inset:8, borderRadius:'50%', border:'1.5px solid rgba(244,136,74,0.1)', borderBottomColor:'rgba(244,136,74,0.5)', animation:'spin 1.4s linear infinite reverse' }} />
-          </div>
-          <div style={{ fontSize:13, color:'rgba(255,255,255,0.55)', letterSpacing:'-0.01em', animation:'ambientPulse 2s ease-in-out infinite' }}>{statusMsg}</div>
-        </div>
-      )}
-
-      {/* ── RESULTS ── */}
-      {phase==='results' && analysis && (
-        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-
-          {/* photo with glow overlays */}
-          <div style={{ position:'relative', borderRadius:14, overflow:'hidden', border:'1px solid rgba(255,255,255,0.08)' }}>
-            <img src={imageUrl} style={{ width:'100%', maxHeight:420, objectFit:'cover', display:'block', filter: view==='after'?`${STYLE_FILTER[style]} saturate(1.1)`:'none', transition:'filter .5s ease' }} alt="" />
-
-            {/* zone glow overlays */}
-            {view==='after' && analysis.zones.filter(z=>activeZones.has(z.id)).map(z => {
-              const c = ZONE_COLORS[z.type] || '#F4884A'
-              return (
-                <div key={z.id} style={{ position:'absolute', left:`${z.x}%`, top:`${z.y}%`, transform:'translate(-50%,-50%)', width:`${z.radius*2}%`, aspectRatio:'1', borderRadius:'50%', background:`radial-gradient(circle, ${glow.color}${Math.round(glow.opacity*255).toString(16).padStart(2,'0')} 0%, ${glow.color}33 45%, transparent 72%)`, pointerEvents:'none', mixBlendMode:'screen', filter:`blur(${z.radius*0.3}px)` }} />
-              )
-            })}
-
-            {/* zone pin buttons */}
-            {view==='after' && analysis.zones.map(z => {
-              const c = ZONE_COLORS[z.type]||'#F4884A'
-              const on = activeZones.has(z.id)
-              return (
-                <button key={z.id} onClick={()=>toggleZone(z.id)}
-                  title={z.name}
-                  style={{ position:'absolute', left:`${z.x}%`, top:`${z.y}%`, transform:'translate(-50%,-50%)', width:22, height:22, borderRadius:'50%', border:`1.5px solid ${on?c:'rgba(255,255,255,0.3)'}`, background:on?`${c}30`:'rgba(0,0,0,0.45)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(4px)', transition:'all .15s', boxShadow:on?`0 0 10px ${c}60`:'none' }}>
-                  <div style={{ width:6, height:6, borderRadius:'50%', background:on?c:'rgba(255,255,255,0.4)', transition:'background .15s' }} />
-                </button>
-              )
-            })}
-
-            {/* before/after toggle */}
-            <div style={{ position:'absolute', top:12, left:12, display:'flex', gap:2, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(12px)', borderRadius:8, padding:3 }}>
-              {(['before','after'] as const).map(v=>(
-                <button key={v} onClick={()=>setView(v)} style={{ padding:'4px 12px', borderRadius:6, border:'none', background:view===v?'rgba(244,136,74,0.25)':'transparent', color:view===v?'#F4884A':'rgba(255,255,255,0.4)', fontSize:11, fontWeight:600, cursor:'pointer', textTransform:'capitalize', transition:'all .15s' }}>{v}</button>
-              ))}
-            </div>
-
-            {/* style dots */}
-            <div style={{ position:'absolute', top:12, right:12, display:'flex', gap:5 }}>
-              {DESIGN_STYLES.map(s=>(
-                <div key={s.id} onClick={()=>setStyle(s.id)} title={s.label}
-                  style={{ width:13, height:13, borderRadius:'50%', background:s.color, cursor:'pointer', border:`2px solid ${style===s.id?'#fff':'transparent'}`, transition:'border .15s', boxShadow:style===s.id?`0 0 8px ${s.color}`:'none' }} />
-              ))}
-            </div>
-          </div>
-
-          {/* design notes */}
-          {analysis.summary.designNotes && (
-            <div style={{ background:'rgba(244,136,74,0.05)', border:'1px solid rgba(244,136,74,0.12)', borderRadius:12, padding:'13px 16px' }}>
-              <div style={{ fontSize:9, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'rgba(244,136,74,0.5)', marginBottom:6 }}>Design Notes</div>
-              <div style={{ fontSize:12, color:'rgba(255,255,255,0.65)', lineHeight:1.65 }}>{analysis.summary.designNotes}</div>
-            </div>
-          )}
-
-          {/* two-col layout: zones + metrics */}
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-
-            {/* zone list */}
-            <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-              <div style={{ fontSize:9, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'rgba(255,255,255,0.2)', marginBottom:2 }}>Lighting Zones</div>
-              {analysis.zones.map(z => {
-                const c = ZONE_COLORS[z.type]||'#F4884A'
-                const on = activeZones.has(z.id)
+              {/* zone pins */}
+              {view==='after' && analysis && analysis.zones.map(z=>{
+                const c=ZONE_COLORS[z.type]||'#F4884A'; const on=activeZones.has(z.id)
                 return (
-                  <button key={z.id} onClick={()=>toggleZone(z.id)} style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'10px 12px', background:on?'rgba(255,255,255,0.04)':'transparent', border:`1px solid ${on?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.04)'}`, borderRadius:9, cursor:'pointer', textAlign:'left', transition:'all .12s' }}>
-                    <div style={{ width:8, height:8, borderRadius:'50%', background:on?c:'rgba(255,255,255,0.2)', flexShrink:0, marginTop:3, boxShadow:on?`0 0 6px ${c}`:'none', transition:'all .12s' }} />
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ fontSize:11, fontWeight:600, color:on?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.4)', letterSpacing:'-0.01em' }}>{z.name}</div>
-                      <div style={{ fontSize:10, color:'rgba(255,255,255,0.25)', marginTop:2, lineHeight:1.4 }}>{z.qty} fixture{z.qty!==1?'s':''} · {z.qty*z.wattage}W · {z.type.replace('_',' ')}</div>
-                    </div>
+                  <button key={z.id} onClick={e=>{e.stopPropagation();toggleZone(z.id)}} title={z.name}
+                    style={{ position:'absolute', left:`${z.x}%`, top:`${z.y}%`, transform:'translate(-50%,-50%)', width:20,height:20,borderRadius:'50%',border:`1.5px solid ${on?c:'rgba(255,255,255,0.25)'}`,background:on?`${c}30`:'rgba(0,0,0,0.45)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',transition:'all .15s',boxShadow:on?`0 0 10px ${c}60`:'none' }}>
+                    <div style={{ width:5,height:5,borderRadius:'50%',background:on?c:'rgba(255,255,255,0.4)',transition:'background .15s' }} />
                   </button>
                 )
               })}
+            </>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:10, padding:'36px 20px' }}>
+              <div style={{ width:44,height:44,borderRadius:12,background:'rgba(244,136,74,0.07)',border:'1px solid rgba(244,136,74,0.14)',display:'flex',alignItems:'center',justifyContent:'center' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.6)" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <div style={{ fontSize:13,fontWeight:500,color:'rgba(255,255,255,0.45)',letterSpacing:'-0.01em' }}>Drop a yard photo to get started</div>
+              <div style={{ fontSize:11,color:'rgba(255,255,255,0.18)' }}>JPG · PNG · HEIC</div>
             </div>
+          )}
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>{const f=e.target.files?.[0];if(f)handleFile(f)}} />
 
-            {/* summary metrics */}
-            <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-              <div style={{ fontSize:9, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color:'rgba(255,255,255,0.2)', marginBottom:2 }}>Summary</div>
-              {[
-                { label:'Total Fixtures', value:analysis.summary.totalFixtures, unit:'fixtures' },
-                { label:'Total Wattage',  value:analysis.summary.totalWattage,  unit:'watts' },
-                { label:'Transformer',    value:analysis.summary.transformerSize, unit:'' },
-                { label:'Wire Run',       value:analysis.summary.wireEstimate,   unit:'' },
-                { label:'Difficulty',     value:analysis.summary.difficulty,     unit:'' },
-              ].map(m => (
-                <div key={m.label} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:9, padding:'10px 12px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                  <span style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{m.label}</span>
-                  <span style={{ fontSize:13, fontWeight:600, color:'rgba(255,255,255,0.82)', letterSpacing:'-0.02em' }}>{m.value}{m.unit?<span style={{ fontSize:10, color:'rgba(255,255,255,0.28)', marginLeft:3 }}>{m.unit}</span>:null}</span>
-                </div>
-              ))}
+        {/* analyzing spinner */}
+        {analyzing && (
+          <div style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:12 }}>
+            <div style={{ width:18,height:18,flexShrink:0,position:'relative' }}>
+              <div style={{ position:'absolute',inset:0,borderRadius:'50%',border:'1.5px solid rgba(244,136,74,0.15)',borderTopColor:'#F4884A',animation:'spin .9s linear infinite' }} />
             </div>
+            <span style={{ fontSize:12,color:'rgba(255,255,255,0.45)',animation:'ambientPulse 2s ease-in-out infinite' }}>{statusMsg}</span>
           </div>
+        )}
 
-          {/* action buttons */}
-          <div style={{ display:'flex', gap:8 }}>
-            <button onClick={()=>{setPhase('ready');setAnalysis(null)}} style={{ flex:1, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:10, color:'rgba(255,255,255,0.55)', fontSize:12, fontWeight:500, padding:11, cursor:'pointer' }}>↺ Try Another Style</button>
-            <button onClick={()=>{setPhase('upload');setImageUrl('');setAnalysis(null);setSavedTo('')}} style={{ flex:1, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:10, color:'rgba(255,255,255,0.55)', fontSize:12, fontWeight:500, padding:11, cursor:'pointer' }}>New Photo</button>
-            <button onClick={()=>setShowSavePicker(true)} style={{ flex:1, background:savedTo?'rgba(34,197,94,0.12)':'linear-gradient(135deg,#F4884A,#df6f28)', border:savedTo?'1px solid rgba(34,197,94,0.3)':'none', borderRadius:10, color:savedTo?'#22c55e':'#fff', fontSize:12, fontWeight:600, padding:11, cursor:'pointer', boxShadow:savedTo?'none':'0 0 16px rgba(244,136,74,0.3)', transition:'all .2s' }}>{savedTo?`✓ Saved to ${savedTo}`:'Save to Project'}</button>
-          </div>
+        {/* results */}
+        {analysis && !analyzing && (
+          <>
+            {/* design notes */}
+            {analysis.summary.designNotes && (
+              <div style={{ background:'rgba(244,136,74,0.05)',border:'1px solid rgba(244,136,74,0.12)',borderRadius:12,padding:'12px 15px' }}>
+                <div style={{ fontSize:9,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(244,136,74,0.5)',marginBottom:5 }}>Design Notes</div>
+                <div style={{ fontSize:12,color:'rgba(255,255,255,0.65)',lineHeight:1.65 }}>{analysis.summary.designNotes}</div>
+              </div>
+            )}
+            {/* zones + metrics */}
+            <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:10 }}>
+              <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
+                <div style={{ fontSize:9,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(255,255,255,0.2)',marginBottom:2 }}>Zones</div>
+                {analysis.zones.map(z=>{
+                  const c=ZONE_COLORS[z.type]||'#F4884A'; const on=activeZones.has(z.id)
+                  return (
+                    <button key={z.id} onClick={()=>toggleZone(z.id)} style={{ display:'flex',alignItems:'flex-start',gap:9,padding:'9px 11px',background:on?'rgba(255,255,255,0.04)':'transparent',border:`1px solid ${on?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.04)'}`,borderRadius:9,cursor:'pointer',textAlign:'left',transition:'all .12s' }}>
+                      <div style={{ width:7,height:7,borderRadius:'50%',background:on?c:'rgba(255,255,255,0.18)',flexShrink:0,marginTop:3,boxShadow:on?`0 0 6px ${c}`:'none',transition:'all .12s' }} />
+                      <div><div style={{ fontSize:11,fontWeight:600,color:on?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.4)',letterSpacing:'-0.01em' }}>{z.name}</div><div style={{ fontSize:10,color:'rgba(255,255,255,0.22)',marginTop:1 }}>{z.qty} · {z.qty*z.wattage}W</div></div>
+                    </button>
+                  )
+                })}
+              </div>
+              <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
+                <div style={{ fontSize:9,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(255,255,255,0.2)',marginBottom:2 }}>Summary</div>
+                {[
+                  {label:'Fixtures',    value:analysis.summary.totalFixtures},
+                  {label:'Wattage',     value:`${analysis.summary.totalWattage}W`},
+                  {label:'Transformer', value:analysis.summary.transformerSize},
+                  {label:'Wire',        value:analysis.summary.wireEstimate},
+                  {label:'Difficulty',  value:analysis.summary.difficulty},
+                ].map(m=>(
+                  <div key={m.label} style={{ background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:8,padding:'8px 11px',display:'flex',alignItems:'center',justifyContent:'space-between' }}>
+                    <span style={{ fontSize:11,color:'rgba(255,255,255,0.28)' }}>{m.label}</span>
+                    <span style={{ fontSize:12,fontWeight:600,color:'rgba(255,255,255,0.78)',letterSpacing:'-0.02em' }}>{m.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* save */}
+            <div style={{ display:'flex',gap:8 }}>
+              <button onClick={()=>{setAnalysis(null);setImageUrl('');setSavedTo('')}} style={{ flex:1,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:10,color:'rgba(255,255,255,0.5)',fontSize:12,fontWeight:500,padding:10,cursor:'pointer' }}>New Photo</button>
+              <button onClick={()=>setShowSavePicker(true)} style={{ flex:2,background:savedTo?'rgba(34,197,94,0.12)':'linear-gradient(135deg,#F4884A,#df6f28)',border:savedTo?'1px solid rgba(34,197,94,0.3)':'none',borderRadius:10,color:savedTo?'#22c55e':'#fff',fontSize:12,fontWeight:600,padding:10,cursor:'pointer',boxShadow:savedTo?'none':'0 0 16px rgba(244,136,74,0.25)',transition:'all .2s' }}>{savedTo?`✓ Saved to ${savedTo}`:'Save to Project'}</button>
+            </div>
+          </>
+        )}
+
+        {error && <div style={{ fontSize:12,color:'#f87171',background:'rgba(248,113,113,0.08)',border:'1px solid rgba(248,113,113,0.2)',borderRadius:8,padding:'10px 14px' }}>{error}</div>}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* prompt chips — shown when image loaded and no results yet */}
+      {imageUrl && !analyzing && !analysis && (
+        <div style={{ display:'flex',gap:6,flexWrap:'wrap',padding:'10px 0 12px',flexShrink:0 }}>
+          {DESIGN_PROMPTS.map(q=>(
+            <button key={q} onClick={()=>analyze(q)} style={{ background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,color:'rgba(255,255,255,0.45)',fontSize:11,padding:'6px 12px',cursor:'pointer',letterSpacing:'-0.01em',transition:'all .15s',fontFamily:'inherit' }}
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(244,136,74,0.3)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.75)'}}
+              onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.08)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.45)'}}>
+              {q}
+            </button>
+          ))}
         </div>
       )}
 
-      {/* save picker portal */}
+      {/* input bar */}
+      <div style={{ display:'flex',gap:10,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:14,padding:'10px 12px',alignItems:'flex-end',flexShrink:0 }}>
+        {/* photo attach button */}
+        <button onClick={()=>fileRef.current?.click()} title="Attach photo" style={{ width:34,height:34,borderRadius:9,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'border-color .15s' }}
+          onMouseEnter={e=>(e.currentTarget.style.borderColor='rgba(244,136,74,0.3)')} onMouseLeave={e=>(e.currentTarget.style.borderColor='rgba(255,255,255,0.08)')}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </button>
+        <textarea value={input} onChange={e=>setInput(e.target.value)}
+          onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(imageUrl)analyze()}}}
+          placeholder={imageUrl?'Describe the style or ask for changes…':'Upload a photo first, then describe what you want'}
+          rows={1}
+          style={{ flex:1,background:'none',border:'none',outline:'none',resize:'none',color:'rgba(255,255,255,0.82)',fontSize:13,lineHeight:1.5,fontFamily:'inherit',overflowY:'hidden',minHeight:22 }}
+          onInput={e=>{const t=e.currentTarget;t.style.height='auto';t.style.height=Math.min(t.scrollHeight,120)+'px'}} />
+        <button onClick={()=>{if(imageUrl)analyze()}} disabled={!imageUrl||analyzing} style={{ background:imageUrl&&!analyzing?'linear-gradient(135deg,#F4884A,#df6f28)':'rgba(255,255,255,0.08)',border:'none',borderRadius:9,width:34,height:34,display:'flex',alignItems:'center',justifyContent:'center',cursor:imageUrl&&!analyzing?'pointer':'default',flexShrink:0,transition:'background .2s' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+
+      {/* save picker */}
       {showSavePicker && createPortal(
         <div onClick={()=>setShowSavePicker(false)} style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.65)',backdropFilter:'blur(6px)',zIndex:2000,display:'flex',alignItems:'center',justifyContent:'center',padding:20 }}>
           <div onClick={e=>e.stopPropagation()} style={{ background:'#1c1917',border:'1px solid rgba(255,255,255,0.08)',borderRadius:16,padding:24,width:'100%',maxWidth:400,maxHeight:'80vh',overflowY:'auto',boxShadow:'0 24px 60px rgba(0,0,0,0.6)' }}>
-            <div style={{ fontWeight:700,fontSize:15,color:'rgba(255,255,255,0.9)',marginBottom:4,letterSpacing:'-0.02em' }}>Save to Project</div>
+            <div style={{ fontWeight:700,fontSize:15,color:'rgba(255,255,255,0.9)',marginBottom:4 }}>Save to Project</div>
             <div style={{ fontSize:11,color:'rgba(255,255,255,0.3)',marginBottom:18 }}>Choose which project to attach this design to.</div>
-            {projects.length===0 && <div style={{ fontSize:13,color:'rgba(255,255,255,0.3)',textAlign:'center',padding:'20px 0' }}>No projects yet.</div>}
+            {projects.length===0&&<div style={{ fontSize:13,color:'rgba(255,255,255,0.3)',textAlign:'center',padding:'20px 0' }}>No projects yet.</div>}
             <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
-              {projects.map(p => {
-                const label = p.homeowner||p.name||p.id
+              {projects.map(p=>{
+                const label=p.homeowner||p.name||p.id
                 return (
-                  <button key={p.id} onClick={()=>{ localStorage.setItem(`upscape_design_${p.id}`,JSON.stringify({style,analysis,imageUrl,savedAt:new Date().toISOString()})); setSavedTo(label); setShowSavePicker(false) }}
+                  <button key={p.id} onClick={()=>{localStorage.setItem(`upscape_design_${p.id}`,JSON.stringify({style,analysis,imageUrl,savedAt:new Date().toISOString()}));setSavedTo(label);setShowSavePicker(false)}}
                     style={{ display:'flex',alignItems:'center',gap:12,padding:'12px 14px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:10,cursor:'pointer',textAlign:'left',transition:'border-color .15s' }}
-                    onMouseEnter={e=>(e.currentTarget.style.borderColor='rgba(244,136,74,0.4)')}
-                    onMouseLeave={e=>(e.currentTarget.style.borderColor='rgba(255,255,255,0.07)')}>
-                    <div style={{ width:34,height:34,borderRadius:8,background:'rgba(244,136,74,0.08)',border:'1px solid rgba(244,136,74,0.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F4884A" strokeWidth="1.7"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-                    </div>
+                    onMouseEnter={e=>(e.currentTarget.style.borderColor='rgba(244,136,74,0.4)')} onMouseLeave={e=>(e.currentTarget.style.borderColor='rgba(255,255,255,0.07)')}>
                     <div style={{ minWidth:0 }}>
                       <div style={{ fontSize:12,fontWeight:600,color:'rgba(255,255,255,0.85)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{label}</div>
-                      {p.address && <div style={{ fontSize:10,color:'rgba(255,255,255,0.28)',marginTop:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{p.address}</div>}
+                      {p.address&&<div style={{ fontSize:10,color:'rgba(255,255,255,0.28)',marginTop:1 }}>{p.address}</div>}
                     </div>
                     <div style={{ marginLeft:'auto',fontSize:9,fontWeight:700,color:STATUS_COLOR[p.status]||'#6b7280',textTransform:'uppercase',letterSpacing:'0.06em',flexShrink:0 }}>{p.status}</div>
                   </button>
@@ -1440,6 +1428,7 @@ function AIDesignPane({ projects }: { projects: Project[] }) {
     </div>
   )
 }
+
 
 
 // ── SETTINGS ──────────────────────────────────────────
