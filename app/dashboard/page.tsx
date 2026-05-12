@@ -627,15 +627,6 @@ function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boo
       {/* Folder + subtle dust — overflow visible so particles can drift outside */}
       <div style={{ position:'relative', width:376, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:2 }}>
 
-        {/* Expanded glow halo — just slightly larger than the object's own glow */}
-        <div style={{
-          position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)',
-          width:440, height:260,
-          background:'radial-gradient(ellipse 55% 45% at 50% 58%, rgba(244,136,74,0.06) 0%, transparent 100%)',
-          filter:'blur(28px)', pointerEvents:'none',
-          animation:'folderGlow 5s ease-in-out infinite',
-        }} />
-
         {/* Dust particles — very faint, drift freely */}
         {dust.map(p => (
           <div key={p.id} style={{
