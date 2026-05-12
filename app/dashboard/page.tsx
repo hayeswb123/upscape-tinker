@@ -479,9 +479,7 @@ function AvatarMenu({ initials, userEmail, logout, lightMode }: { initials: stri
 
 // ── PROJECTS ──────────────────────────────────────────
 function ProjectsSection({ projects, loading, router, installedCount, deleteClient }: any) {
-  const [expanded, setExpanded]   = useState<Set<string>>(new Set())
-  const [selected, setSelected]   = useState<string | null>(null)
-  const [hovered, setHovered]     = useState<string | null>(null)
+  const [hoveredId, setHoveredId]   = useState<string | null>(null)
   const [confirmDel, setConfirmDel] = useState<string | null>(null)
 
   const clientMap = React.useMemo(() => {
@@ -496,159 +494,115 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
 
   const clientCount = clientMap.size
 
-  function toggleClient(key: string) {
-    setExpanded(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
-  }
-
-  // auto-expand all on first load
-  useEffect(() => {
-    if (projects.length > 0) {
-      const keys = new Set<string>()
-      projects.forEach((p: Project) => keys.add((p.homeowner || p.address || p.name || 'Unknown').trim()))
-      setExpanded(keys)
-    }
-  }, [projects.length])
-
   return (
     <div style={{ maxWidth: 900, animation: 'fadeUp .3s ease both' }}>
 
-      {/* ── header ── */}
+      {/* header */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:28 }}>
         <div>
-          <h1 style={{ margin:0, fontSize:20, fontWeight:700, letterSpacing:'-0.035em', color:'rgba(255,255,255,0.9)' }}>Projects</h1>
+          <h1 style={{ margin:0, fontSize:20, fontWeight:700, letterSpacing:'-0.035em', color:'rgba(255,255,255,0.9)' }}>Clients</h1>
           <p style={{ margin:'3px 0 0', fontSize:11, color:'rgba(255,255,255,0.22)', letterSpacing:'-0.01em' }}>
             {clientCount} client{clientCount!==1?'s':''} · {projects.length} project{projects.length!==1?'s':''} · {installedCount} installed
           </p>
         </div>
-        <button className="new-btn" onClick={() => router.push('/projects/new')} style={{ background:'linear-gradient(135deg,#F4884A,#df6f28)', border:'none', borderRadius:8, color:'#fff', fontWeight:600, fontSize:11, padding:'7px 14px', cursor:'pointer', display:'flex', alignItems:'center', gap:5, letterSpacing:'-0.01em', boxShadow:'0 0 18px rgba(244,136,74,0.28), 0 2px 8px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.1) inset', flexShrink:0 }}>
+        <button className="new-btn" onClick={() => router.push('/projects/new')}
+          style={{ background:'linear-gradient(135deg,#F4884A,#df6f28)', border:'none', borderRadius:8, color:'#fff', fontWeight:600, fontSize:11, padding:'7px 14px', cursor:'pointer', display:'flex', alignItems:'center', gap:5, letterSpacing:'-0.01em', boxShadow:'0 0 18px rgba(244,136,74,0.28), 0 2px 8px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.1) inset', flexShrink:0 }}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
           New client
         </button>
       </div>
 
-      {/* ── loading ── */}
+      {/* loading */}
       {loading && (
         <div style={{ display:'flex', alignItems:'center', gap:10, padding:'20px 0', color:'rgba(255,255,255,0.2)', fontSize:12 }}>
           <div style={{ width:16,height:16,border:'1.5px solid rgba(244,136,74,0.2)',borderTopColor:'#F4884A',borderRadius:'50%',animation:'spin .8s linear infinite',flexShrink:0 }} />
-          Loading projects…
+          Loading…
         </div>
       )}
 
-      {/* ── tree ── */}
+      {/* client cards */}
       {!loading && (
-        <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
           {Array.from(clientMap.entries()).map(([key, client], ci) => {
-            const isOpen    = expanded.has(key)
-            const initials  = client.name.split(' ').map((w:string)=>w[0]).slice(0,2).join('').toUpperCase()
+            const isHov    = hoveredId === key
+            const isDel    = confirmDel === key
+            const initials = client.name.split(' ').map((w:string)=>w[0]).slice(0,2).join('').toUpperCase()
             const topStatus = client.projects[0]?.status || 'draft'
-            const isHov     = hovered === key
-            const isDel     = confirmDel === key
+            const statusColor = STATUS_COLOR[topStatus] || '#6b7280'
 
             return (
-              <div key={key} style={{ animation:`fadeUp .25s ease both`, animationDelay:`${ci*.04}s` }}>
+              <div key={key}
+                className="dash-card"
+                onMouseEnter={() => setHoveredId(key)}
+                onMouseLeave={() => setHoveredId(null)}
+                onClick={() => !isDel && router.push(`/clients/${encodeURIComponent(key)}`)}
+                style={{
+                  position: 'relative', overflow: 'hidden',
+                  background: isHov ? 'rgba(255,255,255,0.038)' : 'rgba(255,255,255,0.022)',
+                  border: `1px solid ${isHov ? 'rgba(244,136,74,0.2)' : 'rgba(255,255,255,0.065)'}`,
+                  borderRadius: 14, padding: '16px 18px',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14,
+                  boxShadow: isHov ? '0 0 0 1px rgba(244,136,74,0.08) inset, 0 8px 32px rgba(0,0,0,0.4), 0 0 40px rgba(244,136,74,0.06)' : '0 2px 14px rgba(0,0,0,0.28)',
+                  transform: isHov ? 'translateY(-2px)' : 'translateY(0)',
+                  transition: 'all .22s cubic-bezier(.4,0,.2,1)',
+                  animation: 'fadeUp .3s ease both', animationDelay: `${ci * 0.06}s`,
+                }}>
 
-                {/* ── CLIENT ROW ── */}
-                <div
-                  onMouseEnter={() => setHovered(key)}
-                  onMouseLeave={() => setHovered(null)}
-                  style={{ position:'relative', display:'flex', alignItems:'center', gap:0, borderRadius:10, transition:'background .15s', background: isHov ? 'rgba(255,255,255,0.032)' : 'transparent', cursor:'pointer' }}
-                >
-                  {/* expand chevron */}
-                  <button onClick={() => toggleClient(key)} style={{ width:32, height:36, display:'flex', alignItems:'center', justifyContent:'center', background:'none', border:'none', cursor:'pointer', flexShrink:0, color:'rgba(255,255,255,0.25)', transition:'color .15s', padding:0 }}>
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition:'transform .2s cubic-bezier(.4,0,.2,1)' }}><path d="M9 18l6-6-6-6"/></svg>
-                  </button>
+                {/* left status bar */}
+                <div style={{ position:'absolute', left:0, top:12, bottom:12, width:3, borderRadius:2, background:statusColor, boxShadow:`0 0 8px ${statusColor}`, opacity: isHov ? 1 : 0.6, transition:'opacity .2s' }} />
 
-                  {/* folder icon */}
-                  <div onClick={() => toggleClient(key)} style={{ width:28, height:28, borderRadius:7, background: isOpen ? 'rgba(244,136,74,0.14)' : 'rgba(255,255,255,0.05)', border:`1px solid ${isOpen ? 'rgba(244,136,74,0.25)' : 'rgba(255,255,255,0.08)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all .15s', boxShadow: isOpen ? '0 0 10px rgba(244,136,74,0.12)' : 'none' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={isOpen ? '#F4884A' : 'rgba(255,255,255,0.35)'} strokeWidth="1.6" style={{ transition:'stroke .15s' }}>
-                      {isOpen
-                        ? <><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/><line x1="8" y1="13" x2="16" y2="13" strokeOpacity=".5"/></>
-                        : <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
-                      }
-                    </svg>
-                  </div>
+                {/* initials avatar */}
+                <div style={{
+                  width:44, height:44, borderRadius:11, flexShrink:0, marginLeft:8,
+                  background: isHov ? 'linear-gradient(135deg,rgba(244,136,74,0.28),rgba(244,136,74,0.1))' : 'linear-gradient(135deg,rgba(244,136,74,0.16),rgba(244,136,74,0.05))',
+                  border: `1px solid ${isHov ? 'rgba(244,136,74,0.35)' : 'rgba(244,136,74,0.15)'}`,
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:13, fontWeight:700, color: isHov ? 'rgba(244,136,74,1)' : 'rgba(244,136,74,0.85)',
+                  letterSpacing:'-0.02em', transition:'all .2s',
+                  boxShadow: isHov ? '0 0 18px rgba(244,136,74,0.2)' : 'none',
+                }}>{initials}</div>
 
-                  {/* name + address */}
-                  <div onClick={() => toggleClient(key)} style={{ flex:1, minWidth:0, padding:'0 10px' }}>
-                    <div style={{ fontSize:13, fontWeight:600, color: isOpen ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.7)', letterSpacing:'-0.02em', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', transition:'color .15s' }}>{client.name}</div>
-                    <div style={{ fontSize:10.5, color:'rgba(255,255,255,0.22)', marginTop:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', letterSpacing:'-0.005em' }}>{client.address || 'No address'}</div>
-                  </div>
-
-                  {/* right side — status + count + actions (visible on hover) */}
-                  <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0, paddingRight:8, opacity: isHov ? 1 : 0.45, transition:'opacity .15s' }} onClick={e => e.stopPropagation()}>
-                    {isDel ? (
-                      <>
-                        <span style={{ fontSize:10, color:'rgba(255,255,255,0.4)' }}>Delete client?</span>
-                        <button onClick={() => { deleteClient(key); setConfirmDel(null) }} style={{ background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.3)', color:'#ef4444', borderRadius:5, fontSize:10, fontWeight:600, padding:'2px 8px', cursor:'pointer' }}>Delete</button>
-                        <button onClick={() => setConfirmDel(null)} style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.4)', borderRadius:5, fontSize:10, padding:'2px 8px', cursor:'pointer' }}>Cancel</button>
-                      </>
-                    ) : (
-                      <>
-                        <span style={{ fontSize:10, color:'rgba(255,255,255,0.18)', background:'rgba(255,255,255,0.05)', borderRadius:4, padding:'2px 7px', fontWeight:500 }}>{client.projects.length} project{client.projects.length!==1?'s':''}</span>
-                        <div style={{ width:6, height:6, borderRadius:'50%', background:STATUS_COLOR[topStatus]||'#6b7280', boxShadow:`0 0 5px ${STATUS_COLOR[topStatus]||'#6b7280'}`, flexShrink:0 }} />
-                        <button onClick={() => setConfirmDel(key)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.18)', cursor:'pointer', padding:'2px 4px', borderRadius:5, display:'flex', alignItems:'center', transition:'color .12s' }}
-                          onMouseEnter={e=>(e.currentTarget.style.color='#ef4444')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,0.18)')}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-                        </button>
-                      </>
-                    )}
-                  </div>
+                {/* info */}
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div className="card-name" style={{ fontWeight:600, fontSize:14, letterSpacing:'-0.025em', color: isHov ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.82)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', transition:'color .18s' }}>{client.name}</div>
+                  <div style={{ color:'rgba(255,255,255,0.28)', fontSize:12, marginTop:3, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', letterSpacing:'-0.01em' }}>{client.address || 'No address on file'}</div>
                 </div>
 
-                {/* ── PROJECT CHILDREN ── */}
-                <div style={{ overflow:'hidden', maxHeight: isOpen ? `${client.projects.length * 56}px` : '0px', transition:'max-height .28s cubic-bezier(.4,0,.2,1), opacity .2s', opacity: isOpen ? 1 : 0 }}>
-                  <div style={{ paddingBottom: isOpen ? 6 : 0 }}>
-                    {client.projects.map((p: Project, pi: number) => {
-                      const projKey  = p.id
-                      const isSel    = selected === projKey
-                      const isProjHov = hovered === projKey
-                      const isLast   = pi === client.projects.length - 1
-
-                      return (
-                        <div key={p.id}
-                          onMouseEnter={() => setHovered(projKey)}
-                          onMouseLeave={() => setHovered(null)}
-                          onClick={() => { setSelected(projKey); router.push(`/projects/${p.id}/map`) }}
-                          style={{ position:'relative', display:'flex', alignItems:'center', marginLeft:14, paddingLeft:18, cursor:'pointer', borderRadius:8, background: isSel ? 'rgba(244,136,74,0.07)' : isProjHov ? 'rgba(255,255,255,0.025)' : 'transparent', transition:'background .12s', boxShadow: isSel ? '0 0 0 1px rgba(244,136,74,0.18) inset, 0 0 14px rgba(244,136,74,0.06)' : 'none' }}>
-
-                          {/* connector line */}
-                          <div style={{ position:'absolute', left:0, top:0, bottom: isLast ? '50%' : 0, width:1, background:'rgba(255,255,255,0.07)' }} />
-                          <div style={{ position:'absolute', left:0, top:'50%', width:14, height:1, background:'rgba(255,255,255,0.07)' }} />
-
-                          {/* active glow indicator */}
-                          {isSel && <div style={{ position:'absolute', left:18, top:'50%', transform:'translateY(-50%)', width:2, height:18, borderRadius:1, background:'#F4884A', boxShadow:'0 0 8px rgba(244,136,74,0.7)' }} />}
-
-                          {/* project icon */}
-                          <div style={{ width:24, height:24, borderRadius:6, background: isSel ? 'rgba(244,136,74,0.15)' : 'rgba(255,255,255,0.04)', border:`1px solid ${isSel ? 'rgba(244,136,74,0.3)' : 'rgba(255,255,255,0.06)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginLeft:10, transition:'all .12s' }}>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isSel ? '#F4884A' : 'rgba(255,255,255,0.3)'} strokeWidth="1.7" style={{ transition:'stroke .12s' }}>
-                              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
-                            </svg>
-                          </div>
-
-                          {/* name + meta */}
-                          <div style={{ flex:1, minWidth:0, padding:'9px 10px' }}>
-                            <div style={{ fontSize:12, fontWeight: isSel ? 600 : 500, color: isSel ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.6)', letterSpacing:'-0.015em', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', transition:'color .12s' }}>{p.name || p.address}</div>
-                            <div style={{ fontSize:10, color:'rgba(255,255,255,0.18)', marginTop:1, letterSpacing:'-0.005em' }}>{p.address}</div>
-                          </div>
-
-                          {/* status + open arrow */}
-                          <div style={{ display:'flex', alignItems:'center', gap:7, flexShrink:0, paddingRight:10, opacity: isProjHov || isSel ? 1 : 0.4, transition:'opacity .12s' }}>
-                            <span style={{ background:STATUS_COLOR[p.status]+'18', color:STATUS_COLOR[p.status], borderRadius:4, fontSize:9, fontWeight:700, padding:'2px 6px', letterSpacing:'0.05em', textTransform:'uppercase' }}>{STATUS_LABEL[p.status]}</span>
-                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={isSel ? '#F4884A' : 'rgba(255,255,255,0.25)'} strokeWidth="2" style={{ transition:'stroke .12s' }}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
+                {/* right actions */}
+                <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }} onClick={e => e.stopPropagation()}>
+                  {isDel ? (
+                    <>
+                      <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>Delete all?</span>
+                      <button onClick={() => { deleteClient(key); setConfirmDel(null) }}
+                        style={{ background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.35)', color:'#ef4444', borderRadius:6, fontSize:11, fontWeight:600, padding:'3px 10px', cursor:'pointer' }}>Delete</button>
+                      <button onClick={() => setConfirmDel(null)}
+                        style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', color:'rgba(255,255,255,0.45)', borderRadius:6, fontSize:11, padding:'3px 10px', cursor:'pointer' }}>Cancel</button>
+                    </>
+                  ) : (
+                    <>
+                      <span style={{ fontSize:10, fontWeight:700, color:statusColor, background:statusColor+'18', borderRadius:5, padding:'2px 7px', letterSpacing:'0.04em', textTransform:'uppercase', opacity: isHov ? 1 : 0.7, transition:'opacity .18s' }}>{STATUS_LABEL[topStatus]}</span>
+                      <span style={{ fontSize:11, color:'rgba(255,255,255,0.2)', background:'rgba(255,255,255,0.05)', borderRadius:5, padding:'2px 8px', fontWeight:500 }}>{client.projects.length} project{client.projects.length!==1?'s':''}</span>
+                      <button onClick={() => setConfirmDel(key)} title="Delete client"
+                        style={{ background:'none', border:'none', color:'rgba(255,255,255,0.15)', cursor:'pointer', padding:'4px 6px', borderRadius:6, display:'flex', alignItems:'center', transition:'color .15s', opacity: isHov ? 1 : 0, transform: isHov ? 'scale(1)' : 'scale(0.8)', transition2:'opacity .18s, transform .18s' } as any}
+                        onMouseEnter={e=>(e.currentTarget.style.color='#ef4444')} onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,0.15)')}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                      </button>
+                      <span style={{ color:'rgba(255,255,255,0.2)', fontSize:16, opacity: isHov ? 0.7 : 0.3, transition:'opacity .18s, transform .18s', transform: isHov ? 'translateX(2px)' : 'translateX(0)' }}>›</span>
+                    </>
+                  )}
                 </div>
 
+                {/* cinematic hover glow sweep */}
+                {isHov && (
+                  <div style={{ position:'absolute', inset:0, background:'linear-gradient(105deg, transparent 40%, rgba(244,136,74,0.04) 60%, transparent 80%)', pointerEvents:'none', borderRadius:14 }} />
+                )}
               </div>
             )
           })}
         </div>
       )}
 
-      {/* ── empty state ── */}
+      {/* empty state — glowing folder, fills remaining space */}
       {!loading && clientCount === 0 && <EmptyState onNew={() => router.push('/projects/new')} hasClients={false} />}
     </div>
   )
@@ -684,59 +638,45 @@ function QuotesSection({ projects, router, fmt }: any) {
 }
 
 // ── EMPTY STATE ───────────────────────────────────────
-function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boolean }) {
+function EmptyState({ onNew }: { onNew: () => void; hasClients?: boolean }) {
   return (
     <div style={{
-      marginTop: hasClients ? 72 : 40,
-      marginBottom: 40,
+      flex: 1,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: 60,
+      paddingBottom: 60,
       animation: 'emptyFadeIn 1s cubic-bezier(.16,1,.3,1) both',
-      animationDelay: hasClients ? '0.1s' : '0.3s',
+      animationDelay: '0.2s',
       position: 'relative',
     }}>
-      {/* separator line — only shown when cards above exist */}
-      {hasClients && (
-        <div style={{ width: '100%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)', marginBottom: 72 }} />
-      )}
+      {/* wide floor glow */}
+      <div style={{ position:'absolute', bottom:'30%', left:'50%', transform:'translateX(-50%)', width:560, height:80, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.14) 0%, transparent 70%)', filter:'blur(24px)', pointerEvents:'none', animation:'glowPulse 5s ease-in-out infinite' }} />
 
-      {/* ambient glow behind image */}
-      <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%, -54%)', width:380, height:280, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.09) 0%, transparent 65%)', pointerEvents:'none', animation:'glowPulse 6s ease-in-out infinite' }} />
-
-      {/* floor spotlight */}
-      <div style={{ position:'absolute', top:'calc(50% + 20px)', left:'50%', transform:'translateX(-50%)', width:440, height:60, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.18) 0%, transparent 70%)', filter:'blur(14px)', pointerEvents:'none', animation:'glowPulse 5s ease-in-out infinite', animationDelay:'1s' }} />
-
-      {/* folder illustration */}
-      <div style={{ animation:'float 7s ease-in-out infinite', position:'relative', marginBottom: 44 }}>
-        {/* tight floor shadow under image */}
-        <div style={{ position:'absolute', bottom:-16, left:'50%', transform:'translateX(-50%)', width:160, height:20, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.3) 0%, transparent 70%)', filter:'blur(8px)' }} />
+      {/* folder — the image already has its own built-in orange glow */}
+      <div style={{ animation:'float 7s ease-in-out infinite', position:'relative', marginBottom:40 }}>
         <img
           src="/empty-folder.png"
-          alt="No projects yet"
+          alt="No clients yet"
           style={{
-            width: 200,
+            width: 240,
             height: 'auto',
             display: 'block',
-            filter: 'drop-shadow(0 0 24px rgba(244,136,74,0.35)) drop-shadow(0 0 6px rgba(244,136,74,0.2))',
           }}
         />
       </div>
 
-      {/* text */}
-      <h2 style={{ margin:'0 0 10px', fontSize:24, fontWeight:700, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.82)', textAlign:'center', lineHeight:1.1 }}>
-        {hasClients ? 'Ready to add more?' : 'No clients yet'}
+      <h2 style={{ margin:'0 0 10px', fontSize:26, fontWeight:700, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.82)', textAlign:'center', lineHeight:1.1 }}>
+        No clients yet
       </h2>
-      <p style={{ margin:'0 0 32px', fontSize:13, color:'rgba(255,255,255,0.22)', textAlign:'center', letterSpacing:'-0.01em', lineHeight:1.7, maxWidth:240 }}>
-        {hasClients
-          ? 'Create a new client and start designing their landscape lighting.'
-          : 'Add your first client to begin designing their lighting system.'}
+      <p style={{ margin:'0 0 34px', fontSize:13, color:'rgba(255,255,255,0.22)', textAlign:'center', letterSpacing:'-0.01em', lineHeight:1.7, maxWidth:220 }}>
+        Add your first client to begin designing their lighting system.
       </p>
 
-      {/* CTA */}
-      <button
-        onClick={onNew}
-        style={{ display:'flex', alignItems:'center', gap:8, padding:'11px 26px', borderRadius:11, background:'linear-gradient(135deg,#F4884A,#d96520)', border:'none', color:'#fff', fontSize:13, fontWeight:600, letterSpacing:'-0.01em', cursor:'pointer', boxShadow:'0 0 28px rgba(244,136,74,0.3), 0 4px 18px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.14) inset', transition:'transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s' }}
+      <button onClick={onNew}
+        style={{ display:'flex', alignItems:'center', gap:8, padding:'12px 28px', borderRadius:11, background:'linear-gradient(135deg,#F4884A,#d96520)', border:'none', color:'#fff', fontSize:13, fontWeight:600, letterSpacing:'-0.01em', cursor:'pointer', boxShadow:'0 0 28px rgba(244,136,74,0.3), 0 4px 18px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.14) inset', transition:'transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s' }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-2px) scale(1.02)'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 48px rgba(244,136,74,0.45), 0 8px 28px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.18) inset' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform='none'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 28px rgba(244,136,74,0.3), 0 4px 18px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.14) inset' }}
       >
