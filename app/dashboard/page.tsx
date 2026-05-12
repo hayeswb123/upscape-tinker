@@ -642,7 +642,7 @@ function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boo
 
         {/* Folder */}
         <div style={{ animation:'floatFolder 5s ease-in-out infinite', position:'relative', zIndex:1 }}>
-          <img src="/empty-folder.png" alt="" style={{ width:376, height:'auto', display:'block', mixBlendMode:'screen' }} />
+          <img src="/empty-folder.png" alt="" style={{ width:376, height:'auto', display:'block', mixBlendMode:'screen', WebkitMaskImage:'linear-gradient(to bottom, black 60%, transparent 100%)', maskImage:'linear-gradient(to bottom, black 60%, transparent 100%)' }} />
         </div>
       </div>
 
