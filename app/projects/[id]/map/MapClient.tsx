@@ -136,15 +136,13 @@ export default function MapClient({ projectId }: { projectId: string }) {
     window.addEventListener('storage', onStorage)
     return () => window.removeEventListener('storage', onStorage)
   }, [])
-  type MapMode = 'sat-day' | 'sat-night' | '3d-dawn' | '3d-day' | '3d-dusk' | '3d-night'
-  const [mapMode, setMapMode] = useState<MapMode>(() => {
-    if (typeof window === 'undefined') return 'sat-night'
-    const style = localStorage.getItem('upscape_map_style') || 'satellite'
-    const time  = localStorage.getItem('upscape_map_time') || 'day'
-    if (style === 'terrain') {
-      return ({ dawn:'3d-dawn', day:'3d-day', dusk:'3d-dusk', night:'3d-night' }[time] || '3d-night') as MapMode
-    }
-    return (time === 'day' ? 'sat-day' : 'sat-night') as MapMode
+  const [mapStyle, setMapStyle] = useState<'satellite'|'terrain'>(() => {
+    if (typeof window === 'undefined') return 'satellite'
+    return (localStorage.getItem('upscape_map_style') || 'satellite') as 'satellite'|'terrain'
+  })
+  const [timeOfDay, setTimeOfDay] = useState<'dawn'|'day'|'dusk'|'night'>(() => {
+    if (typeof window === 'undefined') return 'night'
+    return (localStorage.getItem('upscape_map_time') || 'night') as 'dawn'|'day'|'dusk'|'night'
   })
   const [popup, setPopup] = useState<Marker | null>(null)
   const [wirePopup, setWirePopup] = useState<{ id: string; feet: number } | null>(null)
@@ -219,9 +217,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
       const _initMapboxStyle = _initStyle === 'terrain'
         ? 'mapbox://styles/mapbox/standard'
         : 'mapbox://styles/mapbox/standard-satellite'
-      const _initPreset = _initStyle === 'terrain'
-        ? ({ dawn:'dawn', day:'day', dusk:'dusk', night:'night' }[_initTime] || 'day')
-        : (_initTime === 'day' ? 'day' : 'night')
+      const _initPreset = (['dawn','day','dusk','night'].includes(_initTime) ? _initTime : 'night')
 
       const map = new mapboxgl.Map({
         container: mapDiv.current,
@@ -516,34 +512,21 @@ export default function MapClient({ projectId }: { projectId: string }) {
 
   const TERRAIN_STYLE = 'mapbox://styles/mapbox/standard'
   const SAT_STYLE = 'mapbox://styles/mapbox/standard-satellite'
-  const MAP_STYLES: Record<string, string> = {
-    'sat-day':   SAT_STYLE,
-    'sat-night': SAT_STYLE,
-    '3d-day':    TERRAIN_STYLE,
-    '3d-dawn':   TERRAIN_STYLE,
-    '3d-dusk':   TERRAIN_STYLE,
-    '3d-night':  TERRAIN_STYLE,
-  }
-  const LIGHT_PRESETS: Record<string, string> = {
-    'sat-day': 'day', 'sat-night': 'night',
-    '3d-day': 'day', '3d-dawn': 'dawn', '3d-dusk': 'dusk', '3d-night': 'night',
-  }
-  const SAT_CYCLE  = ['sat-day', 'sat-night'] as const
-  const D3_CYCLE   = ['3d-dawn', '3d-day', '3d-dusk', '3d-night'] as const
-  // map a time-of-day to its closest equivalent in each mode
-  const TIME_RANK: Record<string, number> = { 'sat-day':0,'sat-night':2,'3d-dawn':0,'3d-day':1,'3d-dusk':2,'3d-night':3 }
 
-  function switchMode(mode: MapMode) {
+  function applyMapView(newStyle: 'satellite'|'terrain', newTime: 'dawn'|'day'|'dusk'|'night') {
     const map = mapRef.current
     if (!map) return
-    const prevStyle = MAP_STYLES[mapMode]
-    const nextStyle = MAP_STYLES[mode]
-    setMapMode(mode)
-    if (nextStyle !== prevStyle) {
-      map.setStyle(nextStyle)
+    const newMapboxStyle = newStyle === 'terrain' ? TERRAIN_STYLE : SAT_STYLE
+    const curMapboxStyle = mapStyle === 'terrain' ? TERRAIN_STYLE : SAT_STYLE
+    setMapStyle(newStyle)
+    setTimeOfDay(newTime)
+    localStorage.setItem('upscape_map_style', newStyle)
+    localStorage.setItem('upscape_map_time', newTime)
+    if (newMapboxStyle !== curMapboxStyle) {
+      map.setStyle(newMapboxStyle)
       map.once('style.load', () => {
-        if (mode === 'sat-day' || mode === 'sat-night') addTerrain(map)
-        if (LIGHT_PRESETS[mode]) (map as any).setConfigProperty('basemap', 'lightPreset', LIGHT_PRESETS[mode])
+        addTerrain(map)
+        ;(map as any).setConfigProperty('basemap', 'lightPreset', newTime)
         const p = project
         if (!p) return
         map.addSource('wires', { type: 'geojson', data: wiresToGeoJSON(p.wires || []) })
@@ -563,7 +546,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
         markersRef.current.forEach(mb => mb.addTo(map))
       })
     } else {
-      if (LIGHT_PRESETS[mode]) (map as any).setConfigProperty('basemap', 'lightPreset', LIGHT_PRESETS[mode])
+      ;(map as any).setConfigProperty('basemap', 'lightPreset', newTime)
     }
   }
 
@@ -645,6 +628,22 @@ export default function MapClient({ projectId }: { projectId: string }) {
             60%  { transform: scale(1.06); }
             100% { transform: scale(1); opacity: 1; }
           }
+          @keyframes timeGlowDawn {
+            0%,100% { box-shadow: 0 0 10px #c084fc44 inset, 0 0 6px #c084fc22; }
+            50%     { box-shadow: 0 0 20px #c084fc66 inset, 0 0 14px #c084fc44; }
+          }
+          @keyframes timeGlowDay {
+            0%,100% { box-shadow: 0 0 10px #fde04744 inset, 0 0 6px #fde04722; }
+            50%     { box-shadow: 0 0 20px #fde04766 inset, 0 0 14px #fde04744; }
+          }
+          @keyframes timeGlowDusk {
+            0%,100% { box-shadow: 0 0 10px #fb923c44 inset, 0 0 6px #fb923c22; }
+            50%     { box-shadow: 0 0 20px #fb923c66 inset, 0 0 14px #fb923c44; }
+          }
+          @keyframes timeGlowNight {
+            0%,100% { box-shadow: 0 0 10px #60a5fa44 inset, 0 0 6px #60a5fa22; }
+            50%     { box-shadow: 0 0 20px #60a5fa66 inset, 0 0 14px #60a5fa44; }
+          }
           ${WIRE_NODE_CSS}
           .upscape-back:hover { opacity: 1 !important; transform: translateY(-1px); }
           .upscape-back { transition: opacity 0.2s, transform 0.2s; }
@@ -655,6 +654,9 @@ export default function MapClient({ projectId }: { projectId: string }) {
           .upscape-tool { transition: opacity 0.18s, transform 0.18s; }
           .upscape-tool:hover { opacity: 1 !important; transform: scale(1.06) translateY(-1px) !important; }
           .upscape-tool-active { transform: scale(1.08) !important; }
+          .upscape-style-btn:hover { opacity: 1 !important; }
+          .upscape-time-btn { transition: background 0.25s, border-color 0.25s, transform 0.15s; }
+          .upscape-time-btn:hover { transform: translateY(-1px); }
           @media (hover: hover) {
             .fx-tooltip { display: none; }
             .upscape-tool:hover .fx-tooltip { display: flex; }
@@ -674,50 +676,23 @@ export default function MapClient({ projectId }: { projectId: string }) {
           <div style={{ fontWeight: 500, fontSize: 13, letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'rgba(255,255,255,0.92)' }}>{project?.homeowner || project?.name}</div>
           <div style={{ color: 'rgba(255,255,255,0.38)', fontSize: 10, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{project?.address}</div>
         </div>
-        {/* map mode switcher */}
-        <div style={{ display: 'flex', gap: 3, background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(12px)', borderRadius: 8, padding: 3, boxShadow: '0 2px 12px rgba(0,0,0,0.3)', flexShrink: 0 }}>
-          {/* satellite */}
-          {([
-            { key: 'sat', icon: '◉' },
-            { key: '3d',  icon: '⬡' },
-          ] as const).map(({ key, icon }) => {
-            const isSat = !mapMode.startsWith('3d')
-            const isActive = key === 'sat' ? isSat : !isSat
-            const timeLabels: Record<string, string> = { 'sat-day':'Day','sat-night':'Night','3d-dawn':'Dawn','3d-day':'Day','3d-dusk':'Dusk','3d-night':'Night' }
-            const label = `${key === 'sat' ? 'Satellite' : '3D'} · ${timeLabels[mapMode]}`
+        {/* Map Style toggle — Satellite / Terrain */}
+        <div style={{ display: 'flex', gap: 2, background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(12px)', borderRadius: 8, padding: 3, boxShadow: '0 2px 12px rgba(0,0,0,0.3)', flexShrink: 0 }}>
+          {([{ id: 'satellite', icon: '◉', label: 'Sat' }, { id: 'terrain', icon: '⬡', label: '3D' }] as const).map(opt => {
+            const isActive = mapStyle === opt.id
             return (
-              <button key={key} title={label}
-                onClick={() => {
-                  if (key === 'sat') {
-                    if (isSat) {
-                      // already sat — cycle day/night
-                      switchMode(mapMode === 'sat-day' ? 'sat-night' : 'sat-day')
-                    } else {
-                      // switch from 3D to sat, match time
-                      const rank = TIME_RANK[mapMode]
-                      switchMode(rank >= 2 ? 'sat-night' : 'sat-day')
-                    }
-                  } else {
-                    if (isSat) {
-                      // switch to 3D, match time of day
-                      const rank = TIME_RANK[mapMode]
-                      switchMode(rank === 0 ? '3d-dawn' : rank === 1 ? '3d-day' : rank === 2 ? '3d-dusk' : '3d-night')
-                    } else {
-                      // already 3D — cycle to next time
-                      const idx = D3_CYCLE.indexOf(mapMode as typeof D3_CYCLE[number])
-                      switchMode(D3_CYCLE[(idx + 1) % D3_CYCLE.length])
-                    }
-                  }
-                }}
+              <button key={opt.id} className="upscape-style-btn"
+                title={opt.label}
+                onClick={() => applyMapView(opt.id, timeOfDay)}
                 style={{
                   background: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
                   border: 'none', borderRadius: 6,
-                  color: isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)',
+                  color: isActive ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.35)',
                   fontSize: 14, cursor: 'pointer', width: 28, height: 28,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.15s',
+                  transition: 'all 0.18s', opacity: isActive ? 1 : 0.6,
                 }}
-              >{icon}</button>
+              >{opt.icon}</button>
             )
           })}
         </div>
@@ -729,6 +704,137 @@ export default function MapClient({ projectId }: { projectId: string }) {
           boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
         }}>Quote →</button>
       </header>
+
+      {/* Cinematic Time of Day selector */}
+      {(() => {
+        const times = [
+          {
+            id: 'dawn' as const,
+            label: 'Dawn',
+            glowColor: '#c084fc',
+            glowAnim: 'timeGlowDawn',
+            icon: (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                {/* horizon line */}
+                <line x1="3" y1="15" x2="21" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+                {/* sun rising */}
+                <path d="M12 15 A5 5 0 0 1 7 15" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                <path d="M12 15 A5 5 0 0 0 17 15" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                {/* rays */}
+                <line x1="12" y1="7" x2="12" y2="5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="7.5" y1="9.5" x2="6.2" y2="8.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="16.5" y1="9.5" x2="17.8" y2="8.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="5" y1="13" x2="3" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="19" y1="13" x2="21" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            ),
+          },
+          {
+            id: 'day' as const,
+            label: 'Day',
+            glowColor: '#fde047',
+            glowAnim: 'timeGlowDay',
+            icon: (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="4.5" stroke="currentColor" strokeWidth="1.5"/>
+                <line x1="12" y1="2" x2="12" y2="4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="12" y1="19.5" x2="12" y2="22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="2" y1="12" x2="4.5" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="19.5" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="5.6" y1="5.6" x2="7.3" y2="7.3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="16.7" y1="16.7" x2="18.4" y2="18.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="18.4" y1="5.6" x2="16.7" y2="7.3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="7.3" y1="16.7" x2="5.6" y2="18.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            ),
+          },
+          {
+            id: 'dusk' as const,
+            label: 'Dusk',
+            glowColor: '#fb923c',
+            glowAnim: 'timeGlowDusk',
+            icon: (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                {/* horizon */}
+                <line x1="3" y1="15" x2="21" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5"/>
+                {/* setting sun — mostly below horizon */}
+                <path d="M12 15 A4 4 0 0 1 8 15" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                <path d="M12 15 A4 4 0 0 0 16 15" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                {/* warm rays low */}
+                <line x1="4" y1="12" x2="5.5" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="18.5" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="6.5" y1="9.5" x2="7.8" y2="10.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="17.5" y1="9.5" x2="16.2" y2="10.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                {/* warm shimmer lines below */}
+                <line x1="6" y1="18" x2="9" y2="18" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.4"/>
+                <line x1="15" y1="18" x2="18" y2="18" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.4"/>
+              </svg>
+            ),
+          },
+          {
+            id: 'night' as const,
+            label: 'Night',
+            glowColor: '#60a5fa',
+            glowAnim: 'timeGlowNight',
+            icon: (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                {/* crescent */}
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                {/* stars */}
+                <circle cx="18" cy="5" r="0.9" fill="currentColor"/>
+                <circle cx="20" cy="9" r="0.6" fill="currentColor"/>
+                <circle cx="15" cy="3" r="0.6" fill="currentColor"/>
+              </svg>
+            ),
+          },
+        ]
+        return (
+          <div style={{
+            position: 'absolute', top: 58, right: 16, zIndex: 10,
+            display: 'flex', gap: 4,
+            background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(16px)',
+            borderRadius: 14, padding: 4,
+            boxShadow: '0 4px 24px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.06) inset',
+          }}>
+            {times.map(t => {
+              const isActive = timeOfDay === t.id
+              return (
+                <button
+                  key={t.id}
+                  className="upscape-time-btn"
+                  onClick={() => applyMapView(mapStyle, t.id)}
+                  style={{
+                    width: 50, height: 50, border: 'none', borderRadius: 10,
+                    background: isActive ? `${t.glowColor}14` : 'transparent',
+                    outline: isActive ? `1.5px solid ${t.glowColor}50` : '1.5px solid transparent',
+                    cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', gap: 5,
+                    animation: isActive ? `${t.glowAnim} 2.2s ease-in-out infinite` : 'none',
+                    position: 'relative', overflow: 'hidden',
+                  }}
+                >
+                  {/* Shimmer sweep on hover — CSS handles via pseudo, so we add an inline div */}
+                  {isActive && (
+                    <div style={{
+                      position: 'absolute', inset: 0, borderRadius: 10, pointerEvents: 'none',
+                      background: `radial-gradient(ellipse at 50% 30%, ${t.glowColor}18 0%, transparent 70%)`,
+                    }} />
+                  )}
+                  <div style={{ color: isActive ? t.glowColor : 'rgba(255,255,255,0.38)', transition: 'color 0.25s', position: 'relative' }}>
+                    {t.icon}
+                  </div>
+                  <span style={{
+                    fontSize: 8, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase',
+                    color: isActive ? t.glowColor : 'rgba(255,255,255,0.28)',
+                    transition: 'color 0.25s', position: 'relative',
+                  }}>{t.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        )
+      })()}
 
       {/* locate button */}
       {project?.lat && project?.lng && (
