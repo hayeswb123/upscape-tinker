@@ -1042,47 +1042,29 @@ type DesignZone   = { id:string; type:string; name:string; description:string; x
 type DesignSummary = { totalFixtures:number; totalWattage:number; transformerSize:string; wireEstimate:string; difficulty:string; designNotes:string }
 type DesignAnalysis = { zones:DesignZone[]; summary:DesignSummary }
 
-const AI_TABS = [
-  { id: 'chat',   label: 'Chat',          icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> },
-  { id: 'design', label: 'Design Vision', icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> },
-]
 
 function AISection({ projects }: { projects: Project[] }) {
-  const [tab, setTab] = useState<'chat'|'design'>('chat')
-
   return (
     <div style={{ maxWidth: 1100, height: 'calc(100dvh - 140px)', display: 'flex', flexDirection: 'column', animation: 'fadeUp .3s ease both' }}>
-
-      {/* header */}
-      <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', marginBottom: 18, flexShrink: 0 }}>
-        <div>
-          <h1 style={{ margin:'0 0 3px', fontSize:20, fontWeight:700, letterSpacing:'-0.035em', color:'rgba(255,255,255,0.9)' }}>AI Assistant</h1>
-          <p style={{ margin:0, fontSize:11, color:'rgba(255,255,255,0.22)' }}>Powered by Claude · design guidance, lighting plans, project help</p>
-        </div>
-        {/* tab switcher */}
-        <div style={{ display:'flex', gap:2, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:10, padding:3 }}>
-          {AI_TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id as 'chat'|'design')} style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:7, border:'none', background: tab===t.id ? 'rgba(244,136,74,0.12)' : 'transparent', color: tab===t.id ? '#F4884A' : 'rgba(255,255,255,0.3)', fontSize:11, fontWeight: tab===t.id ? 600 : 400, cursor:'pointer', letterSpacing:'-0.01em', transition:'all .15s', boxShadow: tab===t.id ? '0 0 0 1px rgba(244,136,74,0.2) inset' : 'none' }}>
-              {t.icon}{t.label}
-            </button>
-          ))}
-        </div>
+      <div style={{ marginBottom: 18, flexShrink: 0 }}>
+        <h1 style={{ margin:'0 0 3px', fontSize:20, fontWeight:700, letterSpacing:'-0.035em', color:'rgba(255,255,255,0.9)' }}>AI Assistant</h1>
+        <p style={{ margin:0, fontSize:11, color:'rgba(255,255,255,0.22)' }}>Powered by Claude · design guidance, lighting plans, project help</p>
       </div>
-
-      {tab === 'chat'   && <AIChatPane />}
-      {tab === 'design' && <AIDesignPane projects={projects} />}
+      <AIChatPane projects={projects} />
     </div>
   )
 }
 
-// ── CHAT PANE ─────────────────────────────────────────
-function AIChatPane() {
+// ── CHAT PANE (with inline image attachment) ──────────
+function AIChatPane({ projects }: { projects: Project[] }) {
   const [messages, setMessages] = useState<AIMessage[]>([
-    { role: 'assistant', content: "Hey! I'm your Upscape AI — ask me anything about jobs, products, quotes, lighting design, or running your territory." }
+    { role: 'assistant', content: "Hey! I'm your Upscape AI — ask me anything about jobs, products, quotes, or lighting design. You can also attach a yard photo for a design analysis." }
   ])
-  const [input, setInput]   = useState('')
+  const [input, setInput]     = useState('')
   const [loading, setLoading] = useState(false)
+  const [pendingImg, setPendingImg] = useState<{ b64: string; mime: string; preview: string } | null>(null)
   const bottomRef = React.useRef<HTMLDivElement>(null)
+  const fileRef   = React.useRef<HTMLInputElement>(null)
 
   const QUICK = [
     'How do I size a transformer?',
@@ -1094,24 +1076,58 @@ function AIChatPane() {
 
   React.useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:'smooth' }) }, [messages])
 
+  function handleFile(file: File) {
+    if (!file.type.startsWith('image/')) return
+    const reader = new FileReader()
+    reader.onload = e => {
+      const src = e.target?.result as string
+      const img = new Image()
+      img.onload = () => {
+        const MAX = 1024
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height))
+        const w = Math.round(img.width * scale), h = Math.round(img.height * scale)
+        const canvas = document.createElement('canvas')
+        canvas.width = w; canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+        const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+        const full = canvas.toDataURL(mime)
+        setPendingImg({ b64: full.split(',')[1], mime, preview: full })
+      }
+      img.src = src
+    }
+    reader.readAsDataURL(file)
+  }
+
   async function send(text?: string) {
     const msg = (text || input).trim()
-    if (!msg || loading) return
+    if ((!msg && !pendingImg) || loading) return
     const apiKey = process.env.NEXT_PUBLIC_ANTHROPIC_KEY || ''
     if (!apiKey || apiKey.startsWith('REPLACE')) {
-      setMessages(prev => [...prev, { role:'user', content:msg }, { role:'assistant', content:'⚠️ No API key set. Add NEXT_PUBLIC_ANTHROPIC_KEY to Vercel environment variables.' }])
-      setInput('')
+      setMessages(prev => [...prev, { role:'user', content: msg || '(photo)' }, { role:'assistant', content:'⚠️ No API key set. Add NEXT_PUBLIC_ANTHROPIC_KEY to Vercel environment variables.' }])
+      setInput(''); setPendingImg(null)
       return
     }
-    setInput('')
-    const next: AIMessage[] = [...messages, { role:'user', content:msg }]
+
+    // Build user message content for API
+    const userContent: any[] = []
+    if (pendingImg) userContent.push({ type:'image', source:{ type:'base64', media_type: pendingImg.mime, data: pendingImg.b64 } })
+    if (msg) userContent.push({ type:'text', text: msg })
+    else if (pendingImg) userContent.push({ type:'text', text: 'Please analyse this yard photo and suggest a landscape lighting design.' })
+
+    // Display message (show image thumbnail + text)
+    const displayContent = (pendingImg ? `📷 Photo attached\n` : '') + (msg || '')
+    const next: AIMessage[] = [...messages, { role:'user', content: displayContent.trim() }]
     setMessages(next)
+    setInput(''); setPendingImg(null)
     setLoading(true)
+
     try {
+      const apiMessages: any[] = next.slice(0,-1).map(m => ({ role: m.role, content: m.content }))
+      apiMessages.push({ role:'user', content: userContent })
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method:'POST',
         headers:{ 'Content-Type':'application/json', 'x-api-key':apiKey, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
-        body: JSON.stringify({ model:'claude-haiku-4-5', max_tokens:700, system:UPSCAPE_SYSTEM, messages:next.map(m=>({role:m.role,content:m.content})) }),
+        body: JSON.stringify({ model: pendingImg ? 'claude-opus-4-5' : 'claude-haiku-4-5', max_tokens:900, system:UPSCAPE_SYSTEM, messages: apiMessages }),
       })
       const data = await res.json()
       setMessages(prev => [...prev, { role:'assistant', content: data.content?.[0]?.text || 'Sorry, try again.' }])
@@ -1149,7 +1165,7 @@ function AIChatPane() {
         <div ref={bottomRef} />
       </div>
 
-      {/* quick prompts — shown below thread when fresh */}
+      {/* quick prompts */}
       {messages.length === 1 && (
         <div style={{ display:'flex', gap:6, flexWrap:'wrap', padding:'10px 0 12px', flexShrink:0 }}>
           {QUICK.map(q => (
@@ -1162,15 +1178,29 @@ function AIChatPane() {
         </div>
       )}
 
+      {/* pending image preview */}
+      {pendingImg && (
+        <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'rgba(244,136,74,0.06)', border:'1px solid rgba(244,136,74,0.15)', borderRadius:10, marginBottom:6, flexShrink:0 }}>
+          <img src={pendingImg.preview} alt="" style={{ width:38, height:38, borderRadius:6, objectFit:'cover', flexShrink:0 }} />
+          <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)', flex:1 }}>Photo ready — add a note or send for analysis</span>
+          <button onClick={()=>setPendingImg(null)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.25)', cursor:'pointer', fontSize:16, lineHeight:1, padding:'0 2px' }}>×</button>
+        </div>
+      )}
+
       {/* input bar */}
-      <div style={{ display:'flex', gap:10, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:14, padding:'10px 12px', alignItems:'flex-end', flexShrink:0 }}>
+      <div style={{ display:'flex', gap:8, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:14, padding:'10px 12px', alignItems:'flex-end', flexShrink:0 }}>
+        <input ref={fileRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>{const f=e.target.files?.[0];if(f)handleFile(f);e.target.value=''}} />
+        <button onClick={()=>fileRef.current?.click()} title="Attach photo"
+          style={{ width:32, height:32, borderRadius:8, background: pendingImg ? 'rgba(244,136,74,0.12)' : 'rgba(255,255,255,0.05)', border:`1px solid ${pendingImg?'rgba(244,136,74,0.3)':'rgba(255,255,255,0.08)'}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, transition:'all .15s' }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={pendingImg?'#F4884A':'rgba(255,255,255,0.4)'} strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </button>
         <textarea value={input} onChange={e=>setInput(e.target.value)}
           onKeyDown={e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()} }}
-          placeholder="Ask about design, products, jobs, troubleshooting…"
+          placeholder="Ask about design, products, jobs, or attach a photo…"
           rows={1}
           style={{ flex:1, background:'none', border:'none', outline:'none', resize:'none', color:'rgba(255,255,255,0.82)', fontSize:13, lineHeight:1.5, fontFamily:'inherit', overflowY:'hidden', minHeight:22 }}
           onInput={e=>{ const t=e.currentTarget; t.style.height='auto'; t.style.height=Math.min(t.scrollHeight,120)+'px' }} />
-        <button onClick={()=>send()} disabled={!input.trim()||loading} style={{ background:input.trim()?'linear-gradient(135deg,#F4884A,#df6f28)':'rgba(255,255,255,0.08)', border:'none', borderRadius:9, width:34, height:34, display:'flex', alignItems:'center', justifyContent:'center', cursor:input.trim()?'pointer':'default', flexShrink:0, transition:'background .2s' }}>
+        <button onClick={()=>send()} disabled={(!input.trim()&&!pendingImg)||loading} style={{ background:(input.trim()||pendingImg)?'linear-gradient(135deg,#F4884A,#df6f28)':'rgba(255,255,255,0.08)', border:'none', borderRadius:9, width:34, height:34, display:'flex', alignItems:'center', justifyContent:'center', cursor:(input.trim()||pendingImg)?'pointer':'default', flexShrink:0, transition:'background .2s' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
@@ -1178,8 +1208,9 @@ function AIChatPane() {
   )
 }
 
-// ── DESIGN VISION PANE ────────────────────────────────
-function AIDesignPane({ projects }: { projects: Project[] }) {
+// ── DESIGN VISION PANE (removed — merged into chat) ───
+function AIDesignPane({ projects }: { projects: Project[] }) { return null }
+function _AIDesignPaneOld({ projects }: { projects: Project[] }) {
   const [imageUrl, setImageUrl]     = useState('')
   const [imageB64, setImageB64]     = useState('')
   const [imageMime, setImageMime]   = useState('image/jpeg')
