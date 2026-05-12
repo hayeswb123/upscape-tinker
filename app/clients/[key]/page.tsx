@@ -32,7 +32,7 @@ function NoProjects({ clientName, address, router, L, muted }: { clientName: str
     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', paddingTop:40, paddingBottom:60, animation:'fadeUp .6s ease both' }}>
 
       {/* folder + connection lines + dust */}
-      <div style={{ position:'relative', width:320, height:260, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:4 }}>
+      <div style={{ position:'relative', width:420, height:320, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:4 }}>
 
         {/* SVG connection lines */}
         <svg width="100%" height="100%" style={{ position:'absolute', inset:0, pointerEvents:'none', overflow:'visible' }}>
@@ -66,7 +66,7 @@ function NoProjects({ clientName, address, router, L, muted }: { clientName: str
         {/* folder */}
         <div style={{ animation:'floatFolder 5s ease-in-out infinite', position:'relative', zIndex:1 }}>
           <img src="/empty-folder.png" alt="" style={{
-            width:220, height:'auto', display:'block',
+            width:376, height:'auto', display:'block',
             mixBlendMode:'screen',
             WebkitMaskImage:'linear-gradient(to bottom, black 65%, transparent 100%)',
             maskImage:'linear-gradient(to bottom, black 65%, transparent 100%)',
@@ -295,17 +295,18 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
               <div style={{ width:1, height:40, background:'linear-gradient(to bottom,rgba(255,255,255,0.06),transparent)', marginBottom:32 }} />
               <div style={{ animation:'floatFolder 5s ease-in-out infinite' }}>
                 <img src="/empty-folder.png" alt="" style={{
-                  width:180, height:'auto', display:'block',
+                  width:376, height:'auto', display:'block',
                   mixBlendMode:'screen',
                   WebkitMaskImage:'linear-gradient(to bottom, black 60%, transparent 100%)',
                   maskImage:'linear-gradient(to bottom, black 60%, transparent 100%)',
                 }} />
               </div>
-              <p style={{ margin:'4px 0 0', fontSize:12, color:'rgba(255,255,255,0.14)', letterSpacing:'-0.01em' }}>Ready to add more?</p>
+              <h2 style={{ margin:'0 0 8px', fontSize:22, fontWeight:700, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.82)', textAlign:'center' }}>Add another project</h2>
+              <p style={{ margin:'0 0 24px', fontSize:12, color:'rgba(255,255,255,0.22)', textAlign:'center', lineHeight:1.6, maxWidth:200 }}>Map out a new lighting design for {clientName}.</p>
               <button onClick={() => router.push(`/projects/new?homeowner=${encodeURIComponent(clientName)}&address=${encodeURIComponent(address)}`)}
-                style={{ marginTop:16, display:'flex', alignItems:'center', gap:6, padding:'9px 20px', borderRadius:9, background:'linear-gradient(135deg,#F4884A,#df6f28)', border:'none', color:'#fff', fontSize:12, fontWeight:600, cursor:'pointer', letterSpacing:'-0.01em', boxShadow:'0 0 20px rgba(244,136,74,0.2), 0 4px 12px rgba(0,0,0,0.35)' }}>
+                style={{ display:'flex', alignItems:'center', gap:6, padding:'11px 24px', borderRadius:11, background:'linear-gradient(135deg,#F4884A,#df6f28)', border:'none', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', letterSpacing:'-0.01em', boxShadow:'0 0 24px rgba(244,136,74,0.25), 0 4px 14px rgba(0,0,0,0.35)' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                New project
+                + New project
               </button>
             </div>
           )}
