@@ -6,6 +6,91 @@ import { supabase, type Project } from '@/lib/supabase'
 const STATUS_LABEL: Record<string, string> = { draft: 'Draft', quoted: 'Quoted', approved: 'Approved', installed: 'Installed' }
 const STATUS_COLOR: Record<string, string> = { draft: '#6b7280', quoted: '#F4884A', approved: '#22c55e', installed: '#a78bfa' }
 
+function NoProjects({ clientName, address, router, L, muted }: { clientName: string; address: string; router: any; L: boolean; muted: string }) {
+  const dust = React.useMemo(() => Array.from({ length: 8 }, (_, i) => ({
+    id: i,
+    left: 15 + (i * 43 + i * i * 9) % 70,
+    top:  20 + (i * 59 + i * 7)     % 60,
+    size: 1 + (i % 3) * 0.6,
+    delay: (i * 1.3) % 9,
+    dur:   10 + (i * 1.5) % 7,
+    dx0: ((i * 19) % 36) - 18, dy0: ((i * 13) % 24) - 12,
+    dx1: ((i * 27) % 36) - 18, dy1: ((i * 17) % 24) - 12,
+    op: 0.06 + (i % 3) * 0.04,
+  })), [])
+
+  // glowing connection lines radiating from folder
+  const lines = [
+    { x1:'50%', y1:'50%', x2:'15%',  y2:'20%',  delay:0 },
+    { x1:'50%', y1:'50%', x2:'85%',  y2:'25%',  delay:0.6 },
+    { x1:'50%', y1:'50%', x2:'10%',  y2:'72%',  delay:1.2 },
+    { x1:'50%', y1:'50%', x2:'90%',  y2:'68%',  delay:1.8 },
+    { x1:'50%', y1:'50%', x2:'50%',  y2:'10%',  delay:0.9 },
+  ]
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', paddingTop:40, paddingBottom:60, animation:'fadeUp .6s ease both' }}>
+
+      {/* folder + connection lines + dust */}
+      <div style={{ position:'relative', width:320, height:260, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:4 }}>
+
+        {/* SVG connection lines */}
+        <svg width="100%" height="100%" style={{ position:'absolute', inset:0, pointerEvents:'none', overflow:'visible' }}>
+          {lines.map((l,i) => (
+            <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
+              stroke="rgba(244,136,74,0.5)" strokeWidth="1"
+              strokeDasharray="4 6"
+              style={{ animation:`linePulse 3s ease-in-out ${l.delay}s infinite` }} />
+          ))}
+          {/* small dots at line ends */}
+          {lines.map((l,i) => (
+            <circle key={i} cx={l.x2} cy={l.y2} r="2.5"
+              fill="rgba(244,136,74,0.35)"
+              style={{ animation:`linePulse 3s ease-in-out ${l.delay}s infinite` }} />
+          ))}
+        </svg>
+
+        {/* dust */}
+        {dust.map(p => (
+          <div key={p.id} style={{
+            position:'absolute', left:`${p.left}%`, top:`${p.top}%`,
+            width:p.size, height:p.size, borderRadius:'50%',
+            background:'rgba(244,155,70,1)', pointerEvents:'none',
+            ['--dx0' as any]:`${p.dx0}px`, ['--dy0' as any]:`${p.dy0}px`,
+            ['--dx1' as any]:`${p.dx1}px`, ['--dy1' as any]:`${p.dy1}px`,
+            ['--op' as any]:p.op,
+            animation:`dustFloat ${p.dur}s ease-in-out ${p.delay}s infinite`,
+          }} />
+        ))}
+
+        {/* folder */}
+        <div style={{ animation:'floatFolder 5s ease-in-out infinite', position:'relative', zIndex:1 }}>
+          <img src="/empty-folder.png" alt="" style={{
+            width:220, height:'auto', display:'block',
+            mixBlendMode:'screen',
+            WebkitMaskImage:'linear-gradient(to bottom, black 65%, transparent 100%)',
+            maskImage:'linear-gradient(to bottom, black 65%, transparent 100%)',
+          }} />
+        </div>
+      </div>
+
+      <h2 style={{ margin:'0 0 8px', fontSize:20, fontWeight:700, letterSpacing:'-0.035em', color: L ? '#1a1714' : 'rgba(255,255,255,0.82)', textAlign:'center' }}>
+        Create your first project
+      </h2>
+      <p style={{ margin:'0 0 28px', fontSize:12, color: muted, textAlign:'center', lineHeight:1.6, maxWidth:200 }}>
+        Start designing the lighting system for {clientName}.
+      </p>
+
+      <button className="new-btn"
+        onClick={() => router.push(`/projects/new?homeowner=${encodeURIComponent(clientName)}&address=${encodeURIComponent(address)}`)}
+        style={{ background:'linear-gradient(135deg,#F4884A,#df6f28)', border:'none', borderRadius:11, color:'#fff', fontWeight:600, fontSize:13, padding:'12px 26px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:7, boxShadow:'0 0 24px rgba(244,136,74,0.28), 0 4px 14px rgba(0,0,0,0.35)', letterSpacing:'-0.01em' }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        New project
+      </button>
+    </div>
+  )
+}
+
 function UpscapeMark({ size = 36 }: { size?: number }) {
   return <img src="/upscape-logo-mark.png" alt="Upscape" width={size} height={size} style={{ objectFit: 'contain', display: 'block' }} />
 }
@@ -85,8 +170,11 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
   return (
     <div style={{ background: bg, minHeight: '100dvh', color: txt }}>
       <style>{`
-        @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes spin   { to{transform:rotate(360deg)} }
+        @keyframes fadeUp      { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes spin        { to{transform:rotate(360deg)} }
+        @keyframes floatFolder { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-3px)} }
+        @keyframes dustFloat   { 0%{transform:translate(var(--dx0),var(--dy0));opacity:0} 15%{opacity:var(--op)} 85%{opacity:var(--op)} 100%{transform:translate(var(--dx1),var(--dy1));opacity:0} }
+        @keyframes linePulse   { 0%,100%{opacity:.07} 50%{opacity:.18} }
         .client-dash-card { transition: transform .2s cubic-bezier(.22,1,.36,1), box-shadow .2s ease, border-color .2s ease; }
         .client-dash-card:hover { transform: translateY(-1px); }
         .upscape-light .client-dash-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 1.5px rgba(244,136,74,.4) !important; border-color: rgba(244,136,74,.35) !important; }
@@ -132,18 +220,7 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
           )}
 
           {!loading && projects.length === 0 && (
-            <div style={{ textAlign: 'center', paddingTop: 80 }}>
-              <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(244,136,74,0.07)', border: '1px solid rgba(244,136,74,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.6)" strokeWidth="1.5"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-              </div>
-              <p style={{ fontSize: 15, fontWeight: 600, color: L ? '#2a2420' : 'rgba(255,255,255,0.6)', margin: '0 0 6px', letterSpacing: '-0.02em' }}>No projects yet</p>
-              <p style={{ fontSize: 12, color: muted, margin: '0 0 24px' }}>Create the first project for {clientName}.</p>
-              <button className="new-btn" onClick={() => router.push(`/projects/new?homeowner=${encodeURIComponent(clientName)}&address=${encodeURIComponent(address)}`)}
-                style={{ background: 'linear-gradient(135deg,#F4884A,#df6f28)', border: 'none', borderRadius: 10, color: '#fff', fontWeight: 600, fontSize: 13, padding: '11px 22px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 2px 12px rgba(244,136,74,0.3)' }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
-                New project
-              </button>
-            </div>
+            <NoProjects clientName={clientName} address={address} router={router} L={L} muted={muted} />
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
