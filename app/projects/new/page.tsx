@@ -63,7 +63,7 @@ function NewProjectForm() {
     }).select().single()
     setSaving(false)
     if (error) { alert('Error: ' + error.message); return }
-    if (data) router.replace(`/projects/${data.id}/map`)
+    if (data) router.replace(`/clients/${encodeURIComponent(data.homeowner || data.name || data.id)}`)
   }
 
   return (

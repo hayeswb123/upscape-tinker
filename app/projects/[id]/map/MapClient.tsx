@@ -146,16 +146,27 @@ export default function MapClient({ projectId }: { projectId: string }) {
   useEffect(() => { zoneRef.current = zonePoints }, [zonePoints])
   useEffect(() => { zoneColorRef.current = zoneColor }, [zoneColor])
 
-  // Ghost cursor — scoped to the Mapbox canvas element only
+  // Ghost cursor — scoped to the Mapbox canvas element only.
+  // We calculate position relative to the map container via getBoundingClientRect
+  // so the ghost center lands exactly where the cursor (and marker) will appear,
+  // regardless of page layout, browser chrome, sidebar width, or devicePixelRatio.
   useEffect(() => {
     const isFixture = tool !== 'select' && tool !== 'wire' && tool !== 'zone'
     if (!isFixture) { setGhostPos(null); return }
 
-    // Use the canvas directly so UI overlays (toolbar, topbar) never trigger it
     function getCanvas() { return mapDiv.current?.querySelector('canvas') as HTMLCanvasElement | null }
 
     function onMove(e: MouseEvent) {
-      setGhostPos({ x: e.clientX, y: e.clientY })
+      const container = mapDiv.current
+      if (!container) return
+      const rect = container.getBoundingClientRect()
+      // Subtract container origin so coordinates are local to the map div.
+      // Also account for any CSS scale transform on the container.
+      const scaleX = rect.width  / (container.offsetWidth  || rect.width)
+      const scaleY = rect.height / (container.offsetHeight || rect.height)
+      const x = (e.clientX - rect.left) / scaleX
+      const y = (e.clientY - rect.top)  / scaleY
+      setGhostPos({ x, y })
     }
     function onLeave() { setGhostPos(null) }
 
@@ -556,10 +567,11 @@ export default function MapClient({ projectId }: { projectId: string }) {
         </div>
       )}
 
-      {/* ghost cursor overlay — lives outside the Mapbox container */}
+      {/* ghost cursor overlay — absolute within the map container so coordinates
+          match the getBoundingClientRect-relative values we computed above */}
       {ghostPos && tool !== 'select' && tool !== 'wire' && (
         <div style={{
-          position: 'fixed', pointerEvents: 'none', zIndex: 15,
+          position: 'absolute', pointerEvents: 'none', zIndex: 15,
           left: ghostPos.x, top: ghostPos.y,
           transform: 'translate(-50%, -50%)',
         }}>
