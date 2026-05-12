@@ -119,6 +119,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const [tool, setTool] = useState<ToolId>('select')
   const [hoveredTool, setHoveredTool] = useState<string | null>(null)
   const [accentColor] = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_accent') || '#F4884A') : '#F4884A')
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   // Fixture photo thumbnails — loaded from localStorage, live-updated via storage events
   const FIXTURE_TOOL_IDS = ['uplight', 'path', 'flood', 'well', 'power']
@@ -676,26 +677,26 @@ export default function MapClient({ projectId }: { projectId: string }) {
           <div style={{ fontWeight: 500, fontSize: 13, letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'rgba(255,255,255,0.92)' }}>{project?.homeowner || project?.name}</div>
           <div style={{ color: 'rgba(255,255,255,0.38)', fontSize: 10, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 2 }}>{project?.address}</div>
         </div>
-        {/* Map Style toggle — Satellite / Terrain */}
-        <div style={{ display: 'flex', gap: 2, background: 'rgba(0,0,0,0.42)', backdropFilter: 'blur(12px)', borderRadius: 8, padding: 3, boxShadow: '0 2px 12px rgba(0,0,0,0.3)', flexShrink: 0 }}>
-          {([{ id: 'satellite', icon: '◉', label: 'Sat' }, { id: 'terrain', icon: '⬡', label: '3D' }] as const).map(opt => {
-            const isActive = mapStyle === opt.id
-            return (
-              <button key={opt.id} className="upscape-style-btn"
-                title={opt.label}
-                onClick={() => applyMapView(opt.id, timeOfDay)}
-                style={{
-                  background: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
-                  border: 'none', borderRadius: 6,
-                  color: isActive ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.35)',
-                  fontSize: 14, cursor: 'pointer', width: 28, height: 28,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.18s', opacity: isActive ? 1 : 0.6,
-                }}
-              >{opt.icon}</button>
-            )
-          })}
-        </div>
+        {/* Settings button */}
+        <button
+          onClick={() => setSettingsOpen(v => !v)}
+          title="Map settings"
+          style={{
+            background: settingsOpen ? 'rgba(244,136,74,0.18)' : 'rgba(0,0,0,0.42)',
+            backdropFilter: 'blur(12px)',
+            border: settingsOpen ? '1.5px solid rgba(244,136,74,0.5)' : '1.5px solid transparent',
+            borderRadius: 8, color: settingsOpen ? '#F4884A' : 'rgba(255,255,255,0.6)',
+            cursor: 'pointer', width: 34, height: 34, flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+            transition: 'all 0.18s',
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
         <button className="upscape-quote" onClick={() => router.push(`/projects/${projectId}/quote`)} style={{
           background: '#F4884A', border: 'none', borderRadius: 8,
           color: 'rgba(255,255,255,0.92)', fontWeight: 500, fontSize: 12,
@@ -705,8 +706,8 @@ export default function MapClient({ projectId }: { projectId: string }) {
         }}>Quote →</button>
       </header>
 
-      {/* Cinematic Time of Day selector */}
-      {(() => {
+      {/* Settings panel */}
+      {settingsOpen && (() => {
         // Mountain silhouette path — used in every card
         const MtnPath = ({ fill }: { fill: string }) => (
           <svg width="100%" height="28" viewBox="0 0 80 28" preserveAspectRatio="none" style={{ display: 'block' }}>
@@ -791,85 +792,101 @@ export default function MapClient({ projectId }: { projectId: string }) {
         ]
 
         return (
-          <div style={{
-            position: 'absolute', top: 58, right: 16, zIndex: 10,
-            display: 'flex', gap: 5,
-            background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(18px)',
-            borderRadius: 16, padding: 5,
-            boxShadow: '0 6px 28px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.07) inset',
-          }}>
-            {times.map(t => {
-              const isActive = timeOfDay === t.id
-              return (
-                <button
-                  key={t.id}
-                  className="upscape-time-btn"
-                  onClick={() => applyMapView(mapStyle, t.id)}
-                  style={{
-                    width: 72, height: 58, padding: 0, border: 'none', borderRadius: 11,
-                    cursor: 'pointer', position: 'relative', overflow: 'hidden',
-                    outline: isActive ? '2px solid #F4884A' : '2px solid transparent',
-                    outlineOffset: '-2px',
-                    boxShadow: isActive ? '0 0 14px rgba(244,136,74,0.5)' : 'none',
-                    transition: 'outline-color 0.2s, box-shadow 0.2s, transform 0.15s',
-                  }}
-                >
-                  {/* Sky gradient background */}
-                  <div style={{ position: 'absolute', inset: 0, background: t.skyGrad }} />
+          <>
+            {/* Tap-outside backdrop */}
+            <div onClick={() => setSettingsOpen(false)} style={{ position: 'absolute', inset: 0, zIndex: 19 }} />
 
-                  {/* Subtle noise/grain overlay */}
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    background: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 80 58\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'80\' height=\'58\' filter=\'url(%23n)\' opacity=\'0.06\'/%3E%3C/svg%3E")',
-                    opacity: 0.5,
-                  }} />
+            {/* Settings panel */}
+            <div style={{
+              position: 'absolute', top: 58, right: 16, zIndex: 20,
+              background: 'rgba(10,10,14,0.92)', backdropFilter: 'blur(20px)',
+              borderRadius: 18, padding: '14px 14px 12px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.07) inset',
+              minWidth: 320,
+            }}>
 
-                  {/* Icon — centered in upper portion */}
-                  <div style={{
-                    position: 'absolute', top: 6, left: 0, right: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))',
-                  }}>
-                    {t.icon}
-                  </div>
+              {/* Map Style row */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 7 }}>Map Style</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {([{ id: 'satellite' as const, icon: '◉', label: 'Satellite' }, { id: 'terrain' as const, icon: '⬡', label: 'Terrain' }]).map(opt => {
+                    const isActive = mapStyle === opt.id
+                    return (
+                      <button key={opt.id} onClick={() => applyMapView(opt.id, timeOfDay)} style={{
+                        flex: 1, height: 34, border: 'none', borderRadius: 9,
+                        background: isActive ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)',
+                        outline: isActive ? '1.5px solid rgba(255,255,255,0.25)' : '1.5px solid transparent',
+                        color: isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)',
+                        fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        transition: 'all 0.18s',
+                      }}>
+                        <span style={{ fontSize: 14 }}>{opt.icon}</span>
+                        {opt.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
 
-                  {/* Mountain silhouette at bottom */}
-                  <div style={{ position: 'absolute', bottom: 14, left: 0, right: 0 }}>
-                    <MtnPath fill={t.mtFill} />
-                  </div>
+              {/* Divider */}
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', marginBottom: 12 }} />
 
-                  {/* Dark gradient at very bottom for label readability */}
-                  <div style={{
-                    position: 'absolute', bottom: 0, left: 0, right: 0, height: 20,
-                    background: 'linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 100%)',
-                  }} />
-
-                  {/* Label */}
-                  <span style={{
-                    position: 'absolute', bottom: 4, left: 0, right: 0, textAlign: 'center',
-                    fontSize: 8.5, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase',
-                    color: 'rgba(255,255,255,0.88)',
-                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
-                  }}>{t.label}</span>
-
-                  {/* Selected checkmark badge */}
-                  {isActive && (
-                    <div style={{
-                      position: 'absolute', top: 4, right: 4,
-                      width: 16, height: 16, borderRadius: '50%',
-                      background: '#F4884A',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
-                    }}>
-                      <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-                        <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                  )}
-                </button>
-              )
-            })}
-          </div>
+              {/* Time of Day row */}
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 7 }}>Time of Day</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {times.map(t => {
+                    const isActive = timeOfDay === t.id
+                    return (
+                      <button
+                        key={t.id}
+                        className="upscape-time-btn"
+                        onClick={() => { applyMapView(mapStyle, t.id); setSettingsOpen(false) }}
+                        style={{
+                          flex: 1, height: 64, padding: 0, border: 'none', borderRadius: 11,
+                          cursor: 'pointer', position: 'relative', overflow: 'hidden',
+                          outline: isActive ? '2px solid #F4884A' : '2px solid transparent',
+                          outlineOffset: '-2px',
+                          boxShadow: isActive ? '0 0 12px rgba(244,136,74,0.45)' : 'none',
+                          transition: 'outline-color 0.2s, box-shadow 0.2s, transform 0.15s',
+                        }}
+                      >
+                        <div style={{ position: 'absolute', inset: 0, background: t.skyGrad }} />
+                        <div style={{
+                          position: 'absolute', top: 7, left: 0, right: 0,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.7))',
+                        }}>{t.icon}</div>
+                        <div style={{ position: 'absolute', bottom: 14, left: 0, right: 0 }}>
+                          <MtnPath fill={t.mtFill} />
+                        </div>
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 22, background: 'linear-gradient(0deg, rgba(0,0,0,0.72) 0%, transparent 100%)' }} />
+                        <span style={{
+                          position: 'absolute', bottom: 4, left: 0, right: 0, textAlign: 'center',
+                          fontSize: 8.5, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase',
+                          color: 'rgba(255,255,255,0.88)', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+                        }}>{t.label}</span>
+                        {isActive && (
+                          <div style={{
+                            position: 'absolute', top: 4, right: 4,
+                            width: 15, height: 15, borderRadius: '50%',
+                            background: '#F4884A',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
+                          }}>
+                            <svg width="8" height="8" viewBox="0 0 10 10" fill="none">
+                              <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </div>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          </>
         )
       })()}
 
