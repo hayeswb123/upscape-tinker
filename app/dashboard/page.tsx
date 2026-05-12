@@ -602,8 +602,8 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
         </div>
       )}
 
-      {/* empty state — glowing folder, fills remaining space */}
-      {!loading && clientCount === 0 && <EmptyState onNew={() => router.push('/projects/new')} hasClients={false} />}
+      {/* glowing folder — always shown below cards, fills remaining space */}
+      {!loading && <EmptyState onNew={() => router.push('/projects/new')} hasClients={clientCount > 0} />}
     </div>
   )
 }
@@ -638,47 +638,41 @@ function QuotesSection({ projects, router, fmt }: any) {
 }
 
 // ── EMPTY STATE ───────────────────────────────────────
-function EmptyState({ onNew }: { onNew: () => void; hasClients?: boolean }) {
+function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boolean }) {
   return (
     <div style={{
-      flex: 1,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingTop: 60,
-      paddingBottom: 60,
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      paddingTop: hasClients ? 60 : 40, paddingBottom: 60,
       animation: 'emptyFadeIn 1s cubic-bezier(.16,1,.3,1) both',
-      animationDelay: '0.2s',
+      animationDelay: hasClients ? '0.15s' : '0.3s',
       position: 'relative',
     }}>
-      {/* wide floor glow */}
-      <div style={{ position:'absolute', bottom:'30%', left:'50%', transform:'translateX(-50%)', width:560, height:80, borderRadius:'50%', background:'radial-gradient(ellipse, rgba(244,136,74,0.14) 0%, transparent 70%)', filter:'blur(24px)', pointerEvents:'none', animation:'glowPulse 5s ease-in-out infinite' }} />
+      {/* faint separator when cards are above */}
+      {hasClients && (
+        <div style={{ width:'100%', height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent)', marginBottom:64 }} />
+      )}
 
-      {/* folder — the image already has its own built-in orange glow */}
-      <div style={{ animation:'float 7s ease-in-out infinite', position:'relative', marginBottom:40 }}>
-        <img
-          src="/empty-folder.png"
-          alt="No clients yet"
-          style={{
-            width: 240,
-            height: 'auto',
-            display: 'block',
-          }}
-        />
+      {/* wide floor glow */}
+      <div style={{ position:'absolute', bottom:'28%', left:'50%', transform:'translateX(-50%)', width:500, height:70, borderRadius:'50%', background:'radial-gradient(ellipse,rgba(244,136,74,0.13) 0%,transparent 70%)', filter:'blur(22px)', pointerEvents:'none', animation:'glowPulse 5s ease-in-out infinite' }} />
+
+      {/* folder */}
+      <div style={{ animation:'float 7s ease-in-out infinite', position:'relative', marginBottom:38 }}>
+        <img src="/empty-folder.png" alt="" style={{ width:220, height:'auto', display:'block' }} />
       </div>
 
-      <h2 style={{ margin:'0 0 10px', fontSize:26, fontWeight:700, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.82)', textAlign:'center', lineHeight:1.1 }}>
-        No clients yet
+      <h2 style={{ margin:'0 0 10px', fontSize:24, fontWeight:700, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.82)', textAlign:'center', lineHeight:1.1 }}>
+        {hasClients ? 'Ready to add more?' : 'No clients yet'}
       </h2>
-      <p style={{ margin:'0 0 34px', fontSize:13, color:'rgba(255,255,255,0.22)', textAlign:'center', letterSpacing:'-0.01em', lineHeight:1.7, maxWidth:220 }}>
-        Add your first client to begin designing their lighting system.
+      <p style={{ margin:'0 0 32px', fontSize:13, color:'rgba(255,255,255,0.22)', textAlign:'center', letterSpacing:'-0.01em', lineHeight:1.7, maxWidth:230 }}>
+        {hasClients
+          ? 'Create a new client and start designing their landscape lighting.'
+          : 'Add your first client to begin designing their lighting system.'}
       </p>
 
       <button onClick={onNew}
         style={{ display:'flex', alignItems:'center', gap:8, padding:'12px 28px', borderRadius:11, background:'linear-gradient(135deg,#F4884A,#d96520)', border:'none', color:'#fff', fontSize:13, fontWeight:600, letterSpacing:'-0.01em', cursor:'pointer', boxShadow:'0 0 28px rgba(244,136,74,0.3), 0 4px 18px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.14) inset', transition:'transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform='translateY(-2px) scale(1.02)'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 48px rgba(244,136,74,0.45), 0 8px 28px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.18) inset' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform='none'; (e.currentTarget as HTMLElement).style.boxShadow='0 0 28px rgba(244,136,74,0.3), 0 4px 18px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.14) inset' }}
+        onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform='translateY(-2px) scale(1.02)';(e.currentTarget as HTMLElement).style.boxShadow='0 0 48px rgba(244,136,74,0.45),0 8px 28px rgba(0,0,0,0.45),0 1px 0 rgba(255,255,255,0.18) inset'}}
+        onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform='none';(e.currentTarget as HTMLElement).style.boxShadow='0 0 28px rgba(244,136,74,0.3),0 4px 18px rgba(0,0,0,0.4),0 1px 0 rgba(255,255,255,0.14) inset'}}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
         New client
