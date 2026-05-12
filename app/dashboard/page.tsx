@@ -142,6 +142,10 @@ export default function DashboardPage() {
         @keyframes drift3 { 0%{transform:translate(0,0) scale(1);opacity:.5} 50%{transform:translate(-6px,-20px) scale(.5);opacity:.2} 100%{transform:translate(8px,-32px) scale(.2);opacity:0} }
         @keyframes bgDrift { 0%,100%{transform:translate(0,0)} 33%{transform:translate(20px,-10px)} 66%{transform:translate(-12px,14px)} }
         @keyframes emptyFadeIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes shimmerMove { 0%{transform:translateX(-100%)} 100%{transform:translateX(200%)} }
+        @keyframes genPulse    { 0%,100%{box-shadow:0 0 0 0 rgba(244,136,74,0),0 0 24px rgba(244,136,74,0.12)} 50%{box-shadow:0 0 0 4px rgba(244,136,74,0.08),0 0 40px rgba(244,136,74,0.22)} }
+        @keyframes meshDrift   { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(12px,-8px) scale(1.04)} 66%{transform:translate(-8px,10px) scale(.97)} }
+        @keyframes genFadeIn   { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
         @keyframes fogDrift { 0%{transform:translateX(-18%) scaleY(1)} 50%{transform:translateX(18%) scaleY(1.07)} 100%{transform:translateX(-18%) scaleY(1)} }
         @keyframes floatFolder { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-3px)} }
         @keyframes folderGlow { 0%,100%{opacity:.55;transform:translateX(-50%) scaleX(1)} 50%{opacity:.8;transform:translateX(-50%) scaleX(1.12)} }
@@ -1027,7 +1031,7 @@ const STYLE_GLOW: Record<string,{color:string;opacity:number}> = {
   'high-contrast':  { color: '#ff6000', opacity: 0.95 },
 }
 
-type AIMessage    = { role: 'user' | 'assistant'; content: string; imageUrl?: string }
+type AIMessage    = { role: 'user' | 'assistant'; content: string; imageUrl?: string; attachPreview?: string }
 type DesignZone   = { id:string; type:string; name:string; description:string; x:number; y:number; radius:number; qty:number; wattage:number }
 type DesignSummary = { totalFixtures:number; totalWattage:number; transformerSize:string; wireEstimate:string; difficulty:string; designNotes:string }
 type DesignAnalysis = { zones:DesignZone[]; summary:DesignSummary }
@@ -1052,6 +1056,8 @@ function AIChatPane({ projects }: { projects: Project[] }) {
   ])
   const [input, setInput]     = useState('')
   const [loading, setLoading] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [genStage, setGenStage] = useState('')
   const [pendingImg, setPendingImg] = useState<{ b64: string; mime: string; preview: string } | null>(null)
   const bottomRef = React.useRef<HTMLDivElement>(null)
   const fileRef   = React.useRef<HTMLInputElement>(null)
@@ -1098,13 +1104,14 @@ function AIChatPane({ projects }: { projects: Project[] }) {
     if (pendingImg) {
       const snap = pendingImg
       setPendingImg(null)
-      const displayMsg = msg ? `📷 ${msg}` : '📷 Generate a lighting visualization for this yard'
-      setMessages(prev => [...prev, { role:'user', content: displayMsg }])
+      const displayMsg = msg || 'Generate a lighting visualization for this yard'
+      setMessages(prev => [...prev, { role:'user', content: displayMsg, attachPreview: snap.preview }])
 
       const claudeKey = process.env.NEXT_PUBLIC_ANTHROPIC_KEY || ''
       const openaiKey = process.env.NEXT_PUBLIC_OPENAI_KEY || ''
 
       try {
+        setIsGenerating(true); setGenStage('Reading your yard…')
         // Step 1: Claude reads the photo and writes a DALL-E prompt
         const visionRes = await fetch('https://api.anthropic.com/v1/messages', {
           method:'POST',
@@ -1122,6 +1129,7 @@ function AIChatPane({ projects }: { projects: Project[] }) {
         const dallePrompt = (promptMatch && promptMatch[1]) ? promptMatch[1].trim() : `Photorealistic nighttime rendering of a residential yard with professional warm amber landscape lighting — uplights on trees, path lights along walkways, accent lights on architecture. Cinematic, high-end residential photography.`
 
         // Step 2: DALL-E 3 generates the visualization
+        setGenStage('Generating lighting visualization…')
         const imgRes = await fetch('https://api.openai.com/v1/images/generations', {
           method:'POST',
           headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${openaiKey}` },
@@ -1130,11 +1138,17 @@ function AIChatPane({ projects }: { projects: Project[] }) {
         const imgData = await imgRes.json()
         const imageUrl = imgData.data?.[0]?.url
         if (imageUrl) {
-          setMessages(prev => [...prev, { role:'assistant', content:'Here\'s your lighting visualization:', imageUrl }])
+          setGenStage('Rendering…')
+          setTimeout(() => {
+            setIsGenerating(false); setGenStage('')
+            setMessages(prev => [...prev, { role:'assistant', content:'Here\'s your lighting visualization:', imageUrl }])
+          }, 400)
         } else {
+          setIsGenerating(false); setGenStage('')
           setMessages(prev => [...prev, { role:'assistant', content:'Image generation failed — ' + (imgData.error?.message || 'unknown error') }])
         }
       } catch(e: any) {
+        setIsGenerating(false); setGenStage('')
         setMessages(prev => [...prev, { role:'assistant', content:'Error: ' + e.message }])
       }
       setLoading(false)
@@ -1176,19 +1190,65 @@ function AIChatPane({ projects }: { projects: Project[] }) {
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F4884A" strokeWidth="1.8"><path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-4 4H8a4 4 0 01-4-4v-1H3a3 3 0 01-3-3V10a3 3 0 013-3h1V6a4 4 0 014-4h4z" strokeLinejoin="round"/><circle cx="9" cy="11" r="1" fill="#F4884A" stroke="none"/><circle cx="15" cy="11" r="1" fill="#F4884A" stroke="none"/></svg>
               </div>
             )}
-            <div style={{ maxWidth:'78%', background: m.role==='user'?'linear-gradient(135deg,#F4884A,#df6f28)':'rgba(255,255,255,0.05)', border: m.role==='assistant'?'1px solid rgba(255,255,255,0.08)':'none', borderRadius: m.role==='user'?'14px 14px 4px 14px':'14px 14px 14px 4px', padding: m.imageUrl ? '10px 10px 6px' : '11px 14px', fontSize:13, lineHeight:1.6, color: m.role==='user'?'#fff':'rgba(255,255,255,0.82)', whiteSpace:'pre-wrap' }}>
+            <div style={{ maxWidth:'78%', background: m.role==='user'?'linear-gradient(135deg,#F4884A,#df6f28)':'rgba(255,255,255,0.05)', border: m.role==='assistant'?'1px solid rgba(255,255,255,0.08)':'none', borderRadius: m.role==='user'?'14px 14px 4px 14px':'14px 14px 14px 4px', padding: (m.imageUrl || m.attachPreview) ? '8px 8px 6px' : '11px 14px', fontSize:13, lineHeight:1.6, color: m.role==='user'?'#fff':'rgba(255,255,255,0.82)', whiteSpace:'pre-wrap', overflow:'hidden' }}>
+                {/* user attached photo preview */}
+                {m.attachPreview && (
+                  <img src={m.attachPreview} alt="" style={{ display:'block', width:'100%', maxWidth:220, borderRadius:8, marginBottom: m.content ? 7 : 0, objectFit:'cover' }} />
+                )}
                 {m.content}
-                {m.imageUrl && <img src={m.imageUrl} alt="lighting visualization" style={{ display:'block', width:'100%', borderRadius:10, marginTop:8, border:'1px solid rgba(255,255,255,0.08)' }} />}
+                {/* generated image with fade-in */}
+                {m.imageUrl && <img src={m.imageUrl} alt="lighting visualization" style={{ display:'block', width:'100%', borderRadius:10, marginTop:8, border:'1px solid rgba(255,255,255,0.1)', animation:'genFadeIn .6s cubic-bezier(.16,1,.3,1) both' }} />}
               </div>
           </div>
         ))}
-        {loading && (
+        {loading && !isGenerating && (
           <div style={{ display:'flex', justifyContent:'flex-start', alignItems:'flex-end', gap:8 }}>
             <div style={{ width:26, height:26, borderRadius:8, background:'rgba(244,136,74,0.1)', border:'1px solid rgba(244,136,74,0.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F4884A" strokeWidth="1.8"><path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-4 4H8a4 4 0 01-4-4v-1H3a3 3 0 01-3-3V10a3 3 0 013-3h1V6a4 4 0 014-4h4z" strokeLinejoin="round"/><circle cx="9" cy="11" r="1" fill="#F4884A" stroke="none"/><circle cx="15" cy="11" r="1" fill="#F4884A" stroke="none"/></svg>
             </div>
             <div style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'14px 14px 14px 4px', padding:'12px 16px', display:'flex', gap:5, alignItems:'center' }}>
               {[0,1,2].map(j=><div key={j} style={{ width:6,height:6,borderRadius:'50%',background:'rgba(244,136,74,0.6)',animation:`ambientPulse 1.2s ease-in-out ${j*.2}s infinite` }} />)}
+            </div>
+          </div>
+        )}
+
+        {/* ── CINEMATIC IMAGE GENERATION LOADER ── */}
+        {isGenerating && (
+          <div style={{ display:'flex', justifyContent:'flex-start', alignItems:'flex-end', gap:8 }}>
+            <div style={{ width:26, height:26, borderRadius:8, background:'rgba(244,136,74,0.1)', border:'1px solid rgba(244,136,74,0.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F4884A" strokeWidth="1.8"><path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-4 4H8a4 4 0 01-4-4v-1H3a3 3 0 01-3-3V10a3 3 0 013-3h1V6a4 4 0 014-4h4z" strokeLinejoin="round"/><circle cx="9" cy="11" r="1" fill="#F4884A" stroke="none"/><circle cx="15" cy="11" r="1" fill="#F4884A" stroke="none"/></svg>
+            </div>
+            {/* canvas */}
+            <div style={{ width:280, borderRadius:'14px 14px 14px 4px', overflow:'hidden', border:'1px solid rgba(244,136,74,0.15)', animation:'genPulse 2.4s ease-in-out infinite', background:'#0c0a08', position:'relative' }}>
+              {/* mesh gradient bg */}
+              <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse 80% 60% at 30% 40%, rgba(244,136,74,0.12) 0%, transparent 65%), radial-gradient(ellipse 60% 50% at 70% 70%, rgba(180,60,10,0.09) 0%, transparent 60%)', animation:'meshDrift 6s ease-in-out infinite', pointerEvents:'none' }} />
+              {/* shimmer sweep */}
+              <div style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
+                <div style={{ position:'absolute', top:0, bottom:0, width:'40%', background:'linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)', animation:'shimmerMove 1.8s ease-in-out infinite' }} />
+              </div>
+              {/* fake image rows */}
+              <div style={{ padding:'16px 16px 14px', display:'flex', flexDirection:'column', gap:8, position:'relative', zIndex:1 }}>
+                <div style={{ height:110, borderRadius:8, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.05)', overflow:'hidden', position:'relative' }}>
+                  <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(244,136,74,0.06), rgba(180,60,10,0.03), transparent)', animation:'meshDrift 8s ease-in-out infinite reverse' }} />
+                  <div style={{ position:'absolute', inset:0, overflow:'hidden' }}>
+                    <div style={{ position:'absolute', top:0, bottom:0, width:'60%', background:'linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)', animation:'shimmerMove 2.2s ease-in-out .3s infinite' }} />
+                  </div>
+                </div>
+                <div style={{ display:'flex', gap:6 }}>
+                  <div style={{ flex:1, height:6, borderRadius:4, background:'rgba(255,255,255,0.06)', overflow:'hidden', position:'relative' }}>
+                    <div style={{ position:'absolute', inset:0, background:'linear-gradient(90deg, transparent, rgba(244,136,74,0.2), transparent)', animation:'shimmerMove 1.6s ease-in-out infinite' }} />
+                  </div>
+                  <div style={{ width:'30%', height:6, borderRadius:4, background:'rgba(255,255,255,0.04)' }} />
+                </div>
+                <div style={{ height:4, borderRadius:4, background:'rgba(255,255,255,0.04)', overflow:'hidden', position:'relative' }}>
+                  <div style={{ position:'absolute', inset:0, background:'linear-gradient(90deg, transparent, rgba(244,136,74,0.15), transparent)', animation:'shimmerMove 1.4s ease-in-out .2s infinite' }} />
+                </div>
+              </div>
+              {/* stage label */}
+              <div style={{ padding:'0 16px 14px', display:'flex', alignItems:'center', gap:7, position:'relative', zIndex:1 }}>
+                <div style={{ width:5, height:5, borderRadius:'50%', background:'#F4884A', animation:'ambientPulse 1s ease-in-out infinite', flexShrink:0 }} />
+                <span style={{ fontSize:11, color:'rgba(244,136,74,0.7)', letterSpacing:'-0.01em', animation:'ambientPulse 2s ease-in-out infinite' }}>{genStage}</span>
+              </div>
             </div>
           </div>
         )}
