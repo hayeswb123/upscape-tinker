@@ -13,23 +13,15 @@ function UpscapeMark({ size = 36 }: { size?: number }) {
 
 type Section = 'projects' | 'products' | 'gallery' | 'ai' | 'settings'
 
-const NAV = [
+// Main nav items (top section)
+const NAV_MAIN = [
   {
     id: 'projects' as Section,
     label: 'Projects',
     icon: (active: boolean) => (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.8 : 1.5}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.9 : 1.5}>
         <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
         <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'products' as Section,
-    label: 'Products',
-    icon: (active: boolean) => (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.8 : 1.5}>
-        <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
       </svg>
     ),
   },
@@ -37,9 +29,18 @@ const NAV = [
     id: 'gallery' as Section,
     label: 'Gallery',
     icon: (active: boolean) => (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.8 : 1.5}>
-        <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-        <polyline points="21 15 16 10 5 21"/>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.9 : 1.5}>
+        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'products' as Section,
+    label: 'Products',
+    icon: (active: boolean) => (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.9 : 1.5}>
+        <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
       </svg>
     ),
   },
@@ -47,23 +48,29 @@ const NAV = [
     id: 'ai' as Section,
     label: 'AI Assistant',
     icon: (active: boolean) => (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.8 : 1.5}>
-        <path d="M12 2a9 9 0 019 9c0 4.97-4.03 9-9 9a9 9 0 01-9-9 9 9 0 019-9z"/>
-        <path d="M8 12s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.9 : 1.5}>
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
       </svg>
     ),
   },
+]
+
+// Manage nav items (pinned bottom section)
+const NAV_MANAGE = [
   {
     id: 'settings' as Section,
     label: 'Settings',
     icon: (active: boolean) => (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.8 : 1.5}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.9 : 1.5}>
         <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
         <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
       </svg>
     ),
   },
 ]
+
+// combined for breadcrumb lookup
+const NAV = [...NAV_MAIN, ...NAV_MANAGE]
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -225,56 +232,64 @@ export default function DashboardPage() {
 
       {/* ── SIDEBAR ── */}
       <aside style={{
-        width: 220, flexShrink: 0,
+        width: 196, flexShrink: 0,
         display: 'flex', flexDirection: 'column',
-        background: L ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.022)',
-        backdropFilter: 'blur(24px)',
-        borderRight: L ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.055)',
-        boxShadow: L ? '1px 0 0 rgba(0,0,0,0.04), 4px 0 16px rgba(0,0,0,.08)' : '1px 0 0 rgba(244,136,74,0.04), 4px 0 24px rgba(0,0,0,.25)',
+        background: L ? 'rgba(255,255,255,0.6)' : 'rgba(12,10,8,0.55)',
+        backdropFilter: 'blur(32px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+        borderRight: L ? '1px solid rgba(0,0,0,0.07)' : '1px solid rgba(255,255,255,0.06)',
+        boxShadow: L ? '1px 0 0 rgba(0,0,0,0.03), 4px 0 20px rgba(0,0,0,.07)' : '1px 0 0 rgba(244,136,74,0.05), 4px 0 28px rgba(0,0,0,.35)',
         transition: 'background .3s, border-color .3s',
       }}>
         {/* logo */}
-        <div style={{ padding: '18px 16px 14px', borderBottom: L ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.04)' }}>
+        <div style={{ padding: '16px 14px 13px', borderBottom: L ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.04)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <img src="/upscape-logo-mark.png" alt="" width={26} height={26} style={{ objectFit: 'contain', flexShrink: 0 }} />
+            <img src="/upscape-logo-mark.png" alt="" width={24} height={24} style={{ objectFit: 'contain', flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', color: L ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.88)', lineHeight: 1 }}>UPSCAPE</div>
-              <div style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.22)', marginTop: 3 }}>Field Designer</div>
+              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.05em', color: L ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.88)', lineHeight: 1 }}>UPSCAPE</div>
+              <div style={{ fontSize: 9, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.28)' : 'rgba(255,255,255,0.2)', marginTop: 3 }}>Field Designer</div>
             </div>
           </div>
         </div>
 
-        {/* nav */}
-        <nav style={{ flex: 1, padding: '10px 10px', display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
-          {NAV.map(item => {
-            const active = section === item.id
-            return (
-              <button
-                key={item.id}
-                className="nav-item"
-                onClick={() => setSection(item.id)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '9px 12px', borderRadius: 9, border: 'none',
-                  cursor: 'pointer', textAlign: 'left', width: '100%',
-                  background: active ? 'rgba(244,136,74,0.1)' : 'transparent',
-                  color: active ? (L ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.92)') : (L ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.38)'),
-                  fontSize: 13, fontWeight: active ? 500 : 400,
-                  letterSpacing: '-0.01em',
-                  boxShadow: active ? '0 0 0 1px rgba(244,136,74,0.18) inset, 0 0 12px rgba(244,136,74,0.06)' : 'none',
-                  position: 'relative',
-                }}
-              >
-                {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:20,borderRadius:2,background:'rgba(244,136,74,0.8)',boxShadow:'0 0 8px rgba(244,136,74,0.5)' }} />}
-                <span style={{ color: active ? 'rgba(244,136,74,0.9)' : 'rgba(255,255,255,0.3)', flexShrink: 0 }}>{item.icon(active)}</span>
-                {item.label}
-              </button>
-            )
-          })}
+        {/* nav — flex column, main items grow, manage pinned at bottom */}
+        <nav style={{ flex: 1, padding: '10px 8px 10px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+          {/* MAIN group */}
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.2)', padding: '2px 10px 6px' }}>Main</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {NAV_MAIN.map(item => {
+              const active = section === item.id
+              return (
+                <button key={item.id} className="nav-item" onClick={() => setSection(item.id)} style={{ display:'flex',alignItems:'center',gap:9, padding:'8px 10px',borderRadius:8,border:'none',cursor:'pointer',textAlign:'left',width:'100%', background:active?'rgba(244,136,74,0.1)':'transparent', color:active?(L?'rgba(0,0,0,0.85)':'rgba(255,255,255,0.92)'):(L?'rgba(0,0,0,0.42)':'rgba(255,255,255,0.36)'), fontSize:12.5,fontWeight:active?500:400,letterSpacing:'-0.01em', boxShadow:active?'0 0 0 1px rgba(244,136,74,0.16) inset':'none',position:'relative' }}>
+                  {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:18,borderRadius:2,background:'rgba(244,136,74,0.85)',boxShadow:'0 0 8px rgba(244,136,74,0.5)' }} />}
+                  <span style={{ color:active?'rgba(244,136,74,0.9)':(L?'rgba(0,0,0,0.3)':'rgba(255,255,255,0.28)'),flexShrink:0 }}>{item.icon(active)}</span>
+                  {item.label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* spacer pushes MANAGE to bottom */}
+          <div style={{ flex: 1 }} />
+
+          {/* MANAGE group */}
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: L ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.2)', padding: '2px 10px 6px' }}>Manage</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {NAV_MANAGE.map(item => {
+              const active = section === item.id
+              return (
+                <button key={item.id} className="nav-item" onClick={() => setSection(item.id)} style={{ display:'flex',alignItems:'center',gap:9, padding:'8px 10px',borderRadius:8,border:'none',cursor:'pointer',textAlign:'left',width:'100%', background:active?'rgba(244,136,74,0.1)':'transparent', color:active?(L?'rgba(0,0,0,0.85)':'rgba(255,255,255,0.92)'):(L?'rgba(0,0,0,0.42)':'rgba(255,255,255,0.36)'), fontSize:12.5,fontWeight:active?500:400,letterSpacing:'-0.01em', boxShadow:active?'0 0 0 1px rgba(244,136,74,0.16) inset':'none',position:'relative' }}>
+                  {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:18,borderRadius:2,background:'rgba(244,136,74,0.85)',boxShadow:'0 0 8px rgba(244,136,74,0.5)' }} />}
+                  <span style={{ color:active?'rgba(244,136,74,0.9)':(L?'rgba(0,0,0,0.3)':'rgba(255,255,255,0.28)'),flexShrink:0 }}>{item.icon(active)}</span>
+                  {item.label}
+                </button>
+              )
+            })}
+          </div>
         </nav>
 
         {/* profile at bottom */}
-        <div style={{ padding: '12px 10px 16px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+        <div style={{ padding: '10px 8px 14px', borderTop: L ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.04)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}>
             <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#F4884A,#c0520a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0, boxShadow: '0 0 8px rgba(244,136,74,0.3)' }}>{initials}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
