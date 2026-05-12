@@ -633,8 +633,8 @@ function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boo
 
         {/* Layer 1: animated grain texture */}
         <div style={{
-          position:'absolute', inset:0, borderRadius:20, overflow:'hidden', pointerEvents:'none', zIndex:1,
-          opacity: 0.18,
+          position:'absolute', inset:0, pointerEvents:'none', zIndex:1,
+          opacity: 0.12,
         }}>
           <svg width="100%" height="100%" style={{ position:'absolute', inset:0, animation:'grainAnim 0.18s steps(1) infinite' }}>
             <filter id="grain-es"><feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="4" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
@@ -698,7 +698,7 @@ function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boo
 
         {/* Folder — gentle float */}
         <div style={{ animation:'floatFolder 4s ease-in-out infinite', position:'relative', zIndex:5 }}>
-          <img src="/empty-folder.png" alt="" style={{ width:200, height:'auto', display:'block', filter:'drop-shadow(0 0 22px rgba(244,136,74,0.35))' }} />
+          <img src="/empty-folder.png" alt="" style={{ width:340, height:'auto', display:'block' }} />
         </div>
       </div>
 
