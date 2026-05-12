@@ -600,6 +600,18 @@ function QuotesSection({ projects, router, fmt }: any) {
 
 // ── EMPTY STATE ───────────────────────────────────────
 function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boolean }) {
+  const dust = React.useMemo(() => Array.from({ length: 8 }, (_, i) => ({
+    id: i,
+    left: 15 + (i * 43 + i * i * 9) % 70,
+    top:  20 + (i * 59 + i * 7)     % 60,
+    size: 1 + (i % 3) * 0.6,
+    delay: (i * 1.3) % 9,
+    dur:   10 + (i * 1.5) % 7,
+    dx0: ((i * 19) % 36) - 18, dy0: ((i * 13) % 24) - 12,
+    dx1: ((i * 27) % 36) - 18, dy1: ((i * 17) % 24) - 12,
+    op: 0.06 + (i % 3) * 0.04,
+  })), [])
+
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -612,9 +624,35 @@ function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boo
         <div style={{ width:'100%', height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent)', marginBottom:64 }} />
       )}
 
-      {/* Folder — just the object, screen blend removes black bg */}
-      <div style={{ animation:'floatFolder 5s ease-in-out infinite', marginBottom:8 }}>
-        <img src="/empty-folder.png" alt="" style={{ width:320, height:'auto', display:'block', mixBlendMode:'screen' }} />
+      {/* Folder + subtle dust — overflow visible so particles can drift outside */}
+      <div style={{ position:'relative', width:376, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:2 }}>
+
+        {/* Expanded glow halo — just slightly larger than the object's own glow */}
+        <div style={{
+          position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)',
+          width:440, height:260,
+          background:'radial-gradient(ellipse 55% 45% at 50% 58%, rgba(244,136,74,0.06) 0%, transparent 100%)',
+          filter:'blur(28px)', pointerEvents:'none',
+          animation:'folderGlow 5s ease-in-out infinite',
+        }} />
+
+        {/* Dust particles — very faint, drift freely */}
+        {dust.map(p => (
+          <div key={p.id} style={{
+            position:'absolute', left:`${p.left}%`, top:`${p.top}%`,
+            width:p.size, height:p.size, borderRadius:'50%',
+            background:'rgba(244,155,70,1)', pointerEvents:'none',
+            ['--dx0' as any]:`${p.dx0}px`, ['--dy0' as any]:`${p.dy0}px`,
+            ['--dx1' as any]:`${p.dx1}px`, ['--dy1' as any]:`${p.dy1}px`,
+            ['--op' as any]:p.op,
+            animation:`dustFloat ${p.dur}s ease-in-out ${p.delay}s infinite`,
+          }} />
+        ))}
+
+        {/* Folder */}
+        <div style={{ animation:'floatFolder 5s ease-in-out infinite', position:'relative', zIndex:1 }}>
+          <img src="/empty-folder.png" alt="" style={{ width:376, height:'auto', display:'block', mixBlendMode:'screen' }} />
+        </div>
       </div>
 
       <h2 style={{ margin:'0 0 10px', fontSize:24, fontWeight:700, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.82)', textAlign:'center', lineHeight:1.1 }}>
