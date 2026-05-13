@@ -1132,7 +1132,7 @@ function AIChatPane({ projects }: { projects: Project[] }) {
         setGenStage('Applying lighting to your yard…')
         const formData = new FormData()
         formData.append('model', 'gpt-image-1')
-        formData.append('image[]', file)
+        formData.append('image', file)
         formData.append('prompt', editPrompt)
         formData.append('n', '1')
         formData.append('size', '1024x1024')
