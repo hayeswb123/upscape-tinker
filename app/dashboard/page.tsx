@@ -489,7 +489,7 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
   const clientCount = clientMap.size
 
   return (
-    <div style={{ maxWidth: 900, animation: 'fadeUp .3s ease both' }}>
+    <div style={{ maxWidth: 900, margin: '0 auto', animation: 'fadeUp .3s ease both' }}>
 
       {/* header */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
@@ -622,7 +622,7 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
 function QuotesSection({ projects, router, fmt }: any) {
   const quoted = projects.filter((p: Project) => ['quoted','approved'].includes(p.status))
   return (
-    <div style={{ maxWidth: 900, animation: 'fadeUp .3s ease both' }}>
+    <div style={{ maxWidth: 900, margin: '0 auto', animation: 'fadeUp .3s ease both' }}>
       <h1 style={{ margin:'0 0 6px',fontSize:22,fontWeight:700,letterSpacing:'-0.03em',color:'rgba(255,255,255,0.92)' }}>Quotes</h1>
       <p style={{ margin:'0 0 22px',fontSize:12,color:'rgba(255,255,255,0.25)' }}>Proposals, approvals, and pricing</p>
       {quoted.length === 0 ? (
@@ -921,7 +921,7 @@ function InstallSection({ projects }: any) {
     { label:'Install Report',       icon:'▤', desc:'Completed installation PDF' },
   ]
   return (
-    <div style={{ maxWidth: 900, animation:'fadeUp .3s ease both' }}>
+    <div style={{ maxWidth: 900, margin: '0 auto', animation:'fadeUp .3s ease both' }}>
       <h1 style={{ margin:'0 0 6px',fontSize:22,fontWeight:700,letterSpacing:'-0.03em',color:'rgba(255,255,255,0.92)' }}>Install</h1>
       <p style={{ margin:'0 0 22px',fontSize:12,color:'rgba(255,255,255,0.25)' }}>Field tools for installation day</p>
       <div style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:8,marginBottom:20 }}>
