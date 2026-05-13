@@ -1668,6 +1668,8 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
   const [active, setActive]         = useState('general')
   const [mapStyle, setMapStyle]     = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_style') || 'satellite') : 'satellite')
   const [mapTime, setMapTime]       = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_time') || 'day') : 'day')
+  const [accentColor, setAccentColorState] = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_accent') || '#F4884A') : '#F4884A')
+  function pickAccent(c: string) { setAccentColorState(c); localStorage.setItem('upscape_accent', c) }
   const [animations, setAnimations] = useState(true)
   const [quoteAlerts, setQuoteAlerts]     = useState(true)
   const [projectUpdates, setProjectUpdates] = useState(true)
@@ -1844,6 +1846,25 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
             </div>
           ))}
 
+          {row('Accent color','System highlight color used throughout the app.',(
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+              {['#F4884A','#3b82f6','#22c55e','#a855f7','#ef4444','#ec4899','#f59e0b','#06b6d4'].map(c => (
+                <button key={c} onClick={() => pickAccent(c)} style={{
+                  width:22, height:22, borderRadius:'50%', background:c, border:'none',
+                  cursor:'pointer', flexShrink:0, padding:0,
+                  outline: accentColor === c ? `2.5px solid ${c}` : '2.5px solid transparent',
+                  outlineOffset: 2,
+                  boxShadow: accentColor === c ? `0 0 8px ${c}88` : 'none',
+                  transition:'all .15s',
+                }} />
+              ))}
+              {/* custom color input */}
+              <label style={{ position:'relative', width:22, height:22, borderRadius:'50%', cursor:'pointer', flexShrink:0, overflow:'hidden', border:`2px solid ${L?'rgba(0,0,0,0.15)':'rgba(255,255,255,0.15)'}`, display:'flex', alignItems:'center', justifyContent:'center', background: L?'rgba(0,0,0,0.05)':'rgba(255,255,255,0.07)' }} title="Custom color">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={L?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.4)'} strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <input type="color" value={accentColor} onChange={e => pickAccent(e.target.value)} style={{ position:'absolute', inset:0, opacity:0, width:'100%', height:'100%', cursor:'pointer', border:'none', padding:0 }} />
+              </label>
+            </div>
+          ))}
           {row('Animations','Enable interface animations and transitions.',T(animations,()=>setAnimations(v=>!v)),true)}
         </>)}
 
