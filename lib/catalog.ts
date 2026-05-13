@@ -116,23 +116,25 @@ export function calcQuote(project: { markers: Array<{ type: string; qty: number 
       labor += fix.laborEach * qty
     }
 
-    // Transformer: auto-size by wattage for AMP, fixed for others
+    // Transformer: only add if transformer markers were placed on the map
     const powerMarkers = (project.markers || []).filter(m => m.type === 'power')
-    const numTransformers = powerMarkers.reduce((s, m) => s + (m.qty || 1), 0) || 1
+    const numTransformers = powerMarkers.reduce((s, m) => s + (m.qty || 1), 0)
 
-    if (tierId === 'premium') {
-      const xfmr = AMP_TRANSFORMERS.find(t => t.maxW >= totalWatts / numTransformers) || AMP_TRANSFORMERS[AMP_TRANSFORMERS.length - 1]
-      const total = xfmr.price * numTransformers
-      lines.push({ label: `Transformer – ${xfmr.name}`, qty: numTransformers, unitPrice: xfmr.price, total, sku: xfmr.sku, url: xfmr.url })
-      fixtures += total
-      labor += FIXTURES.power.laborEach * numTransformers
-    } else {
-      const t = FIXTURES.power.tiers[tierId]
-      const qty = numTransformers
-      const total = t.price * qty
-      lines.push({ label: `Transformer – ${t.name}`, qty, unitPrice: t.price, total, sku: t.sku, url: t.url })
-      fixtures += total
-      labor += FIXTURES.power.laborEach * qty
+    if (numTransformers > 0) {
+      if (tierId === 'premium') {
+        const xfmr = AMP_TRANSFORMERS.find(t => t.maxW >= totalWatts / numTransformers) || AMP_TRANSFORMERS[AMP_TRANSFORMERS.length - 1]
+        const total = xfmr.price * numTransformers
+        lines.push({ label: `Transformer – ${xfmr.name}`, qty: numTransformers, unitPrice: xfmr.price, total, sku: xfmr.sku, url: xfmr.url })
+        fixtures += total
+        labor += FIXTURES.power.laborEach * numTransformers
+      } else {
+        const t = FIXTURES.power.tiers[tierId]
+        const qty = numTransformers
+        const total = t.price * qty
+        lines.push({ label: `Transformer – ${t.name}`, qty, unitPrice: t.price, total, sku: t.sku, url: t.url })
+        fixtures += total
+        labor += FIXTURES.power.laborEach * qty
+      }
     }
 
     const wire = wireFeet * WIRE_COST_PER_FOOT[tierId]
