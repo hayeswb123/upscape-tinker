@@ -4,6 +4,13 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { supabase, type Project } from '@/lib/supabase'
 
+
+function hexToRgbStr(hex: string): string {
+  const h = hex.replace('#','')
+  const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16)
+  return `${r},${g},${b}`
+}
+
 const STATUS_LABEL: Record<string, string> = { draft: 'Draft', quoted: 'Quoted', approved: 'Approved', installed: 'Installed' }
 const STATUS_COLOR: Record<string, string> = { draft: '#6b7280', quoted: '#F4884A', approved: '#22c55e', installed: '#a78bfa' }
 
@@ -83,6 +90,8 @@ export default function DashboardPage() {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState('')
   const [lightMode, setLightMode] = useState(() => typeof window !== 'undefined' ? localStorage.getItem('upscape_theme') === 'light' : false)
+  const [accentColor, setAccentColor] = useState<string>(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_accent') || '#F4884A') : '#F4884A')
+  function pickAccent(c: string) { setAccentColor(c); localStorage.setItem('upscape_accent', c) }
 
   function toggleTheme() {
     setLightMode(v => {
@@ -129,8 +138,9 @@ export default function DashboardPage() {
   const approvedCount  = projects.filter(p => p.status === 'approved').length
   const installedCount = projects.filter(p => p.status === 'installed').length
 
+  const accentRgb = hexToRgbStr(accentColor)
   return (
-    <div className={L ? 'upscape-light' : 'upscape-dark'} style={{ display: 'flex', height: '100dvh', background: L ? '#ede9e3' : 'linear-gradient(145deg,#060504 0%,#0a0906 60%,#080604 100%)', overflow: 'hidden', transition: 'background .3s' }}>
+    <div className={L ? 'upscape-light' : 'upscape-dark'} style={{ display: 'flex', height: '100dvh', background: L ? '#ede9e3' : 'linear-gradient(145deg,#060504 0%,#0a0906 60%,#080604 100%)', overflow: 'hidden', transition: 'background .3s', ['--accent' as any]: accentColor, ['--accent-rgb' as any]: hexToRgbStr(accentColor) }}>
       <style>{`
         @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         @keyframes spin   { to{transform:rotate(360deg)} }
@@ -143,7 +153,7 @@ export default function DashboardPage() {
         @keyframes bgDrift { 0%,100%{transform:translate(0,0)} 33%{transform:translate(20px,-10px)} 66%{transform:translate(-12px,14px)} }
         @keyframes emptyFadeIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
         @keyframes shimmerMove { 0%{transform:translateX(-100%)} 100%{transform:translateX(200%)} }
-        @keyframes genPulse    { 0%,100%{box-shadow:0 0 0 0 rgba(244,136,74,0),0 0 24px rgba(244,136,74,0.12)} 50%{box-shadow:0 0 0 4px rgba(244,136,74,0.08),0 0 40px rgba(244,136,74,0.22)} }
+        @keyframes genPulse    { 0%,100%{box-shadow:0 0 0 0 rgba(${accentRgb},0),0 0 24px rgba(${accentRgb},0.12)} 50%{box-shadow:0 0 0 4px rgba(${accentRgb},0.08),0 0 40px rgba(${accentRgb},0.22)} }
         @keyframes meshDrift   { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(12px,-8px) scale(1.04)} 66%{transform:translate(-8px,10px) scale(.97)} }
         @keyframes genFadeIn   { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
         @keyframes fogDrift { 0%{transform:translateX(-18%) scaleY(1)} 50%{transform:translateX(18%) scaleY(1.07)} 100%{transform:translateX(-18%) scaleY(1)} }
@@ -157,12 +167,12 @@ export default function DashboardPage() {
         .nav-item { transition: background .18s ease, color .18s ease; }
         .nav-item:hover { background: rgba(255,255,255,0.05) !important; }
         .dash-card { transition: transform .2s cubic-bezier(.22,1,.36,1), box-shadow .2s ease, border-color .2s ease; animation: fadeUp .35s ease both; }
-        .dash-card:hover { transform: translateY(-1px); box-shadow: 0 6px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(244,136,74,.16) !important; border-color: rgba(244,136,74,.2) !important; }
+        .dash-card:hover { transform: translateY(-1px); box-shadow: 0 6px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(${accentRgb},.16) !important; border-color: rgba(${accentRgb},.2) !important; }
         .dash-card:hover .card-arrow { transform: translateX(3px); opacity: .9 !important; }
         .dash-card:hover .card-name  { color: rgba(255,255,255,.98) !important; }
         .card-arrow { transition: transform .18s ease, opacity .18s ease; }
         .new-btn { transition: box-shadow .2s ease, transform .18s ease; }
-        .new-btn:hover { transform: translateY(-1px); box-shadow: 0 0 20px rgba(244,136,74,.35), 0 4px 14px rgba(0,0,0,.4) !important; }
+        .new-btn:hover { transform: translateY(-1px); box-shadow: 0 0 20px rgba(${accentRgb},.35), 0 4px 14px rgba(0,0,0,.4) !important; }
         .sidebar-logo:hover { opacity: 1 !important; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -195,8 +205,8 @@ export default function DashboardPage() {
         .upscape-light .dash-card:hover,
         .upscape-light .client-header:hover {
           transform: translateY(-1px);
-          box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 1.5px rgba(244,136,74,.4) !important;
-          border-color: rgba(244,136,74,.35) !important;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 1.5px rgba(${accentRgb},.4) !important;
+          border-color: rgba(${accentRgb},.35) !important;
         }
         .upscape-light .dash-card:hover .card-name,
         .upscape-light .client-header:hover .card-name { color: #1a1714 !important; }
@@ -235,12 +245,12 @@ export default function DashboardPage() {
         .upscape-light ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); }
 
         /* new project button stays orange */
-        .upscape-light .new-btn:hover { box-shadow: 0 0 20px rgba(244,136,74,.4), 0 4px 12px rgba(0,0,0,.15) !important; }
+        .upscape-light .new-btn:hover { box-shadow: 0 0 20px rgba(${accentRgb},.4), 0 4px 12px rgba(0,0,0,.15) !important; }
       `}</style>
 
       {/* ambient glows — scale with ambientGlow (0–100) */}
-      <div style={{ position:'fixed',top:-80,left:60,width:340,height:200,borderRadius:'50%',background:`radial-gradient(ellipse,rgba(244,136,74,${(ambientGlow/100)*0.14}) 0%,transparent 70%)`,pointerEvents:'none',animation:'ambientPulse 7s ease-in-out infinite',transition:'opacity .4s' }} />
-      <div style={{ position:'fixed',bottom:0,left:180,width:300,height:300,borderRadius:'50%',background:`radial-gradient(ellipse,rgba(244,136,74,${(ambientGlow/100)*0.07}) 0%,transparent 70%)`,pointerEvents:'none',transition:'opacity .4s' }} />
+      <div style={{ position:'fixed',top:-80,left:60,width:340,height:200,borderRadius:'50%',background:`radial-gradient(ellipse,rgba(var(--accent-rgb),${(ambientGlow/100)*0.14}) 0%,transparent 70%)`,pointerEvents:'none',animation:'ambientPulse 7s ease-in-out infinite',transition:'opacity .4s' }} />
+      <div style={{ position:'fixed',bottom:0,left:180,width:300,height:300,borderRadius:'50%',background:`radial-gradient(ellipse,rgba(var(--accent-rgb),${(ambientGlow/100)*0.07}) 0%,transparent 70%)`,pointerEvents:'none',transition:'opacity .4s' }} />
 
       {/* ── SIDEBAR ── */}
       <aside style={{
@@ -250,7 +260,7 @@ export default function DashboardPage() {
         backdropFilter: 'blur(32px) saturate(180%)',
         WebkitBackdropFilter: 'blur(32px) saturate(180%)',
         borderRight: L ? '1px solid rgba(0,0,0,0.07)' : '1px solid rgba(255,255,255,0.06)',
-        boxShadow: L ? '1px 0 0 rgba(0,0,0,0.03), 4px 0 24px rgba(0,0,0,.07)' : '1px 0 0 rgba(244,136,74,0.05), 4px 0 32px rgba(0,0,0,.38)',
+        boxShadow: L ? '1px 0 0 rgba(0,0,0,0.03), 4px 0 24px rgba(0,0,0,.07)' : '1px 0 0 rgba(var(--accent-rgb),0.05), 4px 0 32px rgba(0,0,0,.38)',
         transition: 'background .3s, border-color .3s',
       }}>
         {/* logo */}
@@ -272,9 +282,9 @@ export default function DashboardPage() {
             {NAV_MAIN.map(item => {
               const active = section === item.id
               return (
-                <button key={item.id} className="nav-item" onClick={() => setSection(item.id)} style={{ display:'flex',alignItems:'center',gap:8, padding:'8px 10px',borderRadius:8,border:'none',cursor:'pointer',textAlign:'left',width:'100%', background:active?'rgba(244,136,74,0.1)':'transparent', color:active?(L?'rgba(0,0,0,0.85)':'rgba(255,255,255,0.92)'):(L?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.36)'), fontSize:12,fontWeight:active?500:400,letterSpacing:'-0.01em', boxShadow:active?'0 0 0 1px rgba(244,136,74,0.14) inset':'none',position:'relative' }}>
-                  {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:18,borderRadius:2,background:'rgba(244,136,74,0.85)',boxShadow:'0 0 8px rgba(244,136,74,0.5)' }} />}
-                  <span style={{ color:active?'rgba(244,136,74,0.9)':(L?'rgba(0,0,0,0.28)':'rgba(255,255,255,0.26)'),flexShrink:0 }}>{item.icon(active)}</span>
+                <button key={item.id} className="nav-item" onClick={() => setSection(item.id)} style={{ display:'flex',alignItems:'center',gap:8, padding:'8px 10px',borderRadius:8,border:'none',cursor:'pointer',textAlign:'left',width:'100%', background:active?'rgba(var(--accent-rgb),0.1)':'transparent', color:active?(L?'rgba(0,0,0,0.85)':'rgba(255,255,255,0.92)'):(L?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.36)'), fontSize:12,fontWeight:active?500:400,letterSpacing:'-0.01em', boxShadow:active?'0 0 0 1px rgba(var(--accent-rgb),0.14) inset':'none',position:'relative' }}>
+                  {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:18,borderRadius:2,background:'rgba(var(--accent-rgb),0.85)',boxShadow:'0 0 8px rgba(var(--accent-rgb),0.5)' }} />}
+                  <span style={{ color:active?'rgba(var(--accent-rgb),0.9)':(L?'rgba(0,0,0,0.28)':'rgba(255,255,255,0.26)'),flexShrink:0 }}>{item.icon(active)}</span>
                   {item.label}
                 </button>
               )
@@ -290,9 +300,9 @@ export default function DashboardPage() {
             {NAV_MANAGE.map(item => {
               const active = section === item.id
               return (
-                <button key={item.id} className="nav-item" onClick={() => setSection(item.id)} style={{ display:'flex',alignItems:'center',gap:8, padding:'8px 10px',borderRadius:8,border:'none',cursor:'pointer',textAlign:'left',width:'100%', background:active?'rgba(244,136,74,0.1)':'transparent', color:active?(L?'rgba(0,0,0,0.85)':'rgba(255,255,255,0.92)'):(L?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.36)'), fontSize:12,fontWeight:active?500:400,letterSpacing:'-0.01em', boxShadow:active?'0 0 0 1px rgba(244,136,74,0.14) inset':'none',position:'relative' }}>
-                  {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:18,borderRadius:2,background:'rgba(244,136,74,0.85)',boxShadow:'0 0 8px rgba(244,136,74,0.5)' }} />}
-                  <span style={{ color:active?'rgba(244,136,74,0.9)':(L?'rgba(0,0,0,0.28)':'rgba(255,255,255,0.26)'),flexShrink:0 }}>{item.icon(active)}</span>
+                <button key={item.id} className="nav-item" onClick={() => setSection(item.id)} style={{ display:'flex',alignItems:'center',gap:8, padding:'8px 10px',borderRadius:8,border:'none',cursor:'pointer',textAlign:'left',width:'100%', background:active?'rgba(var(--accent-rgb),0.1)':'transparent', color:active?(L?'rgba(0,0,0,0.85)':'rgba(255,255,255,0.92)'):(L?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.36)'), fontSize:12,fontWeight:active?500:400,letterSpacing:'-0.01em', boxShadow:active?'0 0 0 1px rgba(var(--accent-rgb),0.14) inset':'none',position:'relative' }}>
+                  {active && <div style={{ position:'absolute',left:0,top:'50%',transform:'translateY(-50%)',width:2.5,height:18,borderRadius:2,background:'rgba(var(--accent-rgb),0.85)',boxShadow:'0 0 8px rgba(var(--accent-rgb),0.5)' }} />}
+                  <span style={{ color:active?'rgba(var(--accent-rgb),0.9)':(L?'rgba(0,0,0,0.28)':'rgba(255,255,255,0.26)'),flexShrink:0 }}>{item.icon(active)}</span>
                   {item.label}
                 </button>
               )
@@ -303,7 +313,7 @@ export default function DashboardPage() {
         {/* profile at bottom */}
         <div style={{ padding: '10px 8px 14px', borderTop: L ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255,255,255,0.04)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 9, background: L ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)', border: L ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.06)', cursor: 'pointer' }}>
-            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#F4884A,#c0520a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0, boxShadow: '0 0 8px rgba(244,136,74,0.3)' }}>{initials}</div>
+            <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,var(--accent),#c0520a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0, boxShadow: '0 0 8px rgba(var(--accent-rgb),0.3)' }}>{initials}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 11, fontWeight: 500, color: L ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.65)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail || 'Designer'}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
@@ -335,7 +345,7 @@ export default function DashboardPage() {
           padding: '0 24px', gap: 14,
           background: L ? 'rgba(255,255,255,0.8)' : 'rgba(8,7,6,0.6)', backdropFilter: 'blur(20px)',
           borderBottom: L ? '1px solid rgba(0,0,0,0.07)' : '1px solid rgba(255,255,255,0.05)',
-          boxShadow: '0 1px 0 rgba(244,136,74,0.04)',
+          boxShadow: '0 1px 0 rgba(var(--accent-rgb),0.04)',
           transition: 'background .3s',
         }}>
           {/* breadcrumb */}
@@ -362,7 +372,7 @@ export default function DashboardPage() {
           {section === 'products' && <ProductsSection />}
           {section === 'gallery' && <GallerySection />}
           {section === 'ai' && <AISection projects={projects} />}
-          {section === 'settings' && <SettingsSection userEmail={userEmail} logout={logout} lightMode={L} toggleTheme={toggleTheme} ambientGlow={ambientGlow} setAmbientGlow={(v: number) => { setAmbientGlow(v); localStorage.setItem('upscape_glow', String(v)) }}  />}
+          {section === 'settings' && <SettingsSection userEmail={userEmail} logout={logout} lightMode={L} toggleTheme={toggleTheme} ambientGlow={ambientGlow} setAmbientGlow={(v: number) => { setAmbientGlow(v); localStorage.setItem('upscape_glow', String(v)) }} accentColor={accentColor} pickAccent={pickAccent} />}
         </main>
       </div>
     </div>
@@ -393,7 +403,7 @@ function AvatarMenu({ initials, userEmail, logout, lightMode }: { initials: stri
       <div style={{ background: '#111111', borderRadius: 14, overflow: 'hidden' }}>
             {/* header */}
             <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#F4884A,#c0520a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{initials}</div>
+              <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,var(--accent),#c0520a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{initials}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)', letterSpacing: '-0.02em' }}>UI Designer</div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -440,7 +450,7 @@ function AvatarMenu({ initials, userEmail, logout, lightMode }: { initials: stri
     <div ref={ref} style={{ position: 'relative' }}>
       <div onClick={() => setOpen(v => !v)}
         style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 10px 5px 5px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', userSelect: 'none' }}>
-        <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#F4884A,#c0520a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', boxShadow: '0 0 6px rgba(244,136,74,0.25)' }}>{initials}</div>
+        <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,var(--accent),#c0520a)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', boxShadow: '0 0 6px rgba(var(--accent-rgb),0.25)' }}>{initials}</div>
         <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', letterSpacing: '-0.01em', maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Designer</span>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}><path d="M6 9l6 6 6-6"/></svg>
       </div>
@@ -478,7 +488,7 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
           </p>
         </div>
         <button className="new-btn" onClick={() => router.push('/projects/new')}
-          style={{ background:'linear-gradient(135deg,#F4884A,#df6f28)', border:'none', borderRadius:8, color:'#fff', fontWeight:600, fontSize:11, padding:'7px 14px', cursor:'pointer', display:'flex', alignItems:'center', gap:5, letterSpacing:'-0.01em', boxShadow:'0 0 18px rgba(244,136,74,0.28), 0 2px 8px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.1) inset', flexShrink:0 }}>
+          style={{ background:'linear-gradient(135deg,var(--accent),#df6f28)', border:'none', borderRadius:8, color:'#fff', fontWeight:600, fontSize:11, padding:'7px 14px', cursor:'pointer', display:'flex', alignItems:'center', gap:5, letterSpacing:'-0.01em', boxShadow:'0 0 18px rgba(var(--accent-rgb),0.28), 0 2px 8px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.1) inset', flexShrink:0 }}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
           New client
         </button>
@@ -487,7 +497,7 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
       {/* loading */}
       {loading && (
         <div style={{ display:'flex', alignItems:'center', gap:10, padding:'20px 0', color:'rgba(255,255,255,0.2)', fontSize:12 }}>
-          <div style={{ width:16,height:16,border:'1.5px solid rgba(244,136,74,0.2)',borderTopColor:'#F4884A',borderRadius:'50%',animation:'spin .8s linear infinite',flexShrink:0 }} />
+          <div style={{ width:16,height:16,border:'1.5px solid rgba(var(--accent-rgb),0.2)',borderTopColor:'var(--accent)',borderRadius:'50%',animation:'spin .8s linear infinite',flexShrink:0 }} />
           Loading…
         </div>
       )}
@@ -511,10 +521,10 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
                 style={{
                   position: 'relative', overflow: 'hidden',
                   background: isHov ? 'rgba(255,255,255,0.038)' : 'rgba(255,255,255,0.022)',
-                  border: `1px solid ${isHov ? 'rgba(244,136,74,0.2)' : 'rgba(255,255,255,0.065)'}`,
+                  border: `1px solid ${isHov ? 'rgba(var(--accent-rgb),0.2)' : 'rgba(255,255,255,0.065)'}`,
                   borderRadius: 14, padding: '16px 18px',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14,
-                  boxShadow: isHov ? '0 0 0 1px rgba(244,136,74,0.08) inset, 0 8px 32px rgba(0,0,0,0.4), 0 0 40px rgba(244,136,74,0.06)' : '0 2px 14px rgba(0,0,0,0.28)',
+                  boxShadow: isHov ? '0 0 0 1px rgba(var(--accent-rgb),0.08) inset, 0 8px 32px rgba(0,0,0,0.4), 0 0 40px rgba(var(--accent-rgb),0.06)' : '0 2px 14px rgba(0,0,0,0.28)',
                   transform: isHov ? 'translateY(-2px)' : 'translateY(0)',
                   transition: 'all .22s cubic-bezier(.4,0,.2,1)',
                   animation: 'fadeUp .3s ease both', animationDelay: `${ci * 0.06}s`,
@@ -526,12 +536,12 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
                 {/* initials avatar */}
                 <div style={{
                   width:44, height:44, borderRadius:11, flexShrink:0, marginLeft:8,
-                  background: isHov ? 'linear-gradient(135deg,rgba(244,136,74,0.28),rgba(244,136,74,0.1))' : 'linear-gradient(135deg,rgba(244,136,74,0.16),rgba(244,136,74,0.05))',
-                  border: `1px solid ${isHov ? 'rgba(244,136,74,0.35)' : 'rgba(244,136,74,0.15)'}`,
+                  background: isHov ? 'linear-gradient(135deg,rgba(var(--accent-rgb),0.28),rgba(var(--accent-rgb),0.1))' : 'linear-gradient(135deg,rgba(var(--accent-rgb),0.16),rgba(var(--accent-rgb),0.05))',
+                  border: `1px solid ${isHov ? 'rgba(var(--accent-rgb),0.35)' : 'rgba(var(--accent-rgb),0.15)'}`,
                   display:'flex', alignItems:'center', justifyContent:'center',
-                  fontSize:13, fontWeight:700, color: isHov ? 'rgba(244,136,74,1)' : 'rgba(244,136,74,0.85)',
+                  fontSize:13, fontWeight:700, color: isHov ? 'rgba(var(--accent-rgb),1)' : 'rgba(var(--accent-rgb),0.85)',
                   letterSpacing:'-0.02em', transition:'all .2s',
-                  boxShadow: isHov ? '0 0 18px rgba(244,136,74,0.2)' : 'none',
+                  boxShadow: isHov ? '0 0 18px rgba(var(--accent-rgb),0.2)' : 'none',
                 }}>{initials}</div>
 
                 {/* info */}
@@ -566,7 +576,7 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
 
                 {/* cinematic hover glow sweep */}
                 {isHov && (
-                  <div style={{ position:'absolute', inset:0, background:'linear-gradient(105deg, transparent 40%, rgba(244,136,74,0.04) 60%, transparent 80%)', pointerEvents:'none', borderRadius:14 }} />
+                  <div style={{ position:'absolute', inset:0, background:'linear-gradient(105deg, transparent 40%, rgba(var(--accent-rgb),0.04) 60%, transparent 80%)', pointerEvents:'none', borderRadius:14 }} />
                 )}
               </div>
             )
@@ -588,7 +598,7 @@ function QuotesSection({ projects, router, fmt }: any) {
       <h1 style={{ margin:'0 0 6px',fontSize:22,fontWeight:700,letterSpacing:'-0.03em',color:'rgba(255,255,255,0.92)' }}>Quotes</h1>
       <p style={{ margin:'0 0 22px',fontSize:12,color:'rgba(255,255,255,0.25)' }}>Proposals, approvals, and pricing</p>
       {quoted.length === 0 ? (
-        <Placeholder icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.5)" strokeWidth="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>} label="No quotes yet" sub="Projects you quote will appear here" />
+        <Placeholder icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(var(--accent-rgb),0.5)" strokeWidth="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>} label="No quotes yet" sub="Projects you quote will appear here" />
       ) : (
         <div style={{ display:'flex',flexDirection:'column',gap:7 }}>
           {quoted.map((p: Project) => (
@@ -667,9 +677,9 @@ function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boo
       </p>
 
       <button onClick={onNew}
-        style={{ display:'flex', alignItems:'center', gap:8, padding:'12px 28px', borderRadius:11, background:'linear-gradient(135deg,#F4884A,#d96520)', border:'none', color:'#fff', fontSize:13, fontWeight:600, letterSpacing:'-0.01em', cursor:'pointer', boxShadow:'0 0 28px rgba(244,136,74,0.3), 0 4px 18px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.14) inset', transition:'transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s' }}
-        onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform='translateY(-2px) scale(1.02)';(e.currentTarget as HTMLElement).style.boxShadow='0 0 48px rgba(244,136,74,0.45),0 8px 28px rgba(0,0,0,0.45),0 1px 0 rgba(255,255,255,0.18) inset'}}
-        onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform='none';(e.currentTarget as HTMLElement).style.boxShadow='0 0 28px rgba(244,136,74,0.3),0 4px 18px rgba(0,0,0,0.4),0 1px 0 rgba(255,255,255,0.14) inset'}}
+        style={{ display:'flex', alignItems:'center', gap:8, padding:'12px 28px', borderRadius:11, background:'linear-gradient(135deg,var(--accent),#d96520)', border:'none', color:'#fff', fontSize:13, fontWeight:600, letterSpacing:'-0.01em', cursor:'pointer', boxShadow:'0 0 28px rgba(var(--accent-rgb),0.3), 0 4px 18px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.14) inset', transition:'transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s' }}
+        onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.transform='translateY(-2px) scale(1.02)';(e.currentTarget as HTMLElement).style.boxShadow='0 0 48px rgba(var(--accent-rgb),0.45),0 8px 28px rgba(0,0,0,0.45),0 1px 0 rgba(255,255,255,0.18) inset'}}
+        onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.transform='none';(e.currentTarget as HTMLElement).style.boxShadow='0 0 28px rgba(var(--accent-rgb),0.3),0 4px 18px rgba(0,0,0,0.4),0 1px 0 rgba(255,255,255,0.14) inset'}}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
         New client
@@ -679,23 +689,23 @@ function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boo
       <div style={{ display:'flex', alignItems:'flex-start', gap:0, marginTop:48, width:'100%', maxWidth:480 }}>
         {[
           {
-            icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.7)" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>,
+            icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(var(--accent-rgb),0.7)" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>,
             title: 'Organize clients',
             desc: 'Keep every project in one place.',
           },
           {
-            icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.7)" strokeWidth="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>,
+            icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(var(--accent-rgb),0.7)" strokeWidth="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>,
             title: 'Design beautifully',
             desc: 'Plan and visualize with precision.',
           },
           {
-            icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.7)" strokeWidth="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+            icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(var(--accent-rgb),0.7)" strokeWidth="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
             title: 'Deliver effortlessly',
             desc: 'Install with confidence every time.',
           },
         ].map((f, i) => (
           <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'flex-start', padding:'0 20px', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
-            <div style={{ width:34, height:34, borderRadius:9, background:'rgba(244,136,74,0.08)', border:'1px solid rgba(244,136,74,0.12)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
+            <div style={{ width:34, height:34, borderRadius:9, background:'rgba(var(--accent-rgb),0.08)', border:'1px solid rgba(var(--accent-rgb),0.12)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
               {f.icon}
             </div>
             <div style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.65)', marginBottom:4, letterSpacing:'-0.01em' }}>{f.title}</div>
@@ -784,7 +794,7 @@ const PRODUCT_CATALOG: Record<string, ProdEntry[]> = {
 }
 
 const CAT_TABS = [
-  { id: 'uplights',     label: 'Uplights',     color: '#F4884A' },
+  { id: 'uplights',     label: 'Uplights',     color: 'var(--accent)' },
   { id: 'pathway',      label: 'Pathway',      color: '#F5C842' },
   { id: 'flood',        label: 'Flood',        color: '#EF4444' },
   { id: 'downlights',   label: 'Downlights',   color: '#8B5CF6' },
@@ -827,7 +837,7 @@ function ProductsSection() {
       <div style={{ display: 'flex', gap: 14, marginBottom: 16 }}>
         {(['AMP', 'Sunvie'] as const).map(b => (
           <div key={b} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 2, background: b === 'AMP' ? '#F4884A' : '#22c55e', flexShrink: 0 }} />
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: b === 'AMP' ? 'var(--accent)' : '#22c55e', flexShrink: 0 }} />
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{b === 'AMP' ? 'AMP Lighting' : 'Sunvie'}</span>
           </div>
         ))}
@@ -842,7 +852,7 @@ function ProductsSection() {
             transition: 'border-color .18s, box-shadow .18s, transform .18s',
             animation: 'fadeUp .25s ease both', animationDelay: `${i * 0.03}s`,
           }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(244,136,74,0.18)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(244,136,74,0.2)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(var(--accent-rgb),0.18)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(var(--accent-rgb),0.2)' }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)' }}
           >
             {/* image */}
@@ -858,7 +868,7 @@ function ProductsSection() {
             <div style={{ padding: '10px 11px 11px' }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.78)', letterSpacing: '-0.015em', lineHeight: 1.35, marginBottom: 6 }}>{p.name}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <div style={{ width: 7, height: 7, borderRadius: 2, background: p.brand === 'AMP' ? '#F4884A' : '#22c55e', flexShrink: 0 }} />
+                <div style={{ width: 7, height: 7, borderRadius: 2, background: p.brand === 'AMP' ? 'var(--accent)' : '#22c55e', flexShrink: 0 }} />
                 <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.02em' }}>{p.brand === 'AMP' ? 'AMP Lighting' : 'Sunvie'}</span>
               </div>
             </div>
@@ -895,7 +905,7 @@ function InstallSection({ projects }: any) {
           </div>
         ))}
       </div>
-      <div style={{ padding:'14px 18px',background:'rgba(244,136,74,0.05)',border:'1px solid rgba(244,136,74,0.1)',borderRadius:12 }}>
+      <div style={{ padding:'14px 18px',background:'rgba(var(--accent-rgb),0.05)',border:'1px solid rgba(var(--accent-rgb),0.1)',borderRadius:12 }}>
         <p style={{ margin:0,fontSize:12,color:'rgba(255,255,255,0.35)' }}>Install workflow tools are coming soon. {active.length > 0 ? `${active.length} project${active.length!==1?'s':''} ready for install.` : ''}</p>
       </div>
     </div>
@@ -924,7 +934,7 @@ function GallerySection() {
         {GALLERY_PHOTOS.map((file, i) => (
           <div key={file} onClick={() => setLightbox(file)}
             style={{ aspectRatio: '4/3', borderRadius: 10, overflow: 'hidden', cursor: 'zoom-in', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', animation: 'fadeUp .3s ease both', animationDelay: `${i * 0.025}s`, transition: 'transform .2s, box-shadow .2s' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.02)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(244,136,74,0.2)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.02)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(var(--accent-rgb),0.2)' }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.boxShadow = 'none' }}
           >
             <img src={`/gallery/${file}`} alt={`Project ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -1017,13 +1027,13 @@ radius is glow radius as % of image width (6–18 range).
 Identify 5–9 zones. Be specific to what you actually see in the image.`
 
 const DESIGN_STYLES = [
-  { id: 'warm-luxury',    label: 'Warm Luxury',    desc: 'Rich amber tones, layered depth',    color: '#F4884A' },
+  { id: 'warm-luxury',    label: 'Warm Luxury',    desc: 'Rich amber tones, layered depth',    color: 'var(--accent)' },
   { id: 'modern-minimal', label: 'Modern Minimal', desc: 'Clean white accents, precise lines', color: '#94a3b8' },
   { id: 'soft-natural',   label: 'Soft Natural',   desc: 'Diffused moonlight, gentle glow',    color: '#86efac' },
   { id: 'high-contrast',  label: 'High Contrast',  desc: 'Bold shadows, dramatic uplighting',  color: '#c084fc' },
 ]
 const ZONE_COLORS: Record<string,string> = {
-  uplight:'#F4884A', path:'#fbbf24', flood:'#f87171',
+  uplight:'var(--accent)', path:'#fbbf24', flood:'#f87171',
   wall_wash:'#a78bfa', accent:'#fb923c', step:'#34d399',
   patio:'#60a5fa', downlight:'#e879f9',
 }
@@ -1202,11 +1212,11 @@ function AIChatPane({ projects }: { projects: Project[] }) {
         {messages.map((m,i) => (
           <div key={i} style={{ display:'flex', justifyContent: m.role==='user'?'flex-end':'flex-start', alignItems:'flex-end', gap:8 }}>
             {m.role === 'assistant' && (
-              <div style={{ width:26, height:26, borderRadius:8, background:'rgba(244,136,74,0.1)', border:'1px solid rgba(244,136,74,0.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginBottom:2 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F4884A" strokeWidth="1.8"><path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-4 4H8a4 4 0 01-4-4v-1H3a3 3 0 01-3-3V10a3 3 0 013-3h1V6a4 4 0 014-4h4z" strokeLinejoin="round"/><circle cx="9" cy="11" r="1" fill="#F4884A" stroke="none"/><circle cx="15" cy="11" r="1" fill="#F4884A" stroke="none"/></svg>
+              <div style={{ width:26, height:26, borderRadius:8, background:'rgba(var(--accent-rgb),0.1)', border:'1px solid rgba(var(--accent-rgb),0.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginBottom:2 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8"><path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-4 4H8a4 4 0 01-4-4v-1H3a3 3 0 01-3-3V10a3 3 0 013-3h1V6a4 4 0 014-4h4z" strokeLinejoin="round"/><circle cx="9" cy="11" r="1" fill="var(--accent)" stroke="none"/><circle cx="15" cy="11" r="1" fill="var(--accent)" stroke="none"/></svg>
               </div>
             )}
-            <div style={{ maxWidth:'78%', background: m.role==='user'?'linear-gradient(135deg,#F4884A,#df6f28)':'rgba(255,255,255,0.05)', border: m.role==='assistant'?'1px solid rgba(255,255,255,0.08)':'none', borderRadius: m.role==='user'?'14px 14px 4px 14px':'14px 14px 14px 4px', padding: (m.imageUrl || m.attachPreview) ? '8px 8px 6px' : '11px 14px', fontSize:13, lineHeight:1.6, color: m.role==='user'?'#fff':'rgba(255,255,255,0.82)', whiteSpace:'pre-wrap', overflow:'hidden' }}>
+            <div style={{ maxWidth:'78%', background: m.role==='user'?'linear-gradient(135deg,var(--accent),#df6f28)':'rgba(255,255,255,0.05)', border: m.role==='assistant'?'1px solid rgba(255,255,255,0.08)':'none', borderRadius: m.role==='user'?'14px 14px 4px 14px':'14px 14px 14px 4px', padding: (m.imageUrl || m.attachPreview) ? '8px 8px 6px' : '11px 14px', fontSize:13, lineHeight:1.6, color: m.role==='user'?'#fff':'rgba(255,255,255,0.82)', whiteSpace:'pre-wrap', overflow:'hidden' }}>
                 {/* user attached photo preview */}
                 {m.attachPreview && (
                   <img src={m.attachPreview} alt="" style={{ display:'block', width:'100%', maxWidth:220, borderRadius:8, marginBottom: m.content ? 7 : 0, objectFit:'cover' }} />
@@ -1219,11 +1229,11 @@ function AIChatPane({ projects }: { projects: Project[] }) {
         ))}
         {loading && !isGenerating && (
           <div style={{ display:'flex', justifyContent:'flex-start', alignItems:'flex-end', gap:8 }}>
-            <div style={{ width:26, height:26, borderRadius:8, background:'rgba(244,136,74,0.1)', border:'1px solid rgba(244,136,74,0.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F4884A" strokeWidth="1.8"><path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-4 4H8a4 4 0 01-4-4v-1H3a3 3 0 01-3-3V10a3 3 0 013-3h1V6a4 4 0 014-4h4z" strokeLinejoin="round"/><circle cx="9" cy="11" r="1" fill="#F4884A" stroke="none"/><circle cx="15" cy="11" r="1" fill="#F4884A" stroke="none"/></svg>
+            <div style={{ width:26, height:26, borderRadius:8, background:'rgba(var(--accent-rgb),0.1)', border:'1px solid rgba(var(--accent-rgb),0.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8"><path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-4 4H8a4 4 0 01-4-4v-1H3a3 3 0 01-3-3V10a3 3 0 013-3h1V6a4 4 0 014-4h4z" strokeLinejoin="round"/><circle cx="9" cy="11" r="1" fill="var(--accent)" stroke="none"/><circle cx="15" cy="11" r="1" fill="var(--accent)" stroke="none"/></svg>
             </div>
             <div style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'14px 14px 14px 4px', padding:'12px 16px', display:'flex', gap:5, alignItems:'center' }}>
-              {[0,1,2].map(j=><div key={j} style={{ width:6,height:6,borderRadius:'50%',background:'rgba(244,136,74,0.6)',animation:`ambientPulse 1.2s ease-in-out ${j*.2}s infinite` }} />)}
+              {[0,1,2].map(j=><div key={j} style={{ width:6,height:6,borderRadius:'50%',background:'rgba(var(--accent-rgb),0.6)',animation:`ambientPulse 1.2s ease-in-out ${j*.2}s infinite` }} />)}
             </div>
           </div>
         )}
@@ -1231,15 +1241,15 @@ function AIChatPane({ projects }: { projects: Project[] }) {
         {/* ── CINEMATIC IMAGE GENERATION LOADER ── */}
         {isGenerating && (
           <div style={{ display:'flex', justifyContent:'flex-start', alignItems:'flex-end', gap:8 }}>
-            <div style={{ width:26, height:26, borderRadius:8, background:'rgba(244,136,74,0.1)', border:'1px solid rgba(244,136,74,0.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F4884A" strokeWidth="1.8"><path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-4 4H8a4 4 0 01-4-4v-1H3a3 3 0 01-3-3V10a3 3 0 013-3h1V6a4 4 0 014-4h4z" strokeLinejoin="round"/><circle cx="9" cy="11" r="1" fill="#F4884A" stroke="none"/><circle cx="15" cy="11" r="1" fill="#F4884A" stroke="none"/></svg>
+            <div style={{ width:26, height:26, borderRadius:8, background:'rgba(var(--accent-rgb),0.1)', border:'1px solid rgba(var(--accent-rgb),0.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.8"><path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-4 4H8a4 4 0 01-4-4v-1H3a3 3 0 01-3-3V10a3 3 0 013-3h1V6a4 4 0 014-4h4z" strokeLinejoin="round"/><circle cx="9" cy="11" r="1" fill="var(--accent)" stroke="none"/><circle cx="15" cy="11" r="1" fill="var(--accent)" stroke="none"/></svg>
             </div>
             {/* ChatGPT-style shimmer card */}
             <div style={{
               width: 280, borderRadius:'14px 14px 14px 4px',
               background:'#0d0d0f',
               border:'1px solid rgba(255,255,255,0.08)',
-              boxShadow:'0 0 0 1px rgba(244,136,74,0.12), 0 0 32px rgba(244,136,74,0.08)',
+              boxShadow:'0 0 0 1px rgba(var(--accent-rgb),0.12), 0 0 32px rgba(var(--accent-rgb),0.08)',
               animation:'genPulse 3s ease-in-out infinite',
               overflow:'hidden', position:'relative',
             }}>
@@ -1253,7 +1263,7 @@ function AIChatPane({ projects }: { projects: Project[] }) {
               ].map((p, i) => (
                 <div key={i} style={{
                   position:'absolute', width:p.size, height:p.size, borderRadius:'50%',
-                  background:'rgba(244,136,74,0.55)',
+                  background:'rgba(var(--accent-rgb),0.55)',
                   top:p.top, left:p.left,
                   animation:`float ${p.dur} ease-in-out ${p.del} infinite`,
                   filter:'blur(0.5px)',
@@ -1266,7 +1276,7 @@ function AIChatPane({ projects }: { projects: Project[] }) {
                 {/* base blurred gradient that slowly "forms" */}
                 <div style={{
                   position:'absolute', inset:0,
-                  background:'radial-gradient(ellipse 70% 55% at 40% 45%, rgba(244,136,74,0.09) 0%, transparent 60%), radial-gradient(ellipse 50% 45% at 75% 65%, rgba(100,40,10,0.07) 0%, transparent 55%)',
+                  background:'radial-gradient(ellipse 70% 55% at 40% 45%, rgba(var(--accent-rgb),0.09) 0%, transparent 60%), radial-gradient(ellipse 50% 45% at 75% 65%, rgba(100,40,10,0.07) 0%, transparent 55%)',
                   animation:'meshDrift 7s ease-in-out infinite',
                 }} />
                 {/* grain overlay */}
@@ -1303,8 +1313,8 @@ function AIChatPane({ projects }: { projects: Project[] }) {
 
               {/* stage label */}
               <div style={{ padding:'10px 14px 12px', display:'flex', alignItems:'center', gap:7 }}>
-                <div style={{ width:5, height:5, borderRadius:'50%', background:'#F4884A', animation:'ambientPulse 1s ease-in-out infinite', flexShrink:0 }} />
-                <span style={{ fontSize:11, color:'rgba(244,136,74,0.65)', letterSpacing:'-0.01em', animation:'ambientPulse 2s ease-in-out infinite' }}>{genStage || 'Generating…'}</span>
+                <div style={{ width:5, height:5, borderRadius:'50%', background:'var(--accent)', animation:'ambientPulse 1s ease-in-out infinite', flexShrink:0 }} />
+                <span style={{ fontSize:11, color:'rgba(var(--accent-rgb),0.65)', letterSpacing:'-0.01em', animation:'ambientPulse 2s ease-in-out infinite' }}>{genStage || 'Generating…'}</span>
               </div>
             </div>
           </div>
@@ -1317,7 +1327,7 @@ function AIChatPane({ projects }: { projects: Project[] }) {
         <div style={{ display:'flex', gap:6, flexWrap:'wrap', padding:'10px 0 12px', flexShrink:0 }}>
           {QUICK.map(q => (
             <button key={q} onClick={()=>send(q)} style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, color:'rgba(255,255,255,0.45)', fontSize:11, padding:'6px 12px', cursor:'pointer', letterSpacing:'-0.01em', transition:'all .15s', fontFamily:'inherit' }}
-              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(244,136,74,0.3)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.75)'}}
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(var(--accent-rgb),0.3)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.75)'}}
               onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.08)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.45)'}}>
               {q}
             </button>
@@ -1329,7 +1339,7 @@ function AIChatPane({ projects }: { projects: Project[] }) {
       {pendingImg && (
         <div style={{ marginBottom:6, flexShrink:0 }}>
           {/* photo thumbnail row */}
-          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'rgba(244,136,74,0.06)', border:'1px solid rgba(244,136,74,0.15)', borderRadius:10, marginBottom:8 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'rgba(var(--accent-rgb),0.06)', border:'1px solid rgba(var(--accent-rgb),0.15)', borderRadius:10, marginBottom:8 }}>
             <img src={pendingImg.preview} alt="" style={{ width:38, height:38, borderRadius:6, objectFit:'cover', flexShrink:0 }} />
             <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)', flex:1 }}>Photo ready — pick a style or type your own</span>
             <button onClick={()=>setPendingImg(null)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.25)', cursor:'pointer', fontSize:16, lineHeight:1, padding:'0 2px' }}>×</button>
@@ -1344,9 +1354,9 @@ function AIChatPane({ projects }: { projects: Project[] }) {
               'Make it look like a luxury lighting install',
             ].map(q => (
               <button key={q} onClick={() => send(q)}
-                style={{ background:'rgba(244,136,74,0.08)', border:'1px solid rgba(244,136,74,0.2)', borderRadius:8, color:'rgba(255,255,255,0.6)', fontSize:11, padding:'6px 12px', cursor:'pointer', letterSpacing:'-0.01em', transition:'all .15s', fontFamily:'inherit' }}
-                onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='rgba(244,136,74,0.16)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.9)'}}
-                onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='rgba(244,136,74,0.08)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.6)'}}>
+                style={{ background:'rgba(var(--accent-rgb),0.08)', border:'1px solid rgba(var(--accent-rgb),0.2)', borderRadius:8, color:'rgba(255,255,255,0.6)', fontSize:11, padding:'6px 12px', cursor:'pointer', letterSpacing:'-0.01em', transition:'all .15s', fontFamily:'inherit' }}
+                onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='rgba(var(--accent-rgb),0.16)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.9)'}}
+                onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='rgba(var(--accent-rgb),0.08)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.6)'}}>
                 {q}
               </button>
             ))}
@@ -1358,8 +1368,8 @@ function AIChatPane({ projects }: { projects: Project[] }) {
       <div style={{ display:'flex', gap:8, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)', borderRadius:14, padding:'10px 12px', alignItems:'flex-end', flexShrink:0 }}>
         <input ref={fileRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e=>{const f=e.target.files?.[0];if(f)handleFile(f);e.target.value=''}} />
         <button onClick={()=>fileRef.current?.click()} title="Attach photo"
-          style={{ width:32, height:32, borderRadius:8, background: pendingImg ? 'rgba(244,136,74,0.12)' : 'rgba(255,255,255,0.05)', border:`1px solid ${pendingImg?'rgba(244,136,74,0.3)':'rgba(255,255,255,0.08)'}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, transition:'all .15s' }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={pendingImg?'#F4884A':'rgba(255,255,255,0.4)'} strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          style={{ width:32, height:32, borderRadius:8, background: pendingImg ? 'rgba(var(--accent-rgb),0.12)' : 'rgba(255,255,255,0.05)', border:`1px solid ${pendingImg?'rgba(var(--accent-rgb),0.3)':'rgba(255,255,255,0.08)'}`, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, transition:'all .15s' }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={pendingImg?'var(--accent)':'rgba(255,255,255,0.4)'} strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </button>
         <textarea value={input} onChange={e=>setInput(e.target.value)}
           onKeyDown={e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()} }}
@@ -1367,7 +1377,7 @@ function AIChatPane({ projects }: { projects: Project[] }) {
           rows={1}
           style={{ flex:1, background:'none', border:'none', outline:'none', resize:'none', color:'rgba(255,255,255,0.82)', fontSize:13, lineHeight:1.5, fontFamily:'inherit', overflowY:'hidden', minHeight:22 }}
           onInput={e=>{ const t=e.currentTarget; t.style.height='auto'; t.style.height=Math.min(t.scrollHeight,120)+'px' }} />
-        <button onClick={()=>send()} disabled={(!input.trim()&&!pendingImg)||loading} style={{ background:(input.trim()||pendingImg)?'linear-gradient(135deg,#F4884A,#df6f28)':'rgba(255,255,255,0.08)', border:'none', borderRadius:9, width:34, height:34, display:'flex', alignItems:'center', justifyContent:'center', cursor:(input.trim()||pendingImg)?'pointer':'default', flexShrink:0, transition:'background .2s' }}>
+        <button onClick={()=>send()} disabled={(!input.trim()&&!pendingImg)||loading} style={{ background:(input.trim()||pendingImg)?'linear-gradient(135deg,var(--accent),#df6f28)':'rgba(255,255,255,0.08)', border:'none', borderRadius:9, width:34, height:34, display:'flex', alignItems:'center', justifyContent:'center', cursor:(input.trim()||pendingImg)?'pointer':'default', flexShrink:0, transition:'background .2s' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
@@ -1479,7 +1489,7 @@ function _AIDesignPaneOld({ projects }: { projects: Project[] }) {
         {/* photo drop zone — always visible, compact when image loaded */}
         <div ref={dropRef}
           onClick={()=>fileRef.current?.click()}
-          onDragOver={e=>{e.preventDefault();if(dropRef.current)(dropRef.current as HTMLElement).style.borderColor='rgba(244,136,74,0.5)'}}
+          onDragOver={e=>{e.preventDefault();if(dropRef.current)(dropRef.current as HTMLElement).style.borderColor='rgba(var(--accent-rgb),0.5)'}}
           onDragLeave={()=>{if(dropRef.current)(dropRef.current as HTMLElement).style.borderColor=imageUrl?'rgba(255,255,255,0.06)':'rgba(255,255,255,0.1)'}}
           onDrop={e=>{e.preventDefault();if(dropRef.current)(dropRef.current as HTMLElement).style.borderColor='rgba(255,255,255,0.06)';const f=e.dataTransfer.files[0];if(f)handleFile(f)}}
           style={{ position:'relative', borderRadius:14, border:`1.5px dashed ${imageUrl?'rgba(255,255,255,0.06)':'rgba(255,255,255,0.1)'}`, cursor:'pointer', overflow:'hidden', transition:'border-color .15s', flexShrink:0 }}>
@@ -1489,7 +1499,7 @@ function _AIDesignPaneOld({ projects }: { projects: Project[] }) {
               {/* before/after */}
               <div style={{ position:'absolute', top:10, left:10, display:'flex', gap:2, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(12px)', borderRadius:8, padding:3 }}>
                 {(['before','after'] as const).map(v=>(
-                  <button key={v} onClick={e=>{e.stopPropagation();setView(v)}} style={{ padding:'4px 11px', borderRadius:6, border:'none', background:view===v?'rgba(244,136,74,0.25)':'transparent', color:view===v?'#F4884A':'rgba(255,255,255,0.4)', fontSize:11, fontWeight:600, cursor:'pointer', textTransform:'capitalize', transition:'all .15s' }}>{v}</button>
+                  <button key={v} onClick={e=>{e.stopPropagation();setView(v)}} style={{ padding:'4px 11px', borderRadius:6, border:'none', background:view===v?'rgba(var(--accent-rgb),0.25)':'transparent', color:view===v?'var(--accent)':'rgba(255,255,255,0.4)', fontSize:11, fontWeight:600, cursor:'pointer', textTransform:'capitalize', transition:'all .15s' }}>{v}</button>
                 ))}
               </div>
               {/* style dots */}
@@ -1506,7 +1516,7 @@ function _AIDesignPaneOld({ projects }: { projects: Project[] }) {
               ))}
               {/* zone pins */}
               {view==='after' && analysis && analysis.zones.map(z=>{
-                const c=ZONE_COLORS[z.type]||'#F4884A'; const on=activeZones.has(z.id)
+                const c=ZONE_COLORS[z.type]||'var(--accent)'; const on=activeZones.has(z.id)
                 return (
                   <button key={z.id} onClick={e=>{e.stopPropagation();toggleZone(z.id)}} title={z.name}
                     style={{ position:'absolute', left:`${z.x}%`, top:`${z.y}%`, transform:'translate(-50%,-50%)', width:20,height:20,borderRadius:'50%',border:`1.5px solid ${on?c:'rgba(255,255,255,0.25)'}`,background:on?`${c}30`:'rgba(0,0,0,0.45)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)',transition:'all .15s',boxShadow:on?`0 0 10px ${c}60`:'none' }}>
@@ -1517,8 +1527,8 @@ function _AIDesignPaneOld({ projects }: { projects: Project[] }) {
             </>
           ) : (
             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:10, padding:'36px 20px' }}>
-              <div style={{ width:44,height:44,borderRadius:12,background:'rgba(244,136,74,0.07)',border:'1px solid rgba(244,136,74,0.14)',display:'flex',alignItems:'center',justifyContent:'center' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.6)" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <div style={{ width:44,height:44,borderRadius:12,background:'rgba(var(--accent-rgb),0.07)',border:'1px solid rgba(var(--accent-rgb),0.14)',display:'flex',alignItems:'center',justifyContent:'center' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(var(--accent-rgb),0.6)" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               </div>
               <div style={{ fontSize:13,fontWeight:500,color:'rgba(255,255,255,0.45)',letterSpacing:'-0.01em' }}>Drop a yard photo to get started</div>
               <div style={{ fontSize:11,color:'rgba(255,255,255,0.18)' }}>JPG · PNG · HEIC</div>
@@ -1531,7 +1541,7 @@ function _AIDesignPaneOld({ projects }: { projects: Project[] }) {
         {analyzing && (
           <div style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:12 }}>
             <div style={{ width:18,height:18,flexShrink:0,position:'relative' }}>
-              <div style={{ position:'absolute',inset:0,borderRadius:'50%',border:'1.5px solid rgba(244,136,74,0.15)',borderTopColor:'#F4884A',animation:'spin .9s linear infinite' }} />
+              <div style={{ position:'absolute',inset:0,borderRadius:'50%',border:'1.5px solid rgba(var(--accent-rgb),0.15)',borderTopColor:'var(--accent)',animation:'spin .9s linear infinite' }} />
             </div>
             <span style={{ fontSize:12,color:'rgba(255,255,255,0.45)',animation:'ambientPulse 2s ease-in-out infinite' }}>{statusMsg}</span>
           </div>
@@ -1542,8 +1552,8 @@ function _AIDesignPaneOld({ projects }: { projects: Project[] }) {
           <>
             {/* design notes */}
             {analysis.summary.designNotes && (
-              <div style={{ background:'rgba(244,136,74,0.05)',border:'1px solid rgba(244,136,74,0.12)',borderRadius:12,padding:'12px 15px' }}>
-                <div style={{ fontSize:9,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(244,136,74,0.5)',marginBottom:5 }}>Design Notes</div>
+              <div style={{ background:'rgba(var(--accent-rgb),0.05)',border:'1px solid rgba(var(--accent-rgb),0.12)',borderRadius:12,padding:'12px 15px' }}>
+                <div style={{ fontSize:9,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(var(--accent-rgb),0.5)',marginBottom:5 }}>Design Notes</div>
                 <div style={{ fontSize:12,color:'rgba(255,255,255,0.65)',lineHeight:1.65 }}>{analysis.summary.designNotes}</div>
               </div>
             )}
@@ -1552,7 +1562,7 @@ function _AIDesignPaneOld({ projects }: { projects: Project[] }) {
               <div style={{ display:'flex',flexDirection:'column',gap:5 }}>
                 <div style={{ fontSize:9,fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(255,255,255,0.2)',marginBottom:2 }}>Zones</div>
                 {analysis.zones.map(z=>{
-                  const c=ZONE_COLORS[z.type]||'#F4884A'; const on=activeZones.has(z.id)
+                  const c=ZONE_COLORS[z.type]||'var(--accent)'; const on=activeZones.has(z.id)
                   return (
                     <button key={z.id} onClick={()=>toggleZone(z.id)} style={{ display:'flex',alignItems:'flex-start',gap:9,padding:'9px 11px',background:on?'rgba(255,255,255,0.04)':'transparent',border:`1px solid ${on?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.04)'}`,borderRadius:9,cursor:'pointer',textAlign:'left',transition:'all .12s' }}>
                       <div style={{ width:7,height:7,borderRadius:'50%',background:on?c:'rgba(255,255,255,0.18)',flexShrink:0,marginTop:3,boxShadow:on?`0 0 6px ${c}`:'none',transition:'all .12s' }} />
@@ -1580,7 +1590,7 @@ function _AIDesignPaneOld({ projects }: { projects: Project[] }) {
             {/* save */}
             <div style={{ display:'flex',gap:8 }}>
               <button onClick={()=>{setAnalysis(null);setImageUrl('');setSavedTo('')}} style={{ flex:1,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:10,color:'rgba(255,255,255,0.5)',fontSize:12,fontWeight:500,padding:10,cursor:'pointer' }}>New Photo</button>
-              <button onClick={()=>setShowSavePicker(true)} style={{ flex:2,background:savedTo?'rgba(34,197,94,0.12)':'linear-gradient(135deg,#F4884A,#df6f28)',border:savedTo?'1px solid rgba(34,197,94,0.3)':'none',borderRadius:10,color:savedTo?'#22c55e':'#fff',fontSize:12,fontWeight:600,padding:10,cursor:'pointer',boxShadow:savedTo?'none':'0 0 16px rgba(244,136,74,0.25)',transition:'all .2s' }}>{savedTo?`✓ Saved to ${savedTo}`:'Save to Project'}</button>
+              <button onClick={()=>setShowSavePicker(true)} style={{ flex:2,background:savedTo?'rgba(34,197,94,0.12)':'linear-gradient(135deg,var(--accent),#df6f28)',border:savedTo?'1px solid rgba(34,197,94,0.3)':'none',borderRadius:10,color:savedTo?'#22c55e':'#fff',fontSize:12,fontWeight:600,padding:10,cursor:'pointer',boxShadow:savedTo?'none':'0 0 16px rgba(var(--accent-rgb),0.25)',transition:'all .2s' }}>{savedTo?`✓ Saved to ${savedTo}`:'Save to Project'}</button>
             </div>
           </>
         )}
@@ -1594,7 +1604,7 @@ function _AIDesignPaneOld({ projects }: { projects: Project[] }) {
         <div style={{ display:'flex',gap:6,flexWrap:'wrap',padding:'10px 0 12px',flexShrink:0 }}>
           {DESIGN_PROMPTS.map(q=>(
             <button key={q} onClick={()=>analyze(q)} style={{ background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,color:'rgba(255,255,255,0.45)',fontSize:11,padding:'6px 12px',cursor:'pointer',letterSpacing:'-0.01em',transition:'all .15s',fontFamily:'inherit' }}
-              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(244,136,74,0.3)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.75)'}}
+              onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(var(--accent-rgb),0.3)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.75)'}}
               onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,0.08)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.45)'}}>
               {q}
             </button>
@@ -1606,7 +1616,7 @@ function _AIDesignPaneOld({ projects }: { projects: Project[] }) {
       <div style={{ display:'flex',gap:10,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:14,padding:'10px 12px',alignItems:'flex-end',flexShrink:0 }}>
         {/* photo attach button */}
         <button onClick={()=>fileRef.current?.click()} title="Attach photo" style={{ width:34,height:34,borderRadius:9,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0,transition:'border-color .15s' }}
-          onMouseEnter={e=>(e.currentTarget.style.borderColor='rgba(244,136,74,0.3)')} onMouseLeave={e=>(e.currentTarget.style.borderColor='rgba(255,255,255,0.08)')}>
+          onMouseEnter={e=>(e.currentTarget.style.borderColor='rgba(var(--accent-rgb),0.3)')} onMouseLeave={e=>(e.currentTarget.style.borderColor='rgba(255,255,255,0.08)')}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </button>
         <textarea value={input} onChange={e=>setInput(e.target.value)}
@@ -1615,7 +1625,7 @@ function _AIDesignPaneOld({ projects }: { projects: Project[] }) {
           rows={1}
           style={{ flex:1,background:'none',border:'none',outline:'none',resize:'none',color:'rgba(255,255,255,0.82)',fontSize:13,lineHeight:1.5,fontFamily:'inherit',overflowY:'hidden',minHeight:22 }}
           onInput={e=>{const t=e.currentTarget;t.style.height='auto';t.style.height=Math.min(t.scrollHeight,120)+'px'}} />
-        <button onClick={()=>{if(imageUrl)analyze()}} disabled={!imageUrl||analyzing} style={{ background:imageUrl&&!analyzing?'linear-gradient(135deg,#F4884A,#df6f28)':'rgba(255,255,255,0.08)',border:'none',borderRadius:9,width:34,height:34,display:'flex',alignItems:'center',justifyContent:'center',cursor:imageUrl&&!analyzing?'pointer':'default',flexShrink:0,transition:'background .2s' }}>
+        <button onClick={()=>{if(imageUrl)analyze()}} disabled={!imageUrl||analyzing} style={{ background:imageUrl&&!analyzing?'linear-gradient(135deg,var(--accent),#df6f28)':'rgba(255,255,255,0.08)',border:'none',borderRadius:9,width:34,height:34,display:'flex',alignItems:'center',justifyContent:'center',cursor:imageUrl&&!analyzing?'pointer':'default',flexShrink:0,transition:'background .2s' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
@@ -1633,7 +1643,7 @@ function _AIDesignPaneOld({ projects }: { projects: Project[] }) {
                 return (
                   <button key={p.id} onClick={()=>{localStorage.setItem(`upscape_design_${p.id}`,JSON.stringify({style,analysis,imageUrl,savedAt:new Date().toISOString()}));setSavedTo(label);setShowSavePicker(false)}}
                     style={{ display:'flex',alignItems:'center',gap:12,padding:'12px 14px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:10,cursor:'pointer',textAlign:'left',transition:'border-color .15s' }}
-                    onMouseEnter={e=>(e.currentTarget.style.borderColor='rgba(244,136,74,0.4)')} onMouseLeave={e=>(e.currentTarget.style.borderColor='rgba(255,255,255,0.07)')}>
+                    onMouseEnter={e=>(e.currentTarget.style.borderColor='rgba(var(--accent-rgb),0.4)')} onMouseLeave={e=>(e.currentTarget.style.borderColor='rgba(255,255,255,0.07)')}>
                     <div style={{ minWidth:0 }}>
                       <div style={{ fontSize:12,fontWeight:600,color:'rgba(255,255,255,0.85)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{label}</div>
                       {p.address&&<div style={{ fontSize:10,color:'rgba(255,255,255,0.28)',marginTop:1 }}>{p.address}</div>}
@@ -1658,18 +1668,16 @@ function _AIDesignPaneOld({ projects }: { projects: Project[] }) {
 function Toggle({ on, onToggle, glow = 70 }: { on: boolean; onToggle: () => void; glow?: number }) {
   const g = glow / 100
   return (
-    <div onClick={onToggle} style={{ width:44,height:24,borderRadius:12,background:on?'#F4884A':'rgba(255,255,255,0.12)',cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,boxShadow:on?`0 0 ${Math.round(14*g)}px rgba(244,136,74,${(0.45*g).toFixed(2)})`:'none' }}>
+    <div onClick={onToggle} style={{ width:44,height:24,borderRadius:12,background:on?'var(--accent)':'rgba(255,255,255,0.12)',cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,boxShadow:on?`0 0 ${Math.round(14*g)}px rgba(var(--accent-rgb),${(0.45*g).toFixed(2)})`:'none' }}>
       <div style={{ position:'absolute',top:3,left:on?22:3,width:18,height:18,borderRadius:'50%',background:'#fff',transition:'left .18s',boxShadow:'0 1px 5px rgba(0,0,0,.35)' }} />
     </div>
   )
 }
 
-function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlow, setAmbientGlow }: any) {
+function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlow, setAmbientGlow, accentColor, pickAccent }: any) {
   const [active, setActive]         = useState('general')
   const [mapStyle, setMapStyle]     = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_style') || 'satellite') : 'satellite')
   const [mapTime, setMapTime]       = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_map_time') || 'day') : 'day')
-  const [accentColor, setAccentColorState] = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('upscape_accent') || '#F4884A') : '#F4884A')
-  function pickAccent(c: string) { setAccentColorState(c); localStorage.setItem('upscape_accent', c) }
   const [animations, setAnimations] = useState(true)
   const [quoteAlerts, setQuoteAlerts]     = useState(true)
   const [projectUpdates, setProjectUpdates] = useState(true)
@@ -1697,8 +1705,8 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
   const border = L ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.05)'
   const cardBg = L ? '#ffffff' : 'rgba(255,255,255,0.028)'
   const cardBorder = L ? '#ddd8d1' : 'rgba(255,255,255,0.07)'
-  const optBorder = (active: boolean, col='#F4884A') => active ? col : (L ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.08)')
-  const optBg = (active: boolean) => active ? 'rgba(244,136,74,0.08)' : (L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)')
+  const optBorder = (active: boolean, col='var(--accent)') => active ? col : (L ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.08)')
+  const optBg = (active: boolean) => active ? 'rgba(var(--accent-rgb),0.08)' : (L ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)')
   const tabBg = L ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.03)'
   const tabBorder = L ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'
 
@@ -1716,13 +1724,13 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
 
   const block = (id: string, title: string, children: React.ReactNode) => (
     <div id={'settings-'+id} style={{ marginBottom:28, scrollMarginTop:16 }}>
-      <div style={{ fontSize:10,fontWeight:700,color:'#F4884A',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:10 }}>{title}</div>
+      <div style={{ fontSize:10,fontWeight:700,color:'var(--accent)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:10 }}>{title}</div>
       <div style={{ background:cardBg,border:`1px solid ${cardBorder}`,borderRadius:13,overflow:'hidden',boxShadow:L?'0 1px 4px rgba(0,0,0,0.06)':'none' }}>{children}</div>
     </div>
   )
 
   const mapIcons: Record<string,React.ReactNode> = {
-    satellite: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.55)"/><rect x="14" y="2" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.3)"/><rect x="2" y="14" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.3)"/><rect x="14" y="14" width="8" height="8" rx="1.5" fill="rgba(244,136,74,0.55)"/></svg>,
+    satellite: <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="8" height="8" rx="1.5" fill="rgba(var(--accent-rgb),0.55)"/><rect x="14" y="2" width="8" height="8" rx="1.5" fill="rgba(var(--accent-rgb),0.3)"/><rect x="2" y="14" width="8" height="8" rx="1.5" fill="rgba(var(--accent-rgb),0.3)"/><rect x="14" y="14" width="8" height="8" rx="1.5" fill="rgba(var(--accent-rgb),0.55)"/></svg>,
     terrain:   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M2 18L8 8l4 6 4-8 6 12H2z" fill={L?'rgba(0,0,0,0.12)':'rgba(255,255,255,0.15)'} stroke={L?'rgba(0,0,0,0.45)':'rgba(255,255,255,0.45)'} strokeWidth="1.3"/></svg>,
   }
 
@@ -1735,7 +1743,7 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
           <button key={t.id} onClick={() => scrollTo(t.id)}
             style={{ flex:1, padding:'7px 12px', borderRadius:7, border:'none', background: active===t.id ? (L?'rgba(0,0,0,0.06)':'rgba(255,255,255,0.08)') : 'transparent', color: active===t.id ? txt : muted, fontSize:12, fontWeight: active===t.id ? 600 : 400, cursor:'pointer', letterSpacing:'-0.01em', transition:'all .15s', position:'relative' }}>
             {t.label}
-            {active===t.id && <div style={{ position:'absolute',bottom:2,left:'50%',transform:'translateX(-50%)',width:16,height:2,borderRadius:1,background:'#F4884A' }} />}
+            {active===t.id && <div style={{ position:'absolute',bottom:2,left:'50%',transform:'translateX(-50%)',width:16,height:2,borderRadius:1,background:'var(--accent)' }} />}
           </button>
         ))}
       </div>
@@ -1753,7 +1761,7 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
                   style={{ flex:1,display:'flex',alignItems:'center',gap:10,padding:'12px 14px',borderRadius:10,border:`1.5px solid ${optBorder(mapStyle===opt.id)}`,background:optBg(mapStyle===opt.id),cursor:'pointer',transition:'all .15s' }}>
                   <div style={{ flexShrink:0 }}>{mapIcons[opt.id]}</div>
                   <div>
-                    <div style={{ fontSize:13,fontWeight:600,color:mapStyle===opt.id?'#F4884A':txt,letterSpacing:'-0.01em' }}>{opt.label}</div>
+                    <div style={{ fontSize:13,fontWeight:600,color:mapStyle===opt.id?'var(--accent)':txt,letterSpacing:'-0.01em' }}>{opt.label}</div>
                     <div style={{ fontSize:11,color:muted,marginTop:1 }}>{opt.desc}</div>
                   </div>
                 </div>
@@ -1841,7 +1849,7 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
           ))}
           {row('Ambient glow','Adjust the intensity of ambient glow.',(
             <div style={{ display:'flex',alignItems:'center',gap:10 }}>
-              <input type="range" min={0} max={100} value={ambientGlow} onChange={e=>setAmbientGlow(+e.target.value)} style={{ width:110,accentColor:'#F4884A',cursor:'pointer' }} />
+              <input type="range" min={0} max={100} value={ambientGlow} onChange={e=>setAmbientGlow(+e.target.value)} style={{ width:110,accentColor:'var(--accent)',cursor:'pointer' }} />
               <span style={{ fontSize:11,color:muted,minWidth:30,textAlign:'right' }}>{ambientGlow}%</span>
             </div>
           ))}
@@ -1889,7 +1897,7 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
 function Placeholder({ icon, label, sub }: { icon: React.ReactNode; label: string; sub: string }) {
   return (
     <div style={{ textAlign:'center',paddingTop:60 }}>
-      <div style={{ width:52,height:52,borderRadius:13,background:'rgba(244,136,74,0.07)',border:'1px solid rgba(244,136,74,0.11)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}>{icon}</div>
+      <div style={{ width:52,height:52,borderRadius:13,background:'rgba(var(--accent-rgb),0.07)',border:'1px solid rgba(var(--accent-rgb),0.11)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}>{icon}</div>
       <p style={{ fontWeight:600,color:'rgba(255,255,255,0.6)',fontSize:14,margin:'0 0 5px',letterSpacing:'-0.02em' }}>{label}</p>
       <p style={{ fontSize:12,color:'rgba(255,255,255,0.22)',margin:0 }}>{sub}</p>
     </div>
