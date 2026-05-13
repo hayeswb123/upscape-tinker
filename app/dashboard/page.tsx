@@ -1072,11 +1072,11 @@ function AIChatPane({ projects }: { projects: Project[] }) {
   const fileRef   = React.useRef<HTMLInputElement>(null)
 
   const QUICK = [
-    'How do I size a transformer?',
-    'Best uplight for oak trees?',
-    'How many path lights per 100ft?',
-    'Troubleshoot a flickering zone',
-    'Quote a front yard job',
+    'What beam angle for tall oak trees?',
+    'How many path lights for 100ft?',
+    'Best fixture for a stone wall?',
+    'Why are my lights flickering?',
+    'Turn a daytime photo into a night preview',
   ]
 
   React.useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:'smooth' }) }, [messages])
