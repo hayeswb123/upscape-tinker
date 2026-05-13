@@ -581,7 +581,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
     return q[tier]?.total ?? null
   }, [project])
 
-  // Zone fixture membership — each fixture binds to its nearest zone by centroid distance
+  // Zone fixture membership — point-in-polygon first, nearest centroid as fallback
   const zoneFixtureCounts = useMemo(() => {
     if (!project) return []
     const zones = project.zones || []
@@ -590,15 +590,27 @@ export default function MapClient({ projectId }: { projectId: string }) {
     const counts: Record<string, number> = {}
     zones.forEach(z => { counts[z.id] = 0 })
     fixtures.forEach(m => {
-      let nearestId = zones[0].id
-      let nearestDist = Infinity
-      zones.forEach(z => {
-        const cx = z.points.reduce((s, p) => s + p[0], 0) / z.points.length
-        const cy = z.points.reduce((s, p) => s + p[1], 0) / z.points.length
-        const d = Math.hypot(m.lng - cx, m.lat - cy)
-        if (d < nearestDist) { nearestDist = d; nearestId = z.id }
-      })
-      counts[nearestId]++
+      const pt: [number, number] = [m.lng, m.lat]
+      // Find all zones that contain this fixture
+      const containing = zones.filter(z => pointInPolygon(pt, z.points))
+      if (containing.length === 1) {
+        counts[containing[0].id]++
+      } else if (containing.length > 1) {
+        // Inside multiple overlapping zones — assign to the smallest one (fewest points = most specific)
+        const smallest = containing.reduce((a, b) => a.points.length <= b.points.length ? a : b)
+        counts[smallest.id]++
+      } else {
+        // Outside all zones — assign to nearest zone by centroid
+        let nearestId = zones[0].id
+        let nearestDist = Infinity
+        zones.forEach(z => {
+          const cx = z.points.reduce((s, p) => s + p[0], 0) / z.points.length
+          const cy = z.points.reduce((s, p) => s + p[1], 0) / z.points.length
+          const d = Math.hypot(m.lng - cx, m.lat - cy)
+          if (d < nearestDist) { nearestDist = d; nearestId = z.id }
+        })
+        counts[nearestId]++
+      }
     })
     return zones.map(zone => ({ zone, count: counts[zone.id] }))
   }, [project])
