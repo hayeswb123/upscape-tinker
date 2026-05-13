@@ -1076,7 +1076,9 @@ function AIChatPane({ projects }: { projects: Project[] }) {
     'How many path lights for 100ft?',
     'Best fixture for a stone wall?',
     'Why are my lights flickering?',
-    'Turn a daytime photo into a night preview',
+    '📸 Drop a photo to preview lighting',
+    '📸 Show what this yard looks like lit up',
+    '📸 Turn this daytime photo into a night preview',
   ]
 
   React.useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:'smooth' }) }, [messages])
