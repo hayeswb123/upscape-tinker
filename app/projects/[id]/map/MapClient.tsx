@@ -13,7 +13,7 @@ const TOOLS = [
   { id: 'path',    label: 'Path',    icon: PathIcon   },
   { id: 'flood',   label: 'Flood',   icon: FloodIcon  },
   { id: 'well',    label: 'Well',    icon: WellIcon   },
-  { id: 'power',   label: 'Xfmr',    icon: PowerIcon  },
+  { id: 'power',   label: 'T-Former', icon: PowerIcon  },
   { id: 'wire',    label: 'Wire',    icon: WireIcon   },
   { id: 'zone',    label: 'Zone',    icon: ZoneIcon   },
   { id: 'select',  label: 'Select',  icon: SelectIcon },
@@ -32,7 +32,7 @@ function markerEl(type: string) {
   const color = FIXTURE_COLORS[type] || '#F4884A'
   // Outer div: Mapbox owns the transform on this element — never touch it
   const el = document.createElement('div')
-  el.style.cssText = `width:22px;height:22px;cursor:pointer;`
+  el.style.cssText = `width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;`
 
   // Inner div: we animate this one only
   const inner = document.createElement('div')
