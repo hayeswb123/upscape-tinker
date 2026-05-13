@@ -460,13 +460,10 @@ function AvatarMenu({ initials, userEmail, logout, lightMode }: { initials: stri
 }
 
 // ── PROJECTS ──────────────────────────────────────────
-const PROJ_STATUS_OPTS = ['all', 'draft', 'quoted', 'approved', 'installed'] as const
-
 function ProjectsSection({ projects, loading, router, installedCount, deleteClient }: any) {
   const [hoveredId, setHoveredId]   = useState<string | null>(null)
   const [confirmDel, setConfirmDel] = useState<string | null>(null)
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<typeof PROJ_STATUS_OPTS[number]>('all')
 
   const clientMap = React.useMemo(() => {
     const map = new Map<string, { name: string; address: string; projects: Project[] }>()
@@ -478,18 +475,16 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
     return map
   }, [projects])
 
-  // Filter clientMap by search + status
+  // Filter clientMap by search
   const filteredClientEntries = useMemo(() => {
     const q = search.trim().toLowerCase()
     return Array.from(clientMap.entries()).filter(([_key, client]) => {
-      const matchSearch = !q ||
+      return !q ||
         client.name.toLowerCase().includes(q) ||
         client.address.toLowerCase().includes(q) ||
         client.projects.some((p: Project) => (p.name || '').toLowerCase().includes(q))
-      const matchStatus = statusFilter === 'all' || client.projects.some((p: Project) => p.status === statusFilter)
-      return matchSearch && matchStatus
     })
-  }, [clientMap, search, statusFilter])
+  }, [clientMap, search])
 
   const clientCount = clientMap.size
 
@@ -525,23 +520,6 @@ function ProjectsSection({ projects, loading, router, installedCount, deleteClie
         {search && (
           <button onClick={() => setSearch('')} style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', color:'rgba(255,255,255,0.35)', cursor:'pointer', fontSize:15, lineHeight:1, padding:2 }}>✕</button>
         )}
-      </div>
-
-      {/* Status filter chips */}
-      <div style={{ display:'flex', gap:6, marginBottom:20, overflowX:'auto' }}>
-        {PROJ_STATUS_OPTS.map(s => {
-          const active = statusFilter === s
-          const chipColor = s === 'all' ? 'rgba(var(--accent-rgb),1)' : STATUS_COLOR[s]
-          return (
-            <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              style={{ flexShrink:0, padding:'4px 11px', borderRadius:20, border:`1px solid ${active ? chipColor : 'rgba(255,255,255,0.1)'}`, background: active ? chipColor + '22' : 'rgba(255,255,255,0.04)', color: active ? chipColor : 'rgba(255,255,255,0.4)', fontSize:11, fontWeight:600, cursor:'pointer', transition:'all 0.12s' }}
-            >
-              {s === 'all' ? 'All' : STATUS_LABEL[s]}
-            </button>
-          )
-        })}
       </div>
 
       {/* loading */}
