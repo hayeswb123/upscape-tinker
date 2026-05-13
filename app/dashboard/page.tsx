@@ -1233,36 +1233,77 @@ function AIChatPane({ projects }: { projects: Project[] }) {
             <div style={{ width:26, height:26, borderRadius:8, background:'rgba(244,136,74,0.1)', border:'1px solid rgba(244,136,74,0.2)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#F4884A" strokeWidth="1.8"><path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-4 4H8a4 4 0 01-4-4v-1H3a3 3 0 01-3-3V10a3 3 0 013-3h1V6a4 4 0 014-4h4z" strokeLinejoin="round"/><circle cx="9" cy="11" r="1" fill="#F4884A" stroke="none"/><circle cx="15" cy="11" r="1" fill="#F4884A" stroke="none"/></svg>
             </div>
-            {/* canvas */}
-            <div style={{ width:280, borderRadius:'14px 14px 14px 4px', overflow:'hidden', border:'1px solid rgba(244,136,74,0.15)', animation:'genPulse 2.4s ease-in-out infinite', background:'#0c0a08', position:'relative' }}>
-              {/* mesh gradient bg */}
-              <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse 80% 60% at 30% 40%, rgba(244,136,74,0.12) 0%, transparent 65%), radial-gradient(ellipse 60% 50% at 70% 70%, rgba(180,60,10,0.09) 0%, transparent 60%)', animation:'meshDrift 6s ease-in-out infinite', pointerEvents:'none' }} />
-              {/* shimmer sweep */}
-              <div style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
-                <div style={{ position:'absolute', top:0, bottom:0, width:'40%', background:'linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)', animation:'shimmerMove 1.8s ease-in-out infinite' }} />
-              </div>
-              {/* fake image rows */}
-              <div style={{ padding:'16px 16px 14px', display:'flex', flexDirection:'column', gap:8, position:'relative', zIndex:1 }}>
-                <div style={{ height:110, borderRadius:8, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.05)', overflow:'hidden', position:'relative' }}>
-                  <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg, rgba(244,136,74,0.06), rgba(180,60,10,0.03), transparent)', animation:'meshDrift 8s ease-in-out infinite reverse' }} />
-                  <div style={{ position:'absolute', inset:0, overflow:'hidden' }}>
-                    <div style={{ position:'absolute', top:0, bottom:0, width:'60%', background:'linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)', animation:'shimmerMove 2.2s ease-in-out .3s infinite' }} />
+            {/* ChatGPT-style shimmer card */}
+            <div style={{
+              width: 280, borderRadius:'14px 14px 14px 4px',
+              background:'#0d0d0f',
+              border:'1px solid rgba(255,255,255,0.08)',
+              boxShadow:'0 0 0 1px rgba(244,136,74,0.12), 0 0 32px rgba(244,136,74,0.08)',
+              animation:'genPulse 3s ease-in-out infinite',
+              overflow:'hidden', position:'relative',
+            }}>
+              {/* floating particles */}
+              {[
+                { top:'18%', left:'12%', size:3, dur:'3.2s', del:'0s' },
+                { top:'55%', left:'75%', size:2, dur:'4.1s', del:'0.8s' },
+                { top:'30%', left:'60%', size:2.5, dur:'3.6s', del:'0.4s' },
+                { top:'72%', left:'25%', size:2, dur:'4.8s', del:'1.2s' },
+                { top:'12%', left:'85%', size:1.5, dur:'3.9s', del:'0.6s' },
+              ].map((p, i) => (
+                <div key={i} style={{
+                  position:'absolute', width:p.size, height:p.size, borderRadius:'50%',
+                  background:'rgba(244,136,74,0.55)',
+                  top:p.top, left:p.left,
+                  animation:`float ${p.dur} ease-in-out ${p.del} infinite`,
+                  filter:'blur(0.5px)',
+                  pointerEvents:'none', zIndex:3,
+                }} />
+              ))}
+
+              {/* image placeholder area */}
+              <div style={{ position:'relative', height:200, overflow:'hidden', background:'#111114' }}>
+                {/* base blurred gradient that slowly "forms" */}
+                <div style={{
+                  position:'absolute', inset:0,
+                  background:'radial-gradient(ellipse 70% 55% at 40% 45%, rgba(244,136,74,0.09) 0%, transparent 60%), radial-gradient(ellipse 50% 45% at 75% 65%, rgba(100,40,10,0.07) 0%, transparent 55%)',
+                  animation:'meshDrift 7s ease-in-out infinite',
+                }} />
+                {/* grain overlay */}
+                <div style={{
+                  position:'absolute', inset:0, opacity:0.35,
+                  backgroundImage:`url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E")`,
+                  animation:'grainAnim 0.4s steps(1) infinite',
+                  pointerEvents:'none', zIndex:2,
+                }} />
+                {/* main shimmer sweep */}
+                <div style={{ position:'absolute', inset:0, overflow:'hidden', zIndex:2 }}>
+                  <div style={{
+                    position:'absolute', top:0, bottom:0, width:'55%',
+                    background:'linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.045) 45%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.045) 55%, transparent 100%)',
+                    animation:'shimmerMove 2s cubic-bezier(.4,0,.6,1) infinite',
+                  }} />
+                </div>
+                {/* subtle horizontal scan lines */}
+                <div style={{
+                  position:'absolute', inset:0, zIndex:1,
+                  backgroundImage:'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.012) 3px, rgba(255,255,255,0.012) 4px)',
+                }} />
+                {/* center icon */}
+                <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', zIndex:3 }}>
+                  <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" opacity="0.18">
+                      <rect x="3" y="3" width="18" height="18" rx="3" stroke="white" strokeWidth="1.2"/>
+                      <circle cx="8.5" cy="8.5" r="1.8" stroke="white" strokeWidth="1.2"/>
+                      <polyline points="21 15 16 10 5 21" stroke="white" strokeWidth="1.2"/>
+                    </svg>
                   </div>
                 </div>
-                <div style={{ display:'flex', gap:6 }}>
-                  <div style={{ flex:1, height:6, borderRadius:4, background:'rgba(255,255,255,0.06)', overflow:'hidden', position:'relative' }}>
-                    <div style={{ position:'absolute', inset:0, background:'linear-gradient(90deg, transparent, rgba(244,136,74,0.2), transparent)', animation:'shimmerMove 1.6s ease-in-out infinite' }} />
-                  </div>
-                  <div style={{ width:'30%', height:6, borderRadius:4, background:'rgba(255,255,255,0.04)' }} />
-                </div>
-                <div style={{ height:4, borderRadius:4, background:'rgba(255,255,255,0.04)', overflow:'hidden', position:'relative' }}>
-                  <div style={{ position:'absolute', inset:0, background:'linear-gradient(90deg, transparent, rgba(244,136,74,0.15), transparent)', animation:'shimmerMove 1.4s ease-in-out .2s infinite' }} />
-                </div>
               </div>
+
               {/* stage label */}
-              <div style={{ padding:'0 16px 14px', display:'flex', alignItems:'center', gap:7, position:'relative', zIndex:1 }}>
+              <div style={{ padding:'10px 14px 12px', display:'flex', alignItems:'center', gap:7 }}>
                 <div style={{ width:5, height:5, borderRadius:'50%', background:'#F4884A', animation:'ambientPulse 1s ease-in-out infinite', flexShrink:0 }} />
-                <span style={{ fontSize:11, color:'rgba(244,136,74,0.7)', letterSpacing:'-0.01em', animation:'ambientPulse 2s ease-in-out infinite' }}>{genStage}</span>
+                <span style={{ fontSize:11, color:'rgba(244,136,74,0.65)', letterSpacing:'-0.01em', animation:'ambientPulse 2s ease-in-out infinite' }}>{genStage || 'Generating…'}</span>
               </div>
             </div>
           </div>
