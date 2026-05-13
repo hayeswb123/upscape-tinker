@@ -78,9 +78,20 @@ const AMP_TRANSFORMERS = [
   { maxW: 9999, name: '1200W Multi-tap Transformer', sku: 'VTR-1200',                 price: 699.99, url: 'https://www.amplighting.com/low-voltage-multitap-transformer-outdoor-lighting-1200' },
 ]
 
-// Estimated wattage per fixture type (typical 5W MR16 LEDs)
-const FIXTURE_WATTS: Record<string, number> = {
-  uplight: 5, path: 3, flood: 7, well: 5, downlight: 5, hardscape: 3,
+// Wattage per fixture type based on typical LED specs
+export const FIXTURE_WATTS: Record<string, number> = {
+  uplight: 7, path: 4, flood: 12, well: 7, downlight: 7, hardscape: 4,
+}
+
+// Returns total wattage for a set of markers (with 20% safety buffer)
+export function calcTotalWatts(markers: Array<{ type: string; qty: number }>): number {
+  const raw = markers.reduce((s, m) => s + (FIXTURE_WATTS[m.type] || 0) * (m.qty || 1), 0)
+  return Math.ceil(raw * 1.2)
+}
+
+// Returns the recommended AMP transformer for a given wattage load
+export function recommendTransformer(totalWatts: number): typeof AMP_TRANSFORMERS[number] {
+  return AMP_TRANSFORMERS.find(t => t.maxW >= totalWatts) || AMP_TRANSFORMERS[AMP_TRANSFORMERS.length - 1]
 }
 
 const WIRE_COST_PER_FOOT: Record<TierId, number> = {

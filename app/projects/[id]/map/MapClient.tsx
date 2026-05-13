@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { supabase, type Project, type Marker, type Wire, type Zone } from '@/lib/supabase'
-import { FIXTURES, TIERS, TIERS as _TIERS, calcQuote, type FixtureType } from '@/lib/catalog'
+import { FIXTURES, TIERS, TIERS as _TIERS, calcQuote, calcTotalWatts, recommendTransformer, type FixtureType } from '@/lib/catalog'
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!
 
@@ -581,7 +581,17 @@ export default function MapClient({ projectId }: { projectId: string }) {
     return q[tier]?.total ?? null
   }, [project])
 
-  // Zone fixture membership — point-in-polygon first, nearest centroid as fallback
+  // Wattage summary
+  const wattageInfo = useMemo(() => {
+    if (!project) return null
+    const fixtures = (project.markers || []).filter(m => m.type !== 'power')
+    if (fixtures.length === 0) return null
+    const totalW = calcTotalWatts(fixtures)
+    const xfmr = recommendTransformer(totalW)
+    return { totalW, xfmr }
+  }, [project])
+
+  // Zone fixture membership — each fixture binds to its nearest zone by centroid distance
   const zoneFixtureCounts = useMemo(() => {
     if (!project) return []
     const zones = project.zones || []
@@ -787,6 +797,15 @@ export default function MapClient({ projectId }: { projectId: string }) {
               <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>{count} fix</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Wattage + transformer recommendation chip */}
+      {wattageInfo && (
+        <div style={{ position: 'absolute', top: zoneFixtureCounts.length > 0 && tool !== 'zone' ? (64 + zoneFixtureCounts.length * 28 + 40) : 64, right: 14, zIndex: 20, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(10px)', border: '1px solid rgba(156,163,175,0.35)', borderRadius: 10, padding: '8px 12px', minWidth: 140 }}>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Load</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', marginBottom: 2 }}>{wattageInfo.totalW}W total</div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>→ {wattageInfo.xfmr.name.replace(' Transformer', '').replace(' Slim Line', '').replace(' Multi-tap', '')}</div>
         </div>
       )}
 

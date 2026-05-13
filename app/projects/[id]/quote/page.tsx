@@ -2,7 +2,7 @@
 import { useEffect, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, type Project } from '@/lib/supabase'
-import { TIERS, calcQuote, type TierId } from '@/lib/catalog'
+import { TIERS, calcQuote, calcTotalWatts, recommendTransformer, type TierId } from '@/lib/catalog'
 
 const fmt = (n: number) => '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })
 
@@ -45,6 +45,9 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
 
   const quote = calcQuote(project)
   const wireFeet = (project.wires || []).reduce((s, w) => s + (w.feet || 0), 0)
+  const fixtures = (project.markers || []).filter(m => m.type !== 'power')
+  const totalWatts = calcTotalWatts(fixtures)
+  const recXfmr = recommendTransformer(totalWatts)
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100dvh' }}>
@@ -52,6 +55,17 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
         <button onClick={() => router.push(`/projects/${id}/map`)} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 20, cursor: 'pointer' }}>‹ Map</button>
         <span style={{ fontWeight: 600, fontSize: 14 }}>Quote — {project.homeowner || project.name}</span>
       </header>
+
+      {fixtures.length > 0 && (
+        <div style={{ margin: '12px 16px 0', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+            <span style={{ fontWeight: 600, color: 'var(--fg)' }}>{fixtures.length} fixtures</span> · <span style={{ fontWeight: 600, color: 'var(--fg)' }}>{totalWatts}W</span> total load (incl. 20% buffer)
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--muted)', textAlign: 'right', flexShrink: 0 }}>
+            Needs: <span style={{ fontWeight: 600, color: 'var(--accent)' }}>{recXfmr.name}</span>
+          </div>
+        </div>
+      )}
 
       <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, paddingBottom: 100, alignItems: 'start' }}>
         {(Object.keys(TIERS) as TierId[]).map(tierId => {
