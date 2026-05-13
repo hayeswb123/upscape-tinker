@@ -53,11 +53,11 @@ function markerEl(type: string) {
 
 function markerSVG(type: string) {
   const svgs: Record<string, string> = {
-    uplight:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2l8 18H4z"/></svg>`,
+    uplight:   `<svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path transform="translate(0,-2)" d="M12 2l8 18H4z"/></svg>`,
     path:      `<svg width="12" height="12" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3" fill="${FIXTURE_COLORS.path}22"/></svg>`,
-    flood:     `<svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 3l10 18H2z"/><path d="M12 8l6 11H6z" fill="rgba(255,255,255,0.3)"/></svg>`,
+    flood:     `<svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path transform="translate(0,-3)" d="M12 3l10 18H2z"/><path transform="translate(0,-3)" d="M12 8l6 11H6z" fill="rgba(255,255,255,0.3)"/></svg>`,
     well:      `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="white"/></svg>`,
-    downlight: `<svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 22l8-18H4z"/></svg>`,
+    downlight: `<svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path transform="translate(0,2)" d="M12 22l8-18H4z"/></svg>`,
     hardscape: `<svg width="12" height="12" viewBox="0 0 24 24" fill="white"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`,
     power:     `<svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
   }
