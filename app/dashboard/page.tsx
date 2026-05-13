@@ -1170,7 +1170,8 @@ function AIChatPane({ projects }: { projects: Project[] }) {
         const blob = new Blob([ab], { type: snap.mime })
         const file = new File([blob], 'yard.png', { type: snap.mime })
 
-        const editPrompt = `This is a real photograph of a specific yard. DO NOT change anything about the yard — keep every tree, plant, pathway, structure, lawn, and camera angle EXACTLY as shown in the original photo. The ONLY change allowed is: make it nighttime and add professional landscape lighting. Add warm amber uplights at the exact base of each tree shown, path lights along the exact existing walkways and driveways visible in the photo, and accent lights on the exact architecture shown. This must look like the original photo at night with lighting installed — not a new generated yard. Photorealistic, high-end residential lighting installation.${msg ? ` ${msg}` : ''}`
+        const userRequest = msg || 'Add professional landscape lighting'
+        const editPrompt = `STRICT INSTRUCTION: You are editing the EXACT photo provided. Do NOT generate a new image. Do NOT replace this photo with a stock photo, illustration, or AI-generated yard. The provided image IS the yard — preserve every single detail: the exact trees, plants, lawn, pathways, driveway, house, fences, camera angle, perspective, and composition. Nothing in the scene changes except what is explicitly requested. Apply only this change to the original photo: ${userRequest}. The result must be photorealistic and look like the exact same yard from the exact same camera angle, with only the requested change applied. If lighting is involved, add warm amber uplights at tree bases, path lights along existing walkways, and accent lights on existing architecture — all placed exactly where the original photo shows those features.`
 
         setGenStage('Applying lighting to your yard…')
         const formData = new FormData()
