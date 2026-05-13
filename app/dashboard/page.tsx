@@ -1,16 +1,19 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, type Project } from '@/lib/supabase'
 
 const STATUS_LABEL: Record<string, string> = { draft: 'Draft', quoted: 'Quoted', approved: 'Approved', installed: 'Installed' }
 const STATUS_COLOR: Record<string, string> = { draft: '#6b7280', quoted: '#3b82f6', approved: '#22c55e', installed: '#a78bfa' }
+const STATUS_OPTS = ['all', 'draft', 'quoted', 'approved', 'installed'] as const
 
 export default function DashboardPage() {
   const router = useRouter()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<typeof STATUS_OPTS[number]>('all')
 
   useEffect(() => {
     fetchProjects()
@@ -35,6 +38,15 @@ export default function DashboardPage() {
 
   const fmt = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return projects.filter(p => {
+      const matchStatus = statusFilter === 'all' || p.status === statusFilter
+      const matchSearch = !q || (p.homeowner || '').toLowerCase().includes(q) || (p.address || '').toLowerCase().includes(q) || (p.name || '').toLowerCase().includes(q)
+      return matchStatus && matchSearch
+    })
+  }, [projects, search, statusFilter])
+
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100dvh' }}>
       <header style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '0 20px', height: 52, display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -43,9 +55,9 @@ export default function DashboardPage() {
         <button onClick={logout} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 13 }}>Sign out</button>
       </header>
 
-      <div style={{ padding: '24px 20px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ padding: '20px 20px 10px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Projects</h1>
-        <span style={{ background: 'var(--surface2)', borderRadius: 20, fontSize: 12, fontWeight: 600, padding: '2px 10px', color: 'var(--muted)' }}>{projects.length}</span>
+        <span style={{ background: 'var(--surface2)', borderRadius: 20, fontSize: 12, fontWeight: 600, padding: '2px 10px', color: 'var(--muted)' }}>{filtered.length}</span>
         <span style={{ flex: 1 }} />
         <button
           onClick={() => router.push('/projects/new')}
@@ -55,16 +67,51 @@ export default function DashboardPage() {
         </button>
       </div>
 
+      {/* Search */}
+      <div style={{ padding: '0 20px 10px' }}>
+        <div style={{ position: 'relative' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2.5" style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search homeowner, address…"
+            style={{ width: '100%', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 9, color: 'var(--text)', fontSize: 14, padding: '9px 12px 9px 32px', outline: 'none' }}
+          />
+          {search && (
+            <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: 2 }}>✕</button>
+          )}
+        </div>
+      </div>
+
+      {/* Status filter chips */}
+      <div style={{ padding: '0 20px 14px', display: 'flex', gap: 7, overflowX: 'auto' }}>
+        {STATUS_OPTS.map(s => {
+          const active = statusFilter === s
+          const color = s === 'all' ? 'var(--accent)' : STATUS_COLOR[s]
+          return (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 20, border: `1px solid ${active ? color : 'var(--border)'}`, background: active ? color + '22' : 'var(--surface)', color: active ? color : 'var(--muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.12s' }}
+            >
+              {s === 'all' ? 'All' : STATUS_LABEL[s]}
+            </button>
+          )
+        })}
+      </div>
+
       <div style={{ padding: '0 20px 80px' }}>
         {loading && <p style={{ color: 'var(--muted)', textAlign: 'center', paddingTop: 40 }}>Loading…</p>}
-        {!loading && projects.length === 0 && (
+        {!loading && filtered.length === 0 && (
           <div style={{ textAlign: 'center', paddingTop: 60, color: 'var(--muted)' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>✦</div>
-            <p style={{ fontWeight: 600, color: 'var(--text)' }}>No projects yet</p>
-            <p style={{ fontSize: 14 }}>Tap New above to start your first project</p>
+            <p style={{ fontWeight: 600, color: 'var(--text)' }}>{projects.length === 0 ? 'No projects yet' : 'No matches'}</p>
+            <p style={{ fontSize: 14 }}>{projects.length === 0 ? 'Tap New above to start your first project' : 'Try a different search or filter'}</p>
           </div>
         )}
-        {projects.map(p => {
+        {filtered.map(p => {
           const fixtureCount = (p.markers || []).filter(m => m.type !== 'power').length
           return (
             <div
