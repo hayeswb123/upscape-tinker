@@ -254,7 +254,7 @@ export default function DashboardPage() {
 
       {/* ── SIDEBAR ── */}
       <aside style={{
-        width: 160, flexShrink: 0,
+        width: 200, flexShrink: 0,
         display: 'flex', flexDirection: 'column',
         background: L ? 'rgba(255,255,255,0.62)' : 'rgba(12,10,8,0.55)',
         backdropFilter: 'blur(32px) saturate(180%)',
