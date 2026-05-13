@@ -1076,9 +1076,10 @@ function AIChatPane({ projects }: { projects: Project[] }) {
     'How many path lights for 100ft?',
     'Best fixture for a stone wall?',
     'Why are my lights flickering?',
-    '📸 Drop a photo to preview lighting',
-    '📸 Show what this yard looks like lit up',
-    '📸 Turn this daytime photo into a night preview',
+    'Create a realistic landscape lighting design for this house.',
+    'Add warm pathway lights along the walkway and uplights on the trees.',
+    'Make this backyard feel more luxury at night with subtle outdoor lighting.',
+    'Design a lighting plan using path lights, uplights, and accent lights.',
   ]
 
   React.useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:'smooth' }) }, [messages])
