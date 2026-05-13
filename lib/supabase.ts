@@ -20,6 +20,7 @@ export type Project = {
   markers: Marker[]
   wires: Wire[]
   zones: Zone[]
+  cover_image: string | null
   created_at: string
 }
 
@@ -42,5 +43,6 @@ export type Wire = {
 export type Zone = {
   id: string
   label: string
+  color: string
   points: [number, number][]
 }
