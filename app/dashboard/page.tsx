@@ -1283,12 +1283,32 @@ function AIChatPane({ projects }: { projects: Project[] }) {
         </div>
       )}
 
-      {/* pending image preview */}
+      {/* pending image preview + photo prompt chips */}
       {pendingImg && (
-        <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'rgba(244,136,74,0.06)', border:'1px solid rgba(244,136,74,0.15)', borderRadius:10, marginBottom:6, flexShrink:0 }}>
-          <img src={pendingImg.preview} alt="" style={{ width:38, height:38, borderRadius:6, objectFit:'cover', flexShrink:0 }} />
-          <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)', flex:1 }}>Photo ready — add a note or send for analysis</span>
-          <button onClick={()=>setPendingImg(null)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.25)', cursor:'pointer', fontSize:16, lineHeight:1, padding:'0 2px' }}>×</button>
+        <div style={{ marginBottom:6, flexShrink:0 }}>
+          {/* photo thumbnail row */}
+          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'rgba(244,136,74,0.06)', border:'1px solid rgba(244,136,74,0.15)', borderRadius:10, marginBottom:8 }}>
+            <img src={pendingImg.preview} alt="" style={{ width:38, height:38, borderRadius:6, objectFit:'cover', flexShrink:0 }} />
+            <span style={{ fontSize:11, color:'rgba(255,255,255,0.45)', flex:1 }}>Photo ready — pick a style or type your own</span>
+            <button onClick={()=>setPendingImg(null)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.25)', cursor:'pointer', fontSize:16, lineHeight:1, padding:'0 2px' }}>×</button>
+          </div>
+          {/* contextual prompt chips */}
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+            {[
+              'Show this yard with warm amber lighting at night',
+              'Make it look like dusk with soft lighting',
+              'Add dramatic uplighting to the trees',
+              'Show path lights along the walkway',
+              'Make it look like a luxury lighting install',
+            ].map(q => (
+              <button key={q} onClick={() => send(q)}
+                style={{ background:'rgba(244,136,74,0.08)', border:'1px solid rgba(244,136,74,0.2)', borderRadius:8, color:'rgba(255,255,255,0.6)', fontSize:11, padding:'6px 12px', cursor:'pointer', letterSpacing:'-0.01em', transition:'all .15s', fontFamily:'inherit' }}
+                onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='rgba(244,136,74,0.16)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.9)'}}
+                onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='rgba(244,136,74,0.08)';(e.currentTarget as HTMLElement).style.color='rgba(255,255,255,0.6)'}}>
+                {q}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
