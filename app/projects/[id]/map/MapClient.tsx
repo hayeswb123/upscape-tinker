@@ -13,7 +13,7 @@ const TOOLS = [
   { id: 'path',    label: 'Path',    icon: PathIcon   },
   { id: 'flood',   label: 'Flood',   icon: FloodIcon  },
   { id: 'well',    label: 'Well',    icon: WellIcon   },
-  { id: 'power',   label: 'T-Former', icon: PowerIcon  },
+  { id: 'power',   label: 'Power',   icon: PowerIcon  },
   { id: 'wire',    label: 'Wire',    icon: WireIcon   },
   { id: 'zone',    label: 'Zone',    icon: ZoneIcon   },
   { id: 'select',  label: 'Select',  icon: SelectIcon },
