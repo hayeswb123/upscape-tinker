@@ -581,13 +581,26 @@ export default function MapClient({ projectId }: { projectId: string }) {
     return q[tier]?.total ?? null
   }, [project])
 
-  // Zone fixture membership (point-in-polygon)
+  // Zone fixture membership — each fixture binds to its nearest zone by centroid distance
   const zoneFixtureCounts = useMemo(() => {
     if (!project) return []
-    return (project.zones || []).map(zone => {
-      const count = (project.markers || []).filter(m => m.type !== 'power' && pointInPolygon([m.lng, m.lat], zone.points)).length
-      return { zone, count }
+    const zones = project.zones || []
+    if (zones.length === 0) return []
+    const fixtures = (project.markers || []).filter(m => m.type !== 'power')
+    const counts: Record<string, number> = {}
+    zones.forEach(z => { counts[z.id] = 0 })
+    fixtures.forEach(m => {
+      let nearestId = zones[0].id
+      let nearestDist = Infinity
+      zones.forEach(z => {
+        const cx = z.points.reduce((s, p) => s + p[0], 0) / z.points.length
+        const cy = z.points.reduce((s, p) => s + p[1], 0) / z.points.length
+        const d = Math.hypot(m.lng - cx, m.lat - cy)
+        if (d < nearestDist) { nearestDist = d; nearestId = z.id }
+      })
+      counts[nearestId]++
     })
+    return zones.map(zone => ({ zone, count: counts[zone.id] }))
   }, [project])
 
   return (
@@ -748,17 +761,10 @@ export default function MapClient({ projectId }: { projectId: string }) {
         }}>Quote →</button>
       </header>
 
-      {/* Live running total chip */}
-      {liveQuote !== null && (
-        <div style={{ position: 'absolute', top: 64, right: 14, zIndex: 20, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(10px)', border: '1px solid rgba(244,136,74,0.35)', borderRadius: 10, padding: '5px 12px', pointerEvents: 'none' }}>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 1 }}>{((project as any)?.selected_tier || 'premium').toUpperCase()}</div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#F4884A' }}>${liveQuote.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
-        </div>
-      )}
 
       {/* Zone fixture count legend panel */}
       {zoneFixtureCounts.length > 0 && tool !== 'zone' && (
-        <div style={{ position: 'absolute', top: liveQuote !== null ? 116 : 64, right: 14, zIndex: 20, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(10px)', border: '1px solid rgba(59,130,246,0.35)', borderRadius: 10, padding: '8px 12px', minWidth: 120 }}>
+        <div style={{ position: 'absolute', top: 64, right: 14, zIndex: 20, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(10px)', border: '1px solid rgba(59,130,246,0.35)', borderRadius: 10, padding: '8px 12px', minWidth: 120 }}>
           <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Zones</div>
           {zoneFixtureCounts.map(({ zone, count }) => (
             <div key={zone.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 4 }}>
