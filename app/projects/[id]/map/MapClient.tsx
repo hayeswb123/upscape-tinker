@@ -30,14 +30,16 @@ const FIXTURE_COLORS: Record<string, string> = {
 
 function markerEl(type: string) {
   const color = FIXTURE_COLORS[type] || '#F4884A'
-  // Outer div: Mapbox owns the transform on this element — never touch it
+  // Outer div: Mapbox owns the transform on this element — never touch it.
+  // Size must exactly match the visual circle so anchor:'center' lands precisely.
   const el = document.createElement('div')
-  el.style.cssText = `width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;`
+  el.style.cssText = `width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;`
 
-  // Inner div: we animate this one only
+  // Inner div: box-sizing:border-box keeps the border inside the 24×24 box
+  // so the visual circle is exactly 24×24 and the center matches the anchor point.
   const inner = document.createElement('div')
   inner.style.cssText = `
-    width:22px;height:22px;border-radius:50%;
+    width:24px;height:24px;border-radius:50%;box-sizing:border-box;
     background:${color};border:2px solid rgba(255,255,255,0.9);
     display:flex;align-items:center;justify-content:center;
     box-shadow:0 0 0 2px ${color}44, 0 2px 6px rgba(0,0,0,0.6);
@@ -68,8 +70,10 @@ const WIRE_NODE_CSS = ``
 
 function wireNodeEl(_isNewest: boolean) {
   const el = document.createElement('div')
+  // box-sizing:border-box keeps the border inside the declared size so
+  // anchor:'center' lands the visual dot exactly on the tapped point.
   el.style.cssText = `
-    width:10px;height:10px;border-radius:50%;
+    width:10px;height:10px;border-radius:50%;box-sizing:border-box;
     background:#e8a030;border:2px solid rgba(255,255,255,0.85);
     box-shadow:0 0 6px #e8a03099;
     cursor:crosshair;
@@ -401,6 +405,24 @@ export default function MapClient({ projectId }: { projectId: string }) {
     const id = crypto.randomUUID()
     const marker: Marker = { id, type, lat, lng, qty: 1, label: '', notes: '' }
     addMarkerToMap(map, marker)
+
+    // Debug crosshair: tiny cyan dot placed at the exact same lngLat so you can
+    // compare it to the marker center. Fades out after 1.5 s then removes itself.
+    const dbgEl = document.createElement('div')
+    dbgEl.style.cssText = `
+      width:6px;height:6px;border-radius:50%;box-sizing:border-box;
+      background:cyan;border:1px solid rgba(0,0,0,0.6);
+      pointer-events:none;
+    `
+    const dbgMarker = new mapboxgl.Marker({ element: dbgEl, anchor: 'center' })
+      .setLngLat([lng, lat]).addTo(map)
+    let opacity = 1
+    const fade = setInterval(() => {
+      opacity -= 0.07
+      dbgEl.style.opacity = String(Math.max(0, opacity))
+      if (opacity <= 0) { clearInterval(fade); dbgMarker.remove() }
+    }, 60)
+
     setProject(p => p ? { ...p, markers: [...p.markers, marker] } : p)
     // Fetch latest then append to avoid race conditions with rapid placement
     const { data: proj } = await supabase.from('projects').select('markers').eq('id', projectId).single()
