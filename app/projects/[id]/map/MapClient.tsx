@@ -108,7 +108,9 @@ function addTerrain(map: mapboxgl.Map) {
       maxzoom: 14,
     })
   }
-  map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 })
+  // exaggeration: 1 (no amplification) keeps e.lngLat and marker elevation
+  // on the same terrain surface — exaggeration > 1 diverges the two on pitched maps
+  map.setTerrain({ source: 'mapbox-dem', exaggeration: 1 })
   map.setFog({ color: '#0f0f0f', 'high-color': '#1a1a2e', 'horizon-blend': 0.04 })
 }
 
@@ -358,6 +360,25 @@ export default function MapClient({ projectId }: { projectId: string }) {
             wireMarkersRef.current.push(marker)
             return
           }
+          // Screen-space debug dot — CSS absolute at the raw click pixel so it
+          // shows the TRUE click position regardless of terrain/pitch projection.
+          // The marker center should overlap this dot exactly when placement is correct.
+          if (mapDiv.current) {
+            const dot = document.createElement('div')
+            dot.style.cssText = `
+              position:absolute;pointer-events:none;z-index:999;
+              left:${e.point.x}px;top:${e.point.y}px;
+              width:8px;height:8px;border-radius:50%;box-sizing:border-box;
+              background:lime;border:1.5px solid rgba(0,0,0,0.7);
+              transform:translate(-50%,-50%);
+            `
+            mapDiv.current.appendChild(dot)
+            let op = 1
+            const fade = setInterval(() => {
+              op -= 0.05; dot.style.opacity = String(Math.max(0, op))
+              if (op <= 0) { clearInterval(fade); dot.remove() }
+            }, 50)
+          }
           placeMarker(map, currentTool as FixtureType, e.lngLat.lat, e.lngLat.lng)
         })
       })
@@ -370,6 +391,12 @@ export default function MapClient({ projectId }: { projectId: string }) {
     const mb = new mapboxgl.Marker({ element: el, draggable: true, anchor: 'center' })
       .setLngLat([m.lng, m.lat])
       .addTo(map)
+
+    // If the DEM tile wasn't loaded at placement time the marker silently lands at
+    // sea level (z=0) and projects to the wrong screen position on a pitched map.
+    // Re-calling setLngLat once the map is idle forces Mapbox to re-project using
+    // the now-loaded terrain elevation, snapping the marker to the surface.
+    map.once('idle', () => { mb.setLngLat([m.lng, m.lat]) })
 
     el.addEventListener('click', (e) => {
       e.stopPropagation()
@@ -405,24 +432,6 @@ export default function MapClient({ projectId }: { projectId: string }) {
     const id = crypto.randomUUID()
     const marker: Marker = { id, type, lat, lng, qty: 1, label: '', notes: '' }
     addMarkerToMap(map, marker)
-
-    // Debug crosshair: tiny cyan dot placed at the exact same lngLat so you can
-    // compare it to the marker center. Fades out after 1.5 s then removes itself.
-    const dbgEl = document.createElement('div')
-    dbgEl.style.cssText = `
-      width:6px;height:6px;border-radius:50%;box-sizing:border-box;
-      background:cyan;border:1px solid rgba(0,0,0,0.6);
-      pointer-events:none;
-    `
-    const dbgMarker = new mapboxgl.Marker({ element: dbgEl, anchor: 'center' })
-      .setLngLat([lng, lat]).addTo(map)
-    let opacity = 1
-    const fade = setInterval(() => {
-      opacity -= 0.07
-      dbgEl.style.opacity = String(Math.max(0, opacity))
-      if (opacity <= 0) { clearInterval(fade); dbgMarker.remove() }
-    }, 60)
-
     setProject(p => p ? { ...p, markers: [...p.markers, marker] } : p)
     // Fetch latest then append to avoid race conditions with rapid placement
     const { data: proj } = await supabase.from('projects').select('markers').eq('id', projectId).single()
