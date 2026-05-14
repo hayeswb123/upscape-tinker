@@ -474,8 +474,10 @@ export default function MapClient({ projectId }: { projectId: string }) {
   }
 
   async function savePopup(updated: Marker) {
-    // Re-render map marker when type changes
-    if (popup && updated.type !== popup.type && mapRef.current) {
+    // Re-render map marker when type changes — compare against project data,
+    // not popup state (popup state already reflects the new type by save time)
+    const originalType = projectRef.current?.markers.find(m => m.id === updated.id)?.type
+    if (originalType && updated.type !== originalType && mapRef.current) {
       const old = markersRef.current.get(updated.id)
       if (old) { old.remove(); markersRef.current.delete(updated.id) }
       addMarkerToMap(mapRef.current, updated)
