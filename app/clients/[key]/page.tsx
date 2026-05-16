@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation'
 import { supabase, type Project } from '@/lib/supabase'
 
 const STATUS_LABEL: Record<string, string> = { draft: 'Draft', quoted: 'Quoted', approved: 'Approved', installed: 'Installed' }
-const STATUS_COLOR: Record<string, string> = { draft: '#6b7280', quoted: '#F4884A', approved: '#22c55e', installed: '#a78bfa' }
+const STATUS_COLOR = (accent: string): Record<string, string> => ({ draft: '#6b7280', quoted: accent, approved: '#22c55e', installed: '#a78bfa' })
 
-function NoProjects({ clientName, address, router, L, muted }: { clientName: string; address: string; router: any; L: boolean; muted: string }) {
+function NoProjects({ clientName, address, router, L, muted, accent }: { clientName: string; address: string; router: any; L: boolean; muted: string; accent: string }) {
   const dust = React.useMemo(() => Array.from({ length: 8 }, (_, i) => ({
     id: i,
     left: 15 + (i * 43 + i * i * 9) % 70,
@@ -38,14 +38,14 @@ function NoProjects({ clientName, address, router, L, muted }: { clientName: str
         <svg width="100%" height="100%" style={{ position:'absolute', inset:0, pointerEvents:'none', overflow:'visible' }}>
           {lines.map((l,i) => (
             <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
-              stroke="rgba(244,136,74,0.5)" strokeWidth="1"
+              stroke={`${accent}80`} strokeWidth="1"
               strokeDasharray="4 6"
               style={{ animation:`linePulse 3s ease-in-out ${l.delay}s infinite` }} />
           ))}
           {/* small dots at line ends */}
           {lines.map((l,i) => (
             <circle key={i} cx={l.x2} cy={l.y2} r="2.5"
-              fill="rgba(244,136,74,0.35)"
+              fill={`${accent}59`}
               style={{ animation:`linePulse 3s ease-in-out ${l.delay}s infinite` }} />
           ))}
         </svg>
@@ -55,7 +55,7 @@ function NoProjects({ clientName, address, router, L, muted }: { clientName: str
           <div key={p.id} style={{
             position:'absolute', left:`${p.left}%`, top:`${p.top}%`,
             width:p.size, height:p.size, borderRadius:'50%',
-            background:'rgba(244,155,70,1)', pointerEvents:'none',
+            background:accent, pointerEvents:'none',
             ['--dx0' as any]:`${p.dx0}px`, ['--dy0' as any]:`${p.dy0}px`,
             ['--dx1' as any]:`${p.dx1}px`, ['--dy1' as any]:`${p.dy1}px`,
             ['--op' as any]:p.op,
@@ -83,7 +83,7 @@ function NoProjects({ clientName, address, router, L, muted }: { clientName: str
 
       <button className="new-btn"
         onClick={() => router.push(`/projects/new?homeowner=${encodeURIComponent(clientName)}&address=${encodeURIComponent(address)}`)}
-        style={{ background:'linear-gradient(135deg,#F4884A,#df6f28)', border:'none', borderRadius:11, color:'#fff', fontWeight:600, fontSize:13, padding:'12px 26px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:7, boxShadow:'0 0 24px rgba(244,136,74,0.28), 0 4px 14px rgba(0,0,0,0.35)', letterSpacing:'-0.01em' }}>
+        style={{ background:`linear-gradient(135deg,${accent},${accent}cc)`, border:'none', borderRadius:11, color:'#fff', fontWeight:600, fontSize:13, padding:'12px 26px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:7, boxShadow:`0 0 24px ${accent}47, 0 4px 14px rgba(0,0,0,0.35)`, letterSpacing:'-0.01em' }}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
         New project
       </button>
@@ -106,9 +106,11 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
   const [uploading, setUploading] = useState<string | null>(null)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [L, setL] = useState(false)
+  const [accent, setAccent] = useState('#F4884A')
 
   useEffect(() => {
     setL(localStorage.getItem('upscape_theme') === 'light')
+    setAccent(localStorage.getItem('upscape_accent') || '#F4884A')
     supabase
       .from('projects')
       .select('*')
@@ -177,13 +179,13 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
         @keyframes linePulse   { 0%,100%{opacity:.07} 50%{opacity:.18} }
         .client-dash-card { transition: transform .2s cubic-bezier(.22,1,.36,1), box-shadow .2s ease, border-color .2s ease; }
         .client-dash-card:hover { transform: translateY(-1px); }
-        .upscape-light .client-dash-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 1.5px rgba(244,136,74,.4) !important; border-color: rgba(244,136,74,.35) !important; }
-        .upscape-dark  .client-dash-card:hover { box-shadow: 0 6px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(244,136,74,.16) !important; border-color: rgba(244,136,74,.2) !important; }
+        .upscape-light .client-dash-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 0 0 1.5px ${accent}66 !important; border-color: ${accent}59 !important; }
+        .upscape-dark  .client-dash-card:hover { box-shadow: 0 6px 32px rgba(0,0,0,.55), 0 0 0 1px ${accent}29 !important; border-color: ${accent}33 !important; }
         .client-dash-card:hover .card-name-cl { ${L ? 'color:#1a1714 !important;' : 'color:rgba(255,255,255,.98) !important;'} }
         .card-arrow-cl { transition: transform .18s ease, opacity .18s ease; }
         .client-dash-card:hover .card-arrow-cl { transform: translateX(3px); opacity:.9 !important; }
         .new-btn { transition: box-shadow .2s ease, transform .18s ease; }
-        .new-btn:hover { transform: translateY(-1px); box-shadow: 0 0 20px rgba(244,136,74,.35), 0 4px 14px rgba(0,0,0,.4) !important; }
+        .new-btn:hover { transform: translateY(-1px); box-shadow: 0 0 20px ${accent}59, 0 4px 14px rgba(0,0,0,.4) !important; }
       `}</style>
 
       <div className={L ? 'upscape-light' : 'upscape-dark'}>
@@ -196,14 +198,14 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
           </button>
           <div style={{ width: 1, height: 20, background: divider }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg,rgba(244,136,74,0.2),rgba(244,136,74,0.07))', border: '1px solid rgba(244,136,74,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'rgba(244,136,74,0.9)', flexShrink: 0 }}>{initials}</div>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg,${accent}33,${accent}12)`, border: `1px solid ${accent}29`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: `${accent}e6`, flexShrink: 0 }}>{initials}</div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.03em', color: txt, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clientName}</div>
               {address && <div style={{ fontSize: 11, color: muted, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{address}</div>}
             </div>
           </div>
           <button className="new-btn" onClick={() => router.push(`/projects/new?homeowner=${encodeURIComponent(clientName)}&address=${encodeURIComponent(address)}`)}
-            style={{ background: 'linear-gradient(135deg,#F4884A,#df6f28)', border: 'none', borderRadius: 9, color: '#fff', fontWeight: 600, fontSize: 12, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, letterSpacing: '-0.02em', boxShadow: '0 2px 10px rgba(244,136,74,0.25)', flexShrink: 0 }}>
+            style={{ background: `linear-gradient(135deg,${accent},${accent}cc)`, border: 'none', borderRadius: 9, color: '#fff', fontWeight: 600, fontSize: 12, padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, letterSpacing: '-0.02em', boxShadow: `0 2px 10px ${accent}40`, flexShrink: 0 }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
             New project
           </button>
@@ -214,13 +216,13 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
 
           {loading && (
             <div style={{ textAlign: 'center', paddingTop: 60 }}>
-              <div style={{ width: 24, height: 24, border: '2px solid rgba(244,136,74,0.25)', borderTopColor: '#F4884A', borderRadius: '50%', animation: 'spin .8s linear infinite', margin: '0 auto 10px' }} />
+              <div style={{ width: 24, height: 24, border: `2px solid ${accent}40`, borderTopColor: accent, borderRadius: '50%', animation: 'spin .8s linear infinite', margin: '0 auto 10px' }} />
               <p style={{ color: muted, fontSize: 12 }}>Loading…</p>
             </div>
           )}
 
           {!loading && projects.length === 0 && (
-            <NoProjects clientName={clientName} address={address} router={router} L={L} muted={muted} />
+            <NoProjects clientName={clientName} address={address} router={router} L={L} muted={muted} accent={accent} />
           )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
@@ -237,16 +239,16 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
                   onMouseEnter={() => setHoveredId(p.id)}
                   onMouseLeave={() => setHoveredId(null)}
                   style={{ background: isHovered ? (L ? '#f5f2ee' : 'rgba(22,19,14,0.98)') : cardBg, border: cardBdr, borderRadius: 13, padding: '14px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 13, boxShadow: cardShadow, animation: 'fadeUp .3s ease both', animationDelay: `${i * .04}s`, position: 'relative', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', left: 0, top: 10, bottom: 10, width: 2.5, borderRadius: 2, background: STATUS_COLOR[p.status] || '#6b7280', opacity: .65 }} />
+                  <div style={{ position: 'absolute', left: 0, top: 10, bottom: 10, width: 2.5, borderRadius: 2, background: STATUS_COLOR(accent)[p.status] || '#6b7280', opacity: .65 }} />
 
                   {/* thumbnail / upload zone */}
                   <div
                     onClick={e => { e.stopPropagation(); fileInputRef.current?.click() }}
-                    style={{ width: 52, height: 52, borderRadius: 10, background: 'rgba(244,136,74,0.06)', border: '1px solid rgba(244,136,74,0.09)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: 7, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
+                    style={{ width: 52, height: 52, borderRadius: 10, background: `${accent}0f`, border: `1px solid ${accent}17`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: 7, overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
                     {p.cover_image
                       ? <img src={p.cover_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       : isUploading
-                        ? <div style={{ width: 18, height: 18, border: '2px solid rgba(244,136,74,0.25)', borderTopColor: '#F4884A', borderRadius: '50%', animation: 'spin .8s linear infinite' }} />
+                        ? <div style={{ width: 18, height: 18, border: `2px solid ${accent}40`, borderTopColor: accent, borderRadius: '50%', animation: 'spin .8s linear infinite' }} />
                         : <UpscapeMark size={22} />
                     }
                     {!isUploading && (
@@ -263,7 +265,7 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="card-name-cl" style={{ fontWeight: 600, fontSize: 14, letterSpacing: '-0.025em', color: txt, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', transition: 'color .18s' }}>{p.name || p.address || 'Untitled project'}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 4 }}>
-                      <span style={{ background: STATUS_COLOR[p.status] + '16', color: STATUS_COLOR[p.status], borderRadius: 5, fontSize: 10, fontWeight: 600, padding: '2px 6px', letterSpacing: '0.03em', textTransform: 'uppercase' }}>{STATUS_LABEL[p.status] || 'Draft'}</span>
+                      <span style={{ background: STATUS_COLOR(accent)[p.status] + '16', color: STATUS_COLOR(accent)[p.status], borderRadius: 5, fontSize: 10, fontWeight: 600, padding: '2px 6px', letterSpacing: '0.03em', textTransform: 'uppercase' }}>{STATUS_LABEL[p.status] || 'Draft'}</span>
                       <span style={{ color: metaColor, fontSize: 11 }}>{fixtureCount} fixture{fixtureCount !== 1 ? 's' : ''}{wireCount > 0 ? ` · ${wireCount}w` : ''}{zoneCount > 0 ? ` · ${zoneCount}z` : ''}</span>
                       <span style={{ color: dateColor, fontSize: 11, marginLeft: 'auto' }}>{fmt(p.created_at)}</span>
                     </div>
@@ -304,7 +306,7 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
               <h2 style={{ margin:'0 0 8px', fontSize:22, fontWeight:700, letterSpacing:'-0.04em', color:'rgba(255,255,255,0.82)', textAlign:'center' }}>Add another project</h2>
               <p style={{ margin:'0 0 24px', fontSize:12, color:'rgba(255,255,255,0.22)', textAlign:'center', lineHeight:1.6, maxWidth:200 }}>Map out a new lighting design for {clientName}.</p>
               <button onClick={() => router.push(`/projects/new?homeowner=${encodeURIComponent(clientName)}&address=${encodeURIComponent(address)}`)}
-                style={{ display:'flex', alignItems:'center', gap:6, padding:'11px 24px', borderRadius:11, background:'linear-gradient(135deg,#F4884A,#df6f28)', border:'none', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', letterSpacing:'-0.01em', boxShadow:'0 0 24px rgba(244,136,74,0.25), 0 4px 14px rgba(0,0,0,0.35)' }}>
+                style={{ display:'flex', alignItems:'center', gap:6, padding:'11px 24px', borderRadius:11, background:`linear-gradient(135deg,${accent},${accent}cc)`, border:'none', color:'#fff', fontSize:13, fontWeight:600, cursor:'pointer', letterSpacing:'-0.01em', boxShadow:`0 0 24px ${accent}40, 0 4px 14px rgba(0,0,0,0.35)` }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
                 + New project
               </button>
@@ -313,23 +315,23 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
               <div style={{ display:'flex', alignItems:'flex-start', gap:0, marginTop:52, width:'100%', maxWidth:480 }}>
                 {[
                   {
-                    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.7)" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+                    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={`${accent}b3`} strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
                     title: 'Map every yard',
                     desc: 'Place fixtures on a live satellite map.',
                   },
                   {
-                    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.7)" strokeWidth="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>,
+                    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={`${accent}b3`} strokeWidth="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>,
                     title: 'Design the lighting',
                     desc: 'Zones, wires, and fixture specs in one view.',
                   },
                   {
-                    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(244,136,74,0.7)" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
+                    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={`${accent}b3`} strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
                     title: 'Quote and close',
                     desc: 'Share proposals and track approval.',
                   },
                 ].map((f, i) => (
                   <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'flex-start', padding:'0 20px', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
-                    <div style={{ width:34, height:34, borderRadius:9, background:'rgba(244,136,74,0.08)', border:'1px solid rgba(244,136,74,0.12)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
+                    <div style={{ width:34, height:34, borderRadius:9, background:`${accent}14`, border:`1px solid ${accent}1f`, display:'flex', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
                       {f.icon}
                     </div>
                     <div style={{ fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.65)', marginBottom:4, letterSpacing:'-0.01em' }}>{f.title}</div>
