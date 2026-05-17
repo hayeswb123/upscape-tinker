@@ -45,6 +45,7 @@ export type Zone = {
   label: string
   color: string
   points: [number, number][]
+  pointSets?: [number, number][][]  // multiple polygons merged into one zone
 }
 
 export type ElectricianProfile = {

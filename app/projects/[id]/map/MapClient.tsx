@@ -494,9 +494,29 @@ export default function MapClient({ projectId }: { projectId: string }) {
   async function groupZones(sourceZone: Zone, targetIds: string[]) {
     const { data: proj } = await supabase.from('projects').select('zones').eq('id', projectId).single()
     if (!proj) return
-    const zones = (proj.zones as Zone[]).map(z =>
-      targetIds.includes(z.id) ? { ...z, label: sourceZone.label, color: sourceZone.color } : z
-    )
+    const all = proj.zones as Zone[]
+
+    // Collect every polygon ring from source + targets into one zone
+    const allRings: [number, number][][] = []
+    for (const z of all) {
+      if (targetIds.includes(z.id)) {
+        const rings = z.pointSets ? z.pointSets : [z.points]
+        allRings.push(...rings)
+      }
+    }
+
+    const merged: Zone = {
+      ...sourceZone,
+      points: allRings[0],
+      pointSets: allRings.length > 1 ? allRings : undefined,
+    }
+
+    // Keep merged zone, delete all others that were grouped
+    const otherId = targetIds.filter(id => id !== sourceZone.id)
+    const zones = all
+      .filter(z => !otherId.includes(z.id))
+      .map(z => z.id === sourceZone.id ? merged : z)
+
     await supabase.from('projects').update({ zones }).eq('id', projectId)
     ;(mapRef.current?.getSource('zones') as mapboxgl.GeoJSONSource)?.setData(zonesToGeoJSON(zones))
     ;(mapRef.current?.getSource('zone-labels') as mapboxgl.GeoJSONSource)?.setData(zonesToLabelGeoJSON(zones))
@@ -652,20 +672,23 @@ export default function MapClient({ projectId }: { projectId: string }) {
     fixtures.forEach(m => {
       const pt: [number, number] = [m.lng, m.lat]
       // Find all zones that contain this fixture
-      const containing = zones.filter(z => pointInPolygon(pt, z.points))
+      const zoneRings = (z: Zone) => z.pointSets ? z.pointSets : [z.points]
+      const inZone = (z: Zone) => zoneRings(z).some(ring => pointInPolygon(pt, ring))
+      const allPts = (z: Zone) => z.pointSets ? z.pointSets.flat() : z.points
+      const containing = zones.filter(z => inZone(z))
       if (containing.length === 1) {
         counts[containing[0].id]++
       } else if (containing.length > 1) {
-        // Inside multiple overlapping zones — assign to the smallest one (fewest points = most specific)
-        const smallest = containing.reduce((a, b) => a.points.length <= b.points.length ? a : b)
+        const smallest = containing.reduce((a, b) => allPts(a).length <= allPts(b).length ? a : b)
         counts[smallest.id]++
       } else {
         // Outside all zones — assign to nearest zone by centroid
         let nearestId = zones[0].id
         let nearestDist = Infinity
         zones.forEach(z => {
-          const cx = z.points.reduce((s, p) => s + p[0], 0) / z.points.length
-          const cy = z.points.reduce((s, p) => s + p[1], 0) / z.points.length
+          const pts = allPts(z)
+          const cx = pts.reduce((s, p) => s + p[0], 0) / pts.length
+          const cy = pts.reduce((s, p) => s + p[1], 0) / pts.length
           const d = Math.hypot(m.lng - cx, m.lat - cy)
           if (d < nearestDist) { nearestDist = d; nearestId = z.id }
         })
@@ -1559,16 +1582,24 @@ function wiresToGeoJSON(wires: Wire[]) {
   return { type: 'FeatureCollection' as const, features: wires.map(w => ({ type: 'Feature' as const, geometry: { type: 'LineString' as const, coordinates: w.points }, properties: { wireId: w.id, feet: w.feet } })) }
 }
 function zonesToGeoJSON(zones: Zone[]) {
-  return { type: 'FeatureCollection' as const, features: zones.map(z => ({ type: 'Feature' as const, geometry: { type: 'Polygon' as const, coordinates: [z.points] }, properties: { zoneId: z.id, color: z.color || '#3b82f6', label: z.label } })) }
+  return {
+    type: 'FeatureCollection' as const,
+    features: zones.map(z => {
+      const rings = z.pointSets ? z.pointSets : [z.points]
+      const geometry = rings.length > 1
+        ? { type: 'MultiPolygon' as const, coordinates: rings.map(r => [r]) }
+        : { type: 'Polygon' as const, coordinates: rings }
+      return { type: 'Feature' as const, geometry, properties: { zoneId: z.id, color: z.color || '#3b82f6', label: z.label } }
+    })
+  }
 }
 function zonesToLabelGeoJSON(zones: Zone[]) {
   return {
     type: 'FeatureCollection' as const,
     features: zones.map(z => {
-      const lngs = z.points.map(p => p[0])
-      const lats = z.points.map(p => p[1])
-      const cx = lngs.reduce((a, b) => a + b, 0) / lngs.length
-      const cy = lats.reduce((a, b) => a + b, 0) / lats.length
+      const allPts = z.pointSets ? z.pointSets.flat() : z.points
+      const cx = allPts.reduce((s, p) => s + p[0], 0) / allPts.length
+      const cy = allPts.reduce((s, p) => s + p[1], 0) / allPts.length
       return { type: 'Feature' as const, geometry: { type: 'Point' as const, coordinates: [cx, cy] }, properties: { label: z.label || 'Zone' } }
     }),
   }
