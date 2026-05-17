@@ -125,13 +125,11 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
           {(Object.keys(TIERS) as TierId[]).map(tierId => {
             const tier = TIERS[tierId]
             const q = quote[tierId]
-            const selected = project.selected_tier === tierId
 
             return (
               <div
                 key={tierId}
-                onClick={() => selectTier(tierId)}
-                style={{ background: '#1a1a1a', border: `2px solid ${selected ? tier.color : '#2e2e2e'}`, borderRadius: 14, overflow: 'hidden', cursor: 'pointer', position: 'relative' }}
+                style={{ background: '#1a1a1a', border: '1px solid #2e2e2e', borderRadius: 14, overflow: 'hidden', position: 'relative' }}
               >
                 <div style={{ borderTop: `3px solid ${tier.color}`, padding: '12px 12px 8px' }}>
                   <div style={{ fontWeight: 700, fontSize: 15, color: tier.color }}>{tier.label}</div>
@@ -161,10 +159,7 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
                   <span style={{ fontWeight: 700, fontSize: 17, color: tier.color }}>{fmt(q.total)}</span>
                 </div>
 
-                {selected && (
-                  <div style={{ position: 'absolute', top: 10, right: 10, background: tier.color, borderRadius: 5, fontSize: 10, fontWeight: 700, color: '#fff', padding: '2px 6px' }}>✓</div>
-                )}
-              </div>
+                </div>
             )
           })}
         </div>
