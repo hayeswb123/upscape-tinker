@@ -102,7 +102,7 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
         </div>
       )}
 
-      <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, paddingBottom: 100, alignItems: 'start' }}>
+      <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, paddingBottom: 16, alignItems: 'start' }}>
         {(Object.keys(TIERS) as TierId[]).map(tierId => {
           const tier = TIERS[tierId]
           const q = quote[tierId]
@@ -151,7 +151,7 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
       </div>
 
       {/* Put out to bid panel */}
-      <div style={{ margin: '0 16px 80px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '14px 16px' }}>
+      <div style={{ margin: '0 16px 120px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '14px 16px' }}>
         <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>Put labor out to bid</div>
         <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>
           Licensed electricians will submit sealed bids. The lowest valid bid wins when the deadline expires.
