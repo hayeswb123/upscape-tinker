@@ -105,6 +105,8 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [uploading, setUploading] = useState<string | null>(null)
   const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const [editProject, setEditProject] = useState<Project | null>(null)
+  const [saving, setSaving] = useState(false)
   const [L, setL] = useState(false)
   const [accent, setAccent] = useState('#F4884A')
 
@@ -121,6 +123,22 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
         setLoading(false)
       })
   }, [clientName])
+
+  async function saveProjectEdit() {
+    if (!editProject) return
+    setSaving(true)
+    await supabase.from('projects').update({
+      name: editProject.name,
+      homeowner: editProject.homeowner,
+      address: editProject.address,
+      phone: editProject.phone,
+      email: editProject.email,
+      status: editProject.status,
+    }).eq('id', editProject.id)
+    setProjects(prev => prev.map(p => p.id === editProject.id ? { ...p, ...editProject } : p))
+    setSaving(false)
+    setEditProject(null)
+  }
 
   async function deleteProject(id: string) {
     setProjects(prev => prev.filter(p => p.id !== id))
@@ -279,6 +297,9 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
                       </>
                     ) : (
                       <>
+                        <button onClick={e => { e.stopPropagation(); setEditProject({ ...p }) }} style={{ background: trashBtnBg, border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={trashColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
                         <button onClick={e => { e.stopPropagation(); setConfirmDelete(p.id) }} style={{ background: trashBtnBg, border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke={trashColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 11v5M14 11v5" stroke={trashColor} strokeWidth="1.8" strokeLinecap="round"/></svg>
                         </button>
@@ -343,6 +364,76 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
           )}
         </main>
       </div>
+
+      {/* Edit project modal */}
+      {editProject && (
+        <div onClick={() => setEditProject(null)} style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 520, background: L ? '#f5f2ee' : '#131210', border: L ? '1px solid #e0dbd4' : '1px solid rgba(255,255,255,0.08)', borderRadius: 18, overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.6)' }}>
+            {/* header */}
+            <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: L ? '1px solid #e0dbd4' : '1px solid rgba(255,255,255,0.07)' }}>
+              <span style={{ fontWeight: 700, fontSize: 16, color: L ? '#1a1714' : '#f0f0f0' }}>Project Settings</span>
+              <button onClick={() => setEditProject(null)} style={{ background: 'none', border: 'none', color: L ? '#888' : 'rgba(255,255,255,0.35)', cursor: 'pointer', fontSize: 20, padding: 4, lineHeight: 1 }}>✕</button>
+            </div>
+
+            {/* fields */}
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {([
+                { label: 'HOMEOWNER', key: 'homeowner' as const },
+                { label: 'ADDRESS',   key: 'address'   as const },
+                { label: 'PROJECT NAME', key: 'name'   as const },
+              ]).map(({ label, key }) => (
+                <div key={key}>
+                  <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', color: L ? '#888' : 'rgba(255,255,255,0.35)', marginBottom: 6 }}>{label}</div>
+                  <input
+                    value={editProject[key] as string}
+                    onChange={e => setEditProject({ ...editProject, [key]: e.target.value })}
+                    style={{ width: '100%', background: L ? '#fff' : 'rgba(255,255,255,0.05)', border: L ? '1px solid #d8d3cc' : '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '10px 13px', color: L ? '#1a1714' : '#f0f0f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+              ))}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {([
+                  { label: 'PHONE', key: 'phone' as const },
+                  { label: 'EMAIL', key: 'email' as const },
+                ]).map(({ label, key }) => (
+                  <div key={key}>
+                    <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', color: L ? '#888' : 'rgba(255,255,255,0.35)', marginBottom: 6 }}>{label}</div>
+                    <input
+                      value={editProject[key] as string}
+                      onChange={e => setEditProject({ ...editProject, [key]: e.target.value })}
+                      style={{ width: '100%', background: L ? '#fff' : 'rgba(255,255,255,0.05)', border: L ? '1px solid #d8d3cc' : '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '10px 13px', color: L ? '#1a1714' : '#f0f0f0', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', color: L ? '#888' : 'rgba(255,255,255,0.35)', marginBottom: 8 }}>STATUS</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
+                  {(['draft','quoted','approved','installed'] as const).map(s => {
+                    const active = editProject.status === s
+                    const color = STATUS_COLOR(accent)[s]
+                    return (
+                      <button key={s} onClick={() => setEditProject({ ...editProject, status: s })}
+                        style={{ padding: '8px 4px', borderRadius: 9, border: `1.5px solid ${active ? color : (L ? '#d8d3cc' : 'rgba(255,255,255,0.1)')}`, background: active ? `${color}18` : 'transparent', color: active ? color : (L ? '#888' : 'rgba(255,255,255,0.4)'), fontSize: 12, fontWeight: active ? 700 : 400, cursor: 'pointer', transition: 'all .15s', textTransform: 'capitalize' }}>
+                        {STATUS_LABEL[s]}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ padding: '0 20px 20px' }}>
+              <button onClick={saveProjectEdit} disabled={saving}
+                style={{ width: '100%', background: accent, border: 'none', borderRadius: 11, color: '#fff', fontSize: 15, fontWeight: 700, padding: 14, cursor: 'pointer', opacity: saving ? 0.7 : 1, transition: 'opacity .15s' }}>
+                {saving ? 'Saving…' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
