@@ -47,8 +47,8 @@ function NewProjectForm() {
     e.preventDefault()
     if (!form.address || !form.homeowner) return
     setSaving(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setSaving(false); return }
+    const { data: { user }, error: authErr } = await supabase.auth.getUser()
+    if (!user) { setSaving(false); alert('Not logged in: ' + (authErr?.message ?? 'no user')); return }
     const { data, error } = await supabase.from('projects').insert({
       user_id:       user.id,
       name:          form.name || form.homeowner,
