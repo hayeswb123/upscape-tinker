@@ -232,29 +232,31 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
               <button onClick={() => router.push('/dashboard')} style={{ background: 'none', border: 'none', color: '#F4884A', cursor: 'pointer', fontSize: 13, padding: 0 }}>View bids →</button>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <select
-                value={bidDeadlineHours}
-                onChange={e => setBidDeadlineHours(Number(e.target.value))}
-                style={{ background: '#242424', border: '1px solid #2e2e2e', borderRadius: 8, color: '#f0f0f0', fontSize: 12, padding: '6px 8px', cursor: 'pointer' }}
-              >
-                {DEADLINE_OPTIONS.map(o => <option key={o.hours} value={o.hours}>{o.label}</option>)}
-              </select>
-              <button
-                onClick={putToBid}
-                disabled={puttingToBid}
-                style={{ flex: 1, background: '#F4884A', border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, padding: '7px 14px', cursor: 'pointer', opacity: puttingToBid ? 0.6 : 1 }}
-              >
-                {puttingToBid ? 'Publishing…' : 'Put out to bid'}
-              </button>
-            </div>
-            {bidError && (
-              <p style={{ fontSize: 11, color: '#ef4444', margin: '8px 0 0', lineHeight: 1.4 }}>
-                {bidError.includes('relation') || bidError.includes('does not exist')
-                  ? '⚠ The bidding tables haven\'t been created yet. Run the new SQL from supabase-schema.sql in your Supabase SQL editor.'
-                  : bidError}
-              </p>
-            )}
+            <>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <select
+                  value={bidDeadlineHours}
+                  onChange={e => setBidDeadlineHours(Number(e.target.value))}
+                  style={{ background: '#242424', border: '1px solid #2e2e2e', borderRadius: 8, color: '#f0f0f0', fontSize: 12, padding: '6px 8px', cursor: 'pointer' }}
+                >
+                  {DEADLINE_OPTIONS.map(o => <option key={o.hours} value={o.hours}>{o.label}</option>)}
+                </select>
+                <button
+                  onClick={putToBid}
+                  disabled={puttingToBid}
+                  style={{ flex: 1, background: '#F4884A', border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, padding: '7px 14px', cursor: 'pointer', opacity: puttingToBid ? 0.6 : 1 }}
+                >
+                  {puttingToBid ? 'Publishing…' : 'Put out to bid'}
+                </button>
+              </div>
+              {bidError && (
+                <p style={{ fontSize: 11, color: '#ef4444', margin: '8px 0 0', lineHeight: 1.4 }}>
+                  {bidError.includes('relation') || bidError.includes('does not exist')
+                    ? "⚠ The bidding tables haven't been created yet. Run the new SQL from supabase-schema.sql in your Supabase SQL editor."
+                    : bidError}
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>
