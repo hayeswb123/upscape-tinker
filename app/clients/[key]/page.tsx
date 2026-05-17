@@ -127,15 +127,20 @@ export default function ClientPage({ params }: { params: Promise<{ key: string }
   async function saveProjectEdit() {
     if (!editProject) return
     setSaving(true)
-    await supabase.from('projects').update({
-      name: editProject.name,
-      homeowner: editProject.homeowner,
-      address: editProject.address,
-      phone: editProject.phone,
-      email: editProject.email,
-      status: editProject.status,
-    }).eq('id', editProject.id)
-    setProjects(prev => prev.map(p => p.id === editProject.id ? { ...p, ...editProject } : p))
+    const original = projects.find(p => p.id === editProject.id)
+    let lat = editProject.lat, lng = editProject.lng
+    if (editProject.address !== original?.address && editProject.address.trim()) {
+      try {
+        const token = 'pk.eyJ1IjoiaGF5ZXN3YjEyMyIsImEiOiJjbWFpNXJ3cWQwY3AzMnFzNHdzYzJ3cHBjIn0.example'
+        const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(editProject.address)}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN || token}&limit=1`)
+        const geo = await res.json()
+        const feat = geo.features?.[0]
+        if (feat) { lng = feat.center[0]; lat = feat.center[1] }
+      } catch {}
+    }
+    const updates = { name: editProject.name, homeowner: editProject.homeowner, address: editProject.address, phone: editProject.phone, email: editProject.email, status: editProject.status, lat, lng }
+    await supabase.from('projects').update(updates).eq('id', editProject.id)
+    setProjects(prev => prev.map(p => p.id === editProject.id ? { ...p, ...updates } : p))
     setSaving(false)
     setEditProject(null)
   }

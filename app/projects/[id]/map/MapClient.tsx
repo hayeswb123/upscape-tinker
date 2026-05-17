@@ -1261,6 +1261,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
           projectId={projectId}
           onClose={() => setProjectSettingsOpen(false)}
           onSaved={(updated) => setProject(p => p ? { ...p, ...updated } : p)}
+          mapRef={mapRef}
         />
       )}
     </div>
@@ -1269,11 +1270,12 @@ export default function MapClient({ projectId }: { projectId: string }) {
 
 // ── Project Settings Sheet ────────────────────────────────────────────────────
 
-function ProjectSettingsSheet({ project, projectId, onClose, onSaved }: {
+function ProjectSettingsSheet({ project, projectId, onClose, onSaved, mapRef }: {
   project: Project
   projectId: string
   onClose: () => void
   onSaved: (updates: Partial<Project>) => void
+  mapRef: React.RefObject<mapboxgl.Map | null>
 }) {
   const [form, setForm] = useState({
     homeowner: project.homeowner || '',
@@ -1289,9 +1291,22 @@ function ProjectSettingsSheet({ project, projectId, onClose, onSaved }: {
 
   async function save() {
     setSaving(true)
-    await supabase.from('projects').update(form).eq('id', projectId)
+    let lat = project.lat, lng = project.lng
+    if (form.address !== project.address && form.address.trim()) {
+      try {
+        const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(form.address)}.json?access_token=${mapboxgl.accessToken}&limit=1`)
+        const geo = await res.json()
+        const feat = geo.features?.[0]
+        if (feat) { lng = feat.center[0]; lat = feat.center[1] }
+      } catch {}
+    }
+    const updates = { ...form, lat, lng }
+    await supabase.from('projects').update(updates).eq('id', projectId)
     setSaving(false)
-    onSaved(form)
+    onSaved(updates)
+    if (lat && lng && mapRef.current) {
+      mapRef.current.flyTo({ center: [lng, lat], zoom: 18.5, pitch: 45, duration: 1400 })
+    }
     onClose()
   }
 
