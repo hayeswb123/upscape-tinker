@@ -758,78 +758,78 @@ function EmptyState({ onNew, hasClients }: { onNew: () => void; hasClients?: boo
 }
 
 // ── PRODUCTS ──────────────────────────────────────────
-type ProdEntry = { name: string; brand: 'AMP' | 'Sunvie'; img: string }
+type ProdEntry = { name: string; brand: 'AMP' | 'Sunvie'; img: string; price: number; url?: string }
 const PRODUCT_CATALOG: Record<string, ProdEntry[]> = {
   uplights: [
-    { name: 'PinnaclePro MR16 Spotlight',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/c/b/cb59530c-88f8-4893-8792-01f33d6aad55_cb59530c-88f8-4893-8792-01f33d6aad55.jpg' },
-    { name: 'G2 EcoPro MR16 Spotlight',          brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/e/c/ecopro-bbz_0006_pit_7733.png' },
-    { name: 'ONE G2 ControlPro™ 300 Spotlight',  brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/a/aal-3000-4-bbz_013_jpg_1.jpg' },
-    { name: 'ONE G2 ControlPro™ 500 Spotlight',  brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/a/aal-3001-4-bbz_010_jpg_1.jpg' },
-    { name: 'G5 ControlPro™ RF Spotlight',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/g/5/g5_cw_hero_1.png' },
-    { name: 'Nano LED Spotlight',                brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/n/a/nano.8_1.png' },
-    { name: 'Mini PinnaclePro MR11 Spotlight',   brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/3/d/3d6e43e5-ad71-4fe6-ad90-65677e67f1fe_3d6e43e5-ad71-4fe6-ad90-65677e67f1fe.jpg' },
-    { name: 'Waterproof LED Spotlights 4-Pack',  brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/6_2.jpg' },
-    { name: '6W Anti-Glare Spotlights 8-Pack',   brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_a63910cb-1abc-491f-bd24-8558dc2317c3.jpg' },
-    { name: '5" Solid Brass Spotlights 4-Pack',  brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_1_50bf3f20-0d39-44cd-b202-ff3b2fd76924.jpg' },
+    { name: 'PinnaclePro MR16 Spotlight',       brand: 'AMP',    price: 55.99,  url: 'https://www.amplighting.com/pinnaclepro-mr16-spotlight-lamp-ready', img: 'https://www.amplighting.com/media/catalog/product/c/b/cb59530c-88f8-4893-8792-01f33d6aad55_cb59530c-88f8-4893-8792-01f33d6aad55.jpg' },
+    { name: 'G2 EcoPro MR16 Spotlight',          brand: 'AMP',    price: 44.99,  img: 'https://www.amplighting.com/media/catalog/product/e/c/ecopro-bbz_0006_pit_7733.png' },
+    { name: 'ONE G2 ControlPro™ 300 Spotlight',  brand: 'AMP',    price: 89.99,  img: 'https://www.amplighting.com/media/catalog/product/a/a/aal-3000-4-bbz_013_jpg_1.jpg' },
+    { name: 'ONE G2 ControlPro™ 500 Spotlight',  brand: 'AMP',    price: 109.99, img: 'https://www.amplighting.com/media/catalog/product/a/a/aal-3001-4-bbz_010_jpg_1.jpg' },
+    { name: 'G5 ControlPro™ RF Spotlight',       brand: 'AMP',    price: 129.99, img: 'https://www.amplighting.com/media/catalog/product/g/5/g5_cw_hero_1.png' },
+    { name: 'Nano LED Spotlight',                brand: 'AMP',    price: 34.99,  img: 'https://www.amplighting.com/media/catalog/product/n/a/nano.8_1.png' },
+    { name: 'Mini PinnaclePro MR11 Spotlight',   brand: 'AMP',    price: 49.99,  img: 'https://www.amplighting.com/media/catalog/product/3/d/3d6e43e5-ad71-4fe6-ad90-65677e67f1fe_3d6e43e5-ad71-4fe6-ad90-65677e67f1fe.jpg' },
+    { name: 'Waterproof LED Spotlights 4-Pack',  brand: 'Sunvie', price: 28.00,  img: 'https://www.sunvie.com/cdn/shop/files/6_2.jpg' },
+    { name: '6W Anti-Glare Spotlights 8-Pack',   brand: 'Sunvie', price: 39.99,  img: 'https://www.sunvie.com/cdn/shop/files/1_a63910cb-1abc-491f-bd24-8558dc2317c3.jpg' },
+    { name: '5" Solid Brass Spotlights 4-Pack',  brand: 'Sunvie', price: 45.99,  img: 'https://www.sunvie.com/cdn/shop/files/1_1_50bf3f20-0d39-44cd-b202-ff3b2fd76924.jpg' },
   ],
   pathway: [
-    { name: 'MagnumPro™ Path Light',             brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/h/aht-3309-bbz_002_jpg_1_3.jpg' },
-    { name: 'SummitPro™ Path Light',             brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/h/aht-3206-bbz_002_jpg.jpg' },
-    { name: 'ConicaPro™ Path Light',             brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/i/m/image_34_.png' },
-    { name: 'StetsonPro Path Light',             brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/9/i/9in-stetson-hero_1.png' },
-    { name: 'Mini MagnumPro™ Path Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/m/i/mini_magnumpro_path_area_light_1_.png' },
-    { name: 'Mini SummitPro™ Path Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/m/i/mini-pathlight_0008_color-balance-1-copy-8.png' },
-    { name: 'NovellePro Wide Path Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/e/5/e5082a63-f831-48c8-9487-a5240d70d9a5_e5082a63-f831-48c8-9487-a5240d70d9a5_1_1.jpg' },
-    { name: '3W Cast-Aluminum Path Lights',      brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/61qRXzkJiYL._AC_SL1500.jpg' },
-    { name: 'Hollow Cuboid Path Lights',         brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/81l0q-eJUeL._AC_SL1500.jpg' },
-    { name: 'Anti-Glare LED Path Lights 12-Pack',brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_cd00835a-95d8-47ba-a3f6-8557366691aa.jpg' },
-    { name: 'Pathway Bollard Lights 12-Pack',    brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/2_9d946052-192e-4765-8be1-38bb231ea57d.jpg' },
-    { name: '5W Waterproof Path Lights 4-Pack',  brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/9_1.jpg' },
+    { name: 'MagnumPro™ Path Light',             brand: 'AMP',    price: 74.99,  url: 'https://www.amplighting.com/magnumpro-brass-path-area-light-lamp-ready', img: 'https://www.amplighting.com/media/catalog/product/a/h/aht-3309-bbz_002_jpg_1_3.jpg' },
+    { name: 'SummitPro™ Path Light',             brand: 'AMP',    price: 69.99,  img: 'https://www.amplighting.com/media/catalog/product/a/h/aht-3206-bbz_002_jpg.jpg' },
+    { name: 'ConicaPro™ Path Light',             brand: 'AMP',    price: 59.99,  img: 'https://www.amplighting.com/media/catalog/product/i/m/image_34_.png' },
+    { name: 'StetsonPro Path Light',             brand: 'AMP',    price: 64.99,  img: 'https://www.amplighting.com/media/catalog/product/9/i/9in-stetson-hero_1.png' },
+    { name: 'Mini MagnumPro™ Path Light',        brand: 'AMP',    price: 54.99,  img: 'https://www.amplighting.com/media/catalog/product/m/i/mini_magnumpro_path_area_light_1_.png' },
+    { name: 'Mini SummitPro™ Path Light',        brand: 'AMP',    price: 49.99,  img: 'https://www.amplighting.com/media/catalog/product/m/i/mini-pathlight_0008_color-balance-1-copy-8.png' },
+    { name: 'NovellePro Wide Path Light',        brand: 'AMP',    price: 79.99,  img: 'https://www.amplighting.com/media/catalog/product/e/5/e5082a63-f831-48c8-9487-a5240d70d9a5_e5082a63-f831-48c8-9487-a5240d70d9a5_1_1.jpg' },
+    { name: '3W Cast-Aluminum Path Lights',      brand: 'Sunvie', price: 29.99,  img: 'https://www.sunvie.com/cdn/shop/files/61qRXzkJiYL._AC_SL1500.jpg' },
+    { name: 'Hollow Cuboid Path Lights',         brand: 'Sunvie', price: 32.99,  img: 'https://www.sunvie.com/cdn/shop/files/81l0q-eJUeL._AC_SL1500.jpg' },
+    { name: 'Anti-Glare LED Path Lights 12-Pack',brand: 'Sunvie', price: 59.99,  img: 'https://www.sunvie.com/cdn/shop/files/1_cd00835a-95d8-47ba-a3f6-8557366691aa.jpg' },
+    { name: 'Pathway Bollard Lights 12-Pack',    brand: 'Sunvie', price: 55.99,  img: 'https://www.sunvie.com/cdn/shop/files/2_9d946052-192e-4765-8be1-38bb231ea57d.jpg' },
+    { name: '5W Waterproof Path Lights 4-Pack',  brand: 'Sunvie', price: 34.99,  img: 'https://www.sunvie.com/cdn/shop/files/9_1.jpg' },
   ],
   flood: [
-    { name: 'DiffusePro Flood Light',            brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/0/6/06b29b82-5432-4824-b4a1-cc2744ff6642_06b29b82-5432-4824-b4a1-cc2744ff6642.jpg' },
-    { name: 'ParamountPro LED Flood Light',      brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/f/afl-4012-4-b-bz_4__1.jpg' },
-    { name: 'EquaPro Wall Wash',                 brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/v/a/val-1004-4-bbz_006_030819-3788x3389-602bee3_2_.jpg' },
-    { name: '12W LED Flood w/ Yoke Mount',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/f/afl-4018-b-bz_1_.jpg' },
-    { name: '27W LED Flood w/ Yoke Mount',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/v/f/vfl-4510-bbz-illuminated_1.jpg' },
-    { name: 'G2 Nano LED Flood Light',           brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/n/a/nano_led_flood_light_1_.png' },
-    { name: 'SpectrumPro R7S Flood Light',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/b/v/bvn-vfl-4007-bbz-illuminated-resized_1.png' },
-    { name: 'StoutPro PAR36 Flood Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/v/f/vfl-4501-4-bbz_3__1.png' },
+    { name: 'DiffusePro Flood Light',            brand: 'AMP',    price: 59.99,  url: 'https://www.amplighting.com/diffusepro-flood-light-lamp-ready', img: 'https://www.amplighting.com/media/catalog/product/0/6/06b29b82-5432-4824-b4a1-cc2744ff6642_06b29b82-5432-4824-b4a1-cc2744ff6642.jpg' },
+    { name: 'ParamountPro LED Flood Light',      brand: 'AMP',    price: 94.99,  url: 'https://www.amplighting.com/paramountpro-led-flood-light-constant-output', img: 'https://www.amplighting.com/media/catalog/product/a/f/afl-4012-4-b-bz_4__1.jpg' },
+    { name: 'EquaPro Wall Wash',                 brand: 'AMP',    price: 79.99,  img: 'https://www.amplighting.com/media/catalog/product/v/a/val-1004-4-bbz_006_030819-3788x3389-602bee3_2_.jpg' },
+    { name: '12W LED Flood w/ Yoke Mount',       brand: 'AMP',    price: 69.99,  img: 'https://www.amplighting.com/media/catalog/product/a/f/afl-4018-b-bz_1_.jpg' },
+    { name: '27W LED Flood w/ Yoke Mount',       brand: 'AMP',    price: 99.99,  img: 'https://www.amplighting.com/media/catalog/product/v/f/vfl-4510-bbz-illuminated_1.jpg' },
+    { name: 'G2 Nano LED Flood Light',           brand: 'AMP',    price: 54.99,  img: 'https://www.amplighting.com/media/catalog/product/n/a/nano_led_flood_light_1_.png' },
+    { name: 'SpectrumPro R7S Flood Light',       brand: 'AMP',    price: 84.99,  img: 'https://www.amplighting.com/media/catalog/product/b/v/bvn-vfl-4007-bbz-illuminated-resized_1.png' },
+    { name: 'StoutPro PAR36 Flood Light',        brand: 'AMP',    price: 74.99,  img: 'https://www.amplighting.com/media/catalog/product/v/f/vfl-4501-4-bbz_3__1.png' },
   ],
   downlights: [
-    { name: 'PinnaclePro MR16 Downlight',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/d/3/d359f3f4-6721-4693-953a-a3eee3f9620f_d359f3f4-6721-4693-953a-a3eee3f9620f.jpg' },
-    { name: 'ONE G2 ControlPro™ 200 Downlight',  brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/v/a/val-1813-40-bbz_003_jpg_-_copy_2.jpg' },
-    { name: 'AviatorPro Downlight',              brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/f/2/f2808223-53e9-4b3b-a94c-b1eedf88d2e9_f2808223-53e9-4b3b-a94c-b1eedf88d2e9.jpg' },
-    { name: 'G5 ControlPro™ RF Downlight',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/g/5/g5_cw_hero_1.png' },
-    { name: 'PinnaclePro MR16 Black Downlight',  brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/u/n/untitled-1_0005_pit_8401.png' },
+    { name: 'PinnaclePro MR16 Downlight',        brand: 'AMP',    price: 55.99,  img: 'https://www.amplighting.com/media/catalog/product/d/3/d359f3f4-6721-4693-953a-a3eee3f9620f_d359f3f4-6721-4693-953a-a3eee3f9620f.jpg' },
+    { name: 'ONE G2 ControlPro™ 200 Downlight',  brand: 'AMP',    price: 89.99,  img: 'https://www.amplighting.com/media/catalog/product/v/a/val-1813-40-bbz_003_jpg_-_copy_2.jpg' },
+    { name: 'AviatorPro Downlight',              brand: 'AMP',    price: 74.99,  img: 'https://www.amplighting.com/media/catalog/product/f/2/f2808223-53e9-4b3b-a94c-b1eedf88d2e9_f2808223-53e9-4b3b-a94c-b1eedf88d2e9.jpg' },
+    { name: 'G5 ControlPro™ RF Downlight',       brand: 'AMP',    price: 129.99, img: 'https://www.amplighting.com/media/catalog/product/g/5/g5_cw_hero_1.png' },
+    { name: 'PinnaclePro MR16 Black Downlight',  brand: 'AMP',    price: 55.99,  img: 'https://www.amplighting.com/media/catalog/product/u/n/untitled-1_0005_pit_8401.png' },
   ],
   well: [
-    { name: 'HydraPro™ MR16 Well Light',         brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/0/0/00d06c8c-c6e7-45d1-822b-72c005271644_00d06c8c-c6e7-45d1-822b-72c005271644.jpg' },
-    { name: 'HydraPro™ MR16 In-Grade Light',     brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/w/awl-5004-b-bz-illuminated.jpg' },
-    { name: 'BurrowPro PAR36 Well Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/r/1/r1-awl-5000-guard_0007_pit_9117.png' },
-    { name: 'HydraPro™ MR11 Well Light',         brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/w/awl-5005-4-b-bz-illuminated.jpg' },
-    { name: 'Nano LED Well Light',               brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/n/a/nano-well-light_0003_pit_3167-3_1.png' },
-    { name: 'Core Drill MR11 Well Light',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/c/o/core-well-light_0006__mg_4967_1.png' },
-    { name: 'In-Ground Well Lights 12-Pack',     brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_8d11c97d-4374-42cd-b48e-f99b14c5e143.jpg' },
-    { name: 'Shielded In-Ground Lights 12-Pack', brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/81JY2TXNeAL._AC_SL1500.jpg' },
-    { name: '12W Waterproof Well Lights 10-Pack',brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_69f19edb-415f-4ff8-b641-5d6d57472fef.jpg' },
-    { name: '5W Anti-Glare Well Lights 6-Pack',  brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/LowVoltage5WLEDAnti-GlareGroundLandscapeWellLights6PackMDWY-05-06C_1_1f45f200-1e04-4b1d-97a4-54cb9ddb9f43.jpg' },
+    { name: 'HydraPro™ MR16 Well Light',         brand: 'AMP',    price: 69.99,  img: 'https://www.amplighting.com/media/catalog/product/0/0/00d06c8c-c6e7-45d1-822b-72c005271644_00d06c8c-c6e7-45d1-822b-72c005271644.jpg' },
+    { name: 'HydraPro™ MR16 In-Grade Light',     brand: 'AMP',    price: 65.99,  url: 'https://www.amplighting.com/hydrapro-mr16-in-grade-light', img: 'https://www.amplighting.com/media/catalog/product/a/w/awl-5004-b-bz-illuminated.jpg' },
+    { name: 'BurrowPro PAR36 Well Light',        brand: 'AMP',    price: 84.99,  img: 'https://www.amplighting.com/media/catalog/product/r/1/r1-awl-5000-guard_0007_pit_9117.png' },
+    { name: 'HydraPro™ MR11 Well Light',         brand: 'AMP',    price: 59.99,  img: 'https://www.amplighting.com/media/catalog/product/a/w/awl-5005-4-b-bz-illuminated.jpg' },
+    { name: 'Nano LED Well Light',               brand: 'AMP',    price: 44.99,  img: 'https://www.amplighting.com/media/catalog/product/n/a/nano-well-light_0003_pit_3167-3_1.png' },
+    { name: 'Core Drill MR11 Well Light',        brand: 'AMP',    price: 54.99,  img: 'https://www.amplighting.com/media/catalog/product/c/o/core-well-light_0006__mg_4967_1.png' },
+    { name: 'In-Ground Well Lights 12-Pack',     brand: 'Sunvie', price: 49.99,  img: 'https://www.sunvie.com/cdn/shop/files/1_8d11c97d-4374-42cd-b48e-f99b14c5e143.jpg' },
+    { name: 'Shielded In-Ground Lights 12-Pack', brand: 'Sunvie', price: 54.99,  img: 'https://www.sunvie.com/cdn/shop/files/81JY2TXNeAL._AC_SL1500.jpg' },
+    { name: '12W Waterproof Well Lights 10-Pack',brand: 'Sunvie', price: 59.99,  img: 'https://www.sunvie.com/cdn/shop/files/1_69f19edb-415f-4ff8-b641-5d6d57472fef.jpg' },
+    { name: '5W Anti-Glare Well Lights 6-Pack',  brand: 'Sunvie', price: 39.99,  img: 'https://www.sunvie.com/cdn/shop/files/LowVoltage5WLEDAnti-GlareGroundLandscapeWellLights6PackMDWY-05-06C_1_1f45f200-1e04-4b1d-97a4-54cb9ddb9f43.jpg' },
   ],
   transformers: [
-    { name: '150W Slim Line Transformer',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/1/2/12f23399-79d0-470a-9651-a7a0722223bf_12f23399-79d0-470a-9651-a7a0722223bf.jpg' },
-    { name: '300W Slim Line Transformer',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/d/e/defa481b-6c99-400e-9b04-feec0a650d94_defa481b-6c99-400e-9b04-feec0a650d94.jpg' },
-    { name: '300W Multi-Tap Transformer',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/0/9/09b87dfc-5d55-497f-9897-5ec35ce54bcd_09b87dfc-5d55-497f-9897-5ec35ce54bcd.jpg' },
-    { name: '600W Multi-Tap Transformer',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/a/_/a.transformer.2.png' },
-    { name: '900W Multi-Tap Transformer',        brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/4/c/4c1a4717-6680-4846-b8d8-f3eebfc4177b_4c1a4717-6680-4846-b8d8-f3eebfc4177b_1.jpg' },
-    { name: '1200W Multi-Tap Transformer',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/1/2/1200-12-22.jpg' },
-    { name: '50W Nano Clamp-Connect',            brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/1/x/1x1_amp_transformer-min_1.png' },
-    { name: '100W Inline Power Converter',       brand: 'AMP',    img: 'https://www.amplighting.com/media/catalog/product/s/c/screen_shot_2023-03-27_at_2.11.45_pm.png' },
-    { name: '60W Transformer w/ Timer & Photocell', brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/Low_Voltage_Landscape_Transformer_with_Timer_and_Photocell_Sensor-1.jpg' },
-    { name: '120W Transformer w/ Timer & Photocell',brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/710eEqYWI9L._SL1500.jpg' },
-    { name: '200W Transformer w/ Timer & Photocell',brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/200W_Low_Voltage_Landscape_Lighting_Transformer-1.jpg' },
-    { name: '300W Transformer w/ Timer & Photocell',brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/300W_Low_Voltage_Landscape_Lighting_Transformer-1.jpg' },
-    { name: '300W 3-Zone Independent Control',   brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_-1_d0b7da8c-3815-4785-9b15-d3bed72db5cf.jpg' },
-    { name: '300W Waterproof Transformer',       brand: 'Sunvie', img: 'https://www.sunvie.com/cdn/shop/files/1_1497e56d-6a9d-4c1c-9ade-5b6d72a340e7.jpg' },
+    { name: '150W Slim Line Transformer',        brand: 'AMP',    price: 179.99, url: 'https://www.amplighting.com/150-watt-slim-line-led-transformer', img: 'https://www.amplighting.com/media/catalog/product/1/2/12f23399-79d0-470a-9651-a7a0722223bf_12f23399-79d0-470a-9651-a7a0722223bf.jpg' },
+    { name: '300W Slim Line Transformer',        brand: 'AMP',    price: 209.99, url: 'https://www.amplighting.com/300-watt-slim-line-led-transformer', img: 'https://www.amplighting.com/media/catalog/product/d/e/defa481b-6c99-400e-9b04-feec0a650d94_defa481b-6c99-400e-9b04-feec0a650d94.jpg' },
+    { name: '300W Multi-Tap Transformer',        brand: 'AMP',    price: 189.99, img: 'https://www.amplighting.com/media/catalog/product/0/9/09b87dfc-5d55-497f-9897-5ec35ce54bcd_09b87dfc-5d55-497f-9897-5ec35ce54bcd.jpg' },
+    { name: '600W Multi-Tap Transformer',        brand: 'AMP',    price: 249.99, url: 'https://www.amplighting.com/600w-multi-tap-low-voltage-transformer', img: 'https://www.amplighting.com/media/catalog/product/a/_/a.transformer.2.png' },
+    { name: '900W Multi-Tap Transformer',        brand: 'AMP',    price: 549.99, url: 'https://www.amplighting.com/pro-900-watt-12v-22v-multi-tap-transformer', img: 'https://www.amplighting.com/media/catalog/product/4/c/4c1a4717-6680-4846-b8d8-f3eebfc4177b_4c1a4717-6680-4846-b8d8-f3eebfc4177b_1.jpg' },
+    { name: '1200W Multi-Tap Transformer',       brand: 'AMP',    price: 699.99, img: 'https://www.amplighting.com/media/catalog/product/1/2/1200-12-22.jpg' },
+    { name: '50W Nano Clamp-Connect',            brand: 'AMP',    price: 89.99,  img: 'https://www.amplighting.com/media/catalog/product/1/x/1x1_amp_transformer-min_1.png' },
+    { name: '100W Inline Power Converter',       brand: 'AMP',    price: 119.99, img: 'https://www.amplighting.com/media/catalog/product/s/c/screen_shot_2023-03-27_at_2.11.45_pm.png' },
+    { name: '60W Transformer w/ Timer',          brand: 'Sunvie', price: 39.99,  img: 'https://www.sunvie.com/cdn/shop/files/Low_Voltage_Landscape_Transformer_with_Timer_and_Photocell_Sensor-1.jpg' },
+    { name: '120W Transformer w/ Timer',         brand: 'Sunvie', price: 64.99,  img: 'https://www.sunvie.com/cdn/shop/files/710eEqYWI9L._SL1500.jpg' },
+    { name: '200W Transformer w/ Timer',         brand: 'Sunvie', price: 79.99,  img: 'https://www.sunvie.com/cdn/shop/files/200W_Low_Voltage_Landscape_Lighting_Transformer-1.jpg' },
+    { name: '300W Transformer w/ Timer',         brand: 'Sunvie', price: 99.99,  img: 'https://www.sunvie.com/cdn/shop/files/300W_Low_Voltage_Landscape_Lighting_Transformer-1.jpg' },
+    { name: '300W 3-Zone Independent Control',   brand: 'Sunvie', price: 109.99, img: 'https://www.sunvie.com/cdn/shop/files/1_-1_d0b7da8c-3815-4785-9b15-d3bed72db5cf.jpg' },
+    { name: '300W Waterproof Transformer',       brand: 'Sunvie', price: 99.99,  img: 'https://www.sunvie.com/cdn/shop/files/1_1497e56d-6a9d-4c1c-9ade-5b6d72a340e7.jpg' },
   ],
 }
 
@@ -907,9 +907,12 @@ function ProductsSection() {
             {/* info */}
             <div style={{ padding: '10px 11px 11px' }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.78)', letterSpacing: '-0.015em', lineHeight: 1.35, marginBottom: 6 }}>{p.name}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <div style={{ width: 7, height: 7, borderRadius: 2, background: p.brand === 'AMP' ? 'var(--accent)' : '#22c55e', flexShrink: 0 }} />
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.02em' }}>{p.brand === 'AMP' ? 'AMP Lighting' : 'Sunvie'}</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: 2, background: p.brand === 'AMP' ? 'var(--accent)' : '#22c55e', flexShrink: 0 }} />
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.02em' }}>{p.brand === 'AMP' ? 'AMP' : 'Sunvie'}</span>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: p.brand === 'AMP' ? 'var(--accent)' : '#22c55e' }}>${p.price.toFixed(2)}</span>
               </div>
             </div>
           </div>
