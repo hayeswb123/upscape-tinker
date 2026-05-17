@@ -22,6 +22,7 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
   const [bidDeadlineHours, setBidDeadlineHours] = useState(48)
   const [biddingJob, setBiddingJob] = useState<{ id: string } | null>(null)
   const [puttingToBid, setPuttingToBid] = useState(false)
+  const [bidSentAnim, setBidSentAnim] = useState(false)
 
   useEffect(() => {
     supabase.from('projects').select('*').eq('id', id).single().then(({ data }) => {
@@ -81,7 +82,8 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
     if (!error && data) {
       await supabase.from('projects').update({ status: 'bidding' }).eq('id', id)
       setProject(p => p ? { ...p, status: 'bidding' } : p)
-      setBiddingJob({ id: data.id })
+      setBidSentAnim(true)
+      setTimeout(() => { setBidSentAnim(false); setBiddingJob({ id: data.id }) }, 2200)
     }
     setPuttingToBid(false)
   }
@@ -199,7 +201,25 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
               <> Labor ceiling: <span style={{ color: '#f0f0f0', fontWeight: 600 }}>{fmt(calcQuote(project)[project.selected_tier].labor)}</span> ({project.selected_tier})</>
             )}
           </div>
-          {biddingJob ? (
+          {bidSentAnim ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10px 0', gap: 10 }}>
+              <style>{`
+                @keyframes bidCheckScale { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.25);opacity:1} 100%{transform:scale(1);opacity:1} }
+                @keyframes bidRingPulse  { 0%{transform:scale(0.8);opacity:0.8} 100%{transform:scale(1.8);opacity:0} }
+                @keyframes bidLabelUp   { 0%{opacity:0;transform:translateY(6px)} 100%{opacity:1;transform:translateY(0)} }
+              `}</style>
+              <div style={{ position: 'relative', width: 52, height: 52 }}>
+                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid #22c55e', animation: 'bidRingPulse 1s ease-out forwards' }} />
+                <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid #22c55e', animation: 'bidRingPulse 1s ease-out 0.3s forwards', opacity: 0 }} />
+                <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(34,197,94,0.15)', border: '2px solid #22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'bidCheckScale 0.4s cubic-bezier(.22,1,.36,1) forwards' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#22c55e', animation: 'bidLabelUp 0.4s ease 0.2s both' }}>Job published to bidding!</div>
+            </div>
+          ) : biddingJob ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#22c55e' }}>
               <span>✓ Job is live ·</span>
               <button onClick={() => router.push('/dashboard')} style={{ background: 'none', border: 'none', color: '#F4884A', cursor: 'pointer', fontSize: 13, padding: 0 }}>View bids →</button>
