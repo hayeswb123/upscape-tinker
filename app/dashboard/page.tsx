@@ -116,8 +116,11 @@ export default function DashboardPage() {
   const L = lightMode
 
   useEffect(() => {
-    fetchProjects()
-    supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email || ''))
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) { router.replace('/'); return }
+      setUserEmail(data.user.email || '')
+      fetchProjects()
+    })
   }, [])
 
   async function fetchProjects() {

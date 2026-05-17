@@ -11,7 +11,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
 
   // Skip login if already authenticated
-  useEffect(() => { router.replace('/dashboard') }, [])
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) router.replace('/dashboard')
+    })
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
