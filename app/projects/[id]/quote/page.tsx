@@ -23,6 +23,7 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
   const [biddingJob, setBiddingJob] = useState<{ id: string } | null>(null)
   const [puttingToBid, setPuttingToBid] = useState(false)
   const [bidSentAnim, setBidSentAnim] = useState(false)
+  const [bidError, setBidError] = useState('')
 
   useEffect(() => {
     supabase.from('projects').select('*').eq('id', id).single().then(({ data }) => {
@@ -79,10 +80,16 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
       labor_ceiling: laborCeiling,
       deadline,
     }).select('id').single()
-    if (!error && data) {
+    if (error) {
+      setBidError(error.message)
+      setPuttingToBid(false)
+      return
+    }
+    if (data) {
       await supabase.from('projects').update({ status: 'bidding' }).eq('id', id)
       setProject(p => p ? { ...p, status: 'bidding' } : p)
       setBidSentAnim(true)
+      setBidError('')
       setTimeout(() => { setBidSentAnim(false); setBiddingJob({ id: data.id }) }, 2200)
     }
     setPuttingToBid(false)
@@ -241,6 +248,13 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
                 {puttingToBid ? 'Publishing…' : 'Put out to bid'}
               </button>
             </div>
+            {bidError && (
+              <p style={{ fontSize: 11, color: '#ef4444', margin: '8px 0 0', lineHeight: 1.4 }}>
+                {bidError.includes('relation') || bidError.includes('does not exist')
+                  ? '⚠ The bidding tables haven\'t been created yet. Run the new SQL from supabase-schema.sql in your Supabase SQL editor.'
+                  : bidError}
+              </p>
+            )}
           )}
         </div>
       </div>
