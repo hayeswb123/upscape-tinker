@@ -18,7 +18,7 @@ function UpscapeMark({ size = 36 }: { size?: number }) {
   return <img src="/upscape-logo-mark.png" alt="Upscape" width={size} height={size} style={{ objectFit: 'contain', display: 'block' }} />
 }
 
-type Section = 'projects' | 'products' | 'gallery' | 'ai' | 'settings'
+type Section = 'projects' | 'products' | 'gallery' | 'ai' | 'bids' | 'settings'
 
 // Main nav items (top section)
 const NAV_MAIN = [
@@ -59,6 +59,17 @@ const NAV_MAIN = [
         <path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-4 4H8a4 4 0 01-4-4v-1H3a3 3 0 01-3-3V10a3 3 0 013-3h1V6a4 4 0 014-4h4z" strokeLinejoin="round"/>
         <circle cx="9" cy="11" r="1" fill="currentColor" stroke="none"/>
         <circle cx="15" cy="11" r="1" fill="currentColor" stroke="none"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'bids' as Section,
+    label: 'Bids',
+    icon: (active: boolean) => (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 1.9 : 1.5}>
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
       </svg>
     ),
   },
@@ -372,6 +383,7 @@ export default function DashboardPage() {
           {section === 'products' && <ProductsSection />}
           {section === 'gallery' && <GallerySection />}
           {section === 'ai' && <AISection projects={projects} />}
+          {section === 'bids' && <BidsSection router={router} />}
           {section === 'settings' && <SettingsSection userEmail={userEmail} logout={logout} lightMode={L} toggleTheme={toggleTheme} ambientGlow={ambientGlow} setAmbientGlow={(v: number) => { setAmbientGlow(v); localStorage.setItem('upscape_glow', String(v)) }} accentColor={accentColor} pickAccent={pickAccent} />}
         </main>
       </div>
@@ -1918,6 +1930,98 @@ function SettingsSection({ userEmail, logout, lightMode, toggleTheme, ambientGlo
 
         <button onClick={logout} style={{ marginTop:4,alignSelf:'flex-start',background:'transparent',border:'1px solid rgba(239,68,68,0.18)',borderRadius:9,color:'rgba(239,68,68,0.55)',fontSize:12,fontWeight:500,padding:'9px 18px',cursor:'pointer' }}>Sign out</button>
       </div>
+    </div>
+  )
+}
+
+// ── BIDS SECTION ──────────────────────────────────────
+function BidsSection({ router }: { router: ReturnType<typeof useRouter> }) {
+  type BidJobRow = { id: string; project_id: string; labor_ceiling: number; deadline: string; status: string; winner_id: string | null; project_name?: string; project_address?: string; bid_count?: number; winner_name?: string; winner_amount?: number }
+  const [open, setOpen] = useState<BidJobRow[]>([])
+  const [closed, setClosed] = useState<BidJobRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [tab, setTab] = useState<'open' | 'closed'>('open')
+
+  useEffect(() => {
+    async function load() {
+      const { data: jobs } = await supabase
+        .from('bid_jobs')
+        .select('id,project_id,labor_ceiling,deadline,status,winner_id')
+        .order('created_at', { ascending: false })
+
+      const enriched: BidJobRow[] = await Promise.all((jobs || []).map(async (j) => {
+        const { data: proj } = await supabase.from('projects').select('name,address').eq('id', j.project_id).maybeSingle()
+        const { count } = await supabase.from('bids').select('id', { count: 'exact', head: true }).eq('job_id', j.id)
+        let winner_name: string | undefined, winner_amount: number | undefined
+        if (j.winner_id) {
+          const { data: wp } = await supabase.from('electrician_profiles').select('name').eq('id', j.winner_id).maybeSingle()
+          const { data: wb } = await supabase.from('bids').select('amount').eq('job_id', j.id).eq('electrician_id', j.winner_id).maybeSingle()
+          winner_name = wp?.name
+          winner_amount = wb?.amount
+        }
+        return { ...j, project_name: proj?.name, project_address: proj?.address, bid_count: count ?? 0, winner_name, winner_amount }
+      }))
+
+      setOpen(enriched.filter(j => j.status === 'open'))
+      setClosed(enriched.filter(j => j.status !== 'open'))
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  function Countdown({ deadline }: { deadline: string }) {
+    const [remaining, setRemaining] = useState('')
+    useEffect(() => {
+      function update() {
+        const diff = new Date(deadline).getTime() - Date.now()
+        if (diff <= 0) { setRemaining('Closed'); return }
+        const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000)
+        setRemaining(`${h}h ${m}m left`)
+      }
+      update(); const t = setInterval(update, 30000); return () => clearInterval(t)
+    }, [deadline])
+    return <span style={{ color: remaining === 'Closed' ? '#6b7280' : '#facc15' }}>{remaining}</span>
+  }
+
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>Loading…</div>
+
+  const rows = tab === 'open' ? open : closed
+
+  return (
+    <div style={{ padding: '28px 24px' }}>
+      <h2 style={{ fontWeight: 700, fontSize: 18, margin: '0 0 16px', letterSpacing: '-0.03em' }}>Bids</h2>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
+        {(['open', 'closed'] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)} style={{ background: tab === t ? 'rgba(var(--accent-rgb),0.15)' : 'transparent', border: `1px solid ${tab === t ? 'rgba(var(--accent-rgb),0.3)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 8, color: tab === t ? 'var(--accent)' : 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: 600, padding: '5px 14px', cursor: 'pointer', textTransform: 'capitalize' }}>{t} {t === 'open' ? `(${open.length})` : `(${closed.length})`}</button>
+        ))}
+      </div>
+      {rows.length === 0 ? (
+        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>{tab === 'open' ? 'No active bids. Put a project out to bid from its Quote page.' : 'No closed bids yet.'}</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {rows.map(j => (
+            <div key={j.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '14px 16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontWeight: 600, fontSize: 14, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.project_name || 'Untitled'}</p>
+                  <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, margin: '2px 0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{j.project_address}</p>
+                  {tab === 'open' ? (
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}><Countdown deadline={j.deadline} /> · <span style={{ color: 'rgba(255,255,255,0.6)' }}>{j.bid_count} bid{j.bid_count !== 1 ? 's' : ''}</span></p>
+                  ) : j.winner_name ? (
+                    <p style={{ fontSize: 12, color: '#22c55e' }}>Winner: {j.winner_name} · ${j.winner_amount?.toLocaleString()}</p>
+                  ) : (
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>No bids received</p>
+                  )}
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '0 0 4px' }}>ceiling</p>
+                  <p style={{ fontWeight: 700, fontSize: 15, margin: 0 }}>${j.labor_ceiling.toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

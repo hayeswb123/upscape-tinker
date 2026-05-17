@@ -4,6 +4,12 @@ import { useRouter } from 'next/navigation'
 import { supabase, type Project } from '@/lib/supabase'
 import { TIERS, calcQuote, calcTotalWatts, recommendTransformer, type TierId } from '@/lib/catalog'
 
+const DEADLINE_OPTIONS = [
+  { label: '24 hours', hours: 24 },
+  { label: '48 hours', hours: 48 },
+  { label: '72 hours', hours: 72 },
+]
+
 const fmt = (n: number) => '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 })
 
 export default function QuotePage({ params }: { params: Promise<{ id: string }> }) {
@@ -12,10 +18,17 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
   const [project, setProject] = useState<Project | null>(null)
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [bidDeadlineHours, setBidDeadlineHours] = useState(48)
+  const [biddingJob, setBiddingJob] = useState<{ id: string } | null>(null)
+  const [puttingToBid, setPuttingToBid] = useState(false)
 
   useEffect(() => {
     supabase.from('projects').select('*').eq('id', id).single().then(({ data }) => {
       if (data) setProject(data)
+    })
+    // Check if already put to bid
+    supabase.from('bid_jobs').select('id,status').eq('project_id', id).eq('status', 'open').maybeSingle().then(({ data }) => {
+      if (data) setBiddingJob(data)
     })
   }, [id])
 
@@ -39,6 +52,28 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
     } else {
       alert('Failed to send quote.')
     }
+  }
+
+  async function putToBid() {
+    if (!project) return
+    setPuttingToBid(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setPuttingToBid(false); return }
+    const tier = project.selected_tier ?? 'mid'
+    const laborCeiling = calcQuote(project)[tier].labor
+    const deadline = new Date(Date.now() + bidDeadlineHours * 3600 * 1000).toISOString()
+    const { data, error } = await supabase.from('bid_jobs').insert({
+      project_id: id,
+      owner_id: user.id,
+      labor_ceiling: laborCeiling,
+      deadline,
+    }).select('id').single()
+    if (!error && data) {
+      await supabase.from('projects').update({ status: 'bidding' }).eq('id', id)
+      setProject(p => p ? { ...p, status: 'bidding' } : p)
+      setBiddingJob({ id: data.id })
+    }
+    setPuttingToBid(false)
   }
 
   if (!project) return <div style={{ background: 'var(--bg)', height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>Loading…</div>
@@ -113,6 +148,40 @@ export default function QuotePage({ params }: { params: Promise<{ id: string }> 
             </div>
           )
         })}
+      </div>
+
+      {/* Put out to bid panel */}
+      <div style={{ margin: '0 16px 80px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '14px 16px' }}>
+        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>Put labor out to bid</div>
+        <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>
+          Licensed electricians will submit sealed bids. The lowest valid bid wins when the deadline expires.
+          {project.selected_tier && (
+            <> Labor ceiling: <span style={{ color: 'var(--fg)', fontWeight: 600 }}>{fmt(calcQuote(project)[project.selected_tier].labor)}</span> ({project.selected_tier})</>
+          )}
+        </div>
+        {biddingJob ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#22c55e' }}>
+            <span>✓</span>
+            <span>Job is live · <button onClick={() => router.push('/dashboard')} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 13, padding: 0 }}>View bids →</button></span>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <select
+              value={bidDeadlineHours}
+              onChange={e => setBidDeadlineHours(Number(e.target.value))}
+              style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--fg)', fontSize: 12, padding: '6px 8px', cursor: 'pointer' }}
+            >
+              {DEADLINE_OPTIONS.map(o => <option key={o.hours} value={o.hours}>{o.label}</option>)}
+            </select>
+            <button
+              onClick={putToBid}
+              disabled={puttingToBid}
+              style={{ flex: 1, background: 'var(--accent)', border: 'none', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 600, padding: '7px 14px', cursor: 'pointer', opacity: puttingToBid ? 0.6 : 1 }}
+            >
+              {puttingToBid ? 'Publishing…' : 'Put out to bid'}
+            </button>
+          </div>
+        )}
       </div>
 
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '12px 16px 28px', background: 'rgba(15,15,15,0.95)', borderTop: '1px solid var(--border)', backdropFilter: 'blur(8px)' }}>

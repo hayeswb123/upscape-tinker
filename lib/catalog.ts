@@ -100,6 +100,10 @@ const WIRE_COST_PER_FOOT: Record<TierId, number> = {
   premium: 0.44, // AMP 12/2 250ft: $109.99/250ft
 }
 
+export function calcLaborCeiling(project: { markers: Array<{ type: string; qty: number }>; wires: Array<{ feet: number }> }, tier: TierId = 'mid'): number {
+  return calcQuote(project)[tier].labor
+}
+
 export function calcQuote(project: { markers: Array<{ type: string; qty: number }>; wires: Array<{ feet: number }> }) {
   const wireFeet = (project.wires || []).reduce((s, w) => s + (w.feet || 0), 0)
 

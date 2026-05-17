@@ -15,7 +15,7 @@ export type Project = {
   email: string
   lat: number | null
   lng: number | null
-  status: 'draft' | 'quoted' | 'approved' | 'installed'
+  status: 'draft' | 'quoted' | 'approved' | 'installed' | 'bidding'
   selected_tier: 'budget' | 'mid' | 'premium'
   markers: Marker[]
   wires: Wire[]
@@ -45,4 +45,35 @@ export type Zone = {
   label: string
   color: string
   points: [number, number][]
+}
+
+export type ElectricianProfile = {
+  id: string
+  user_id: string
+  name: string
+  company: string | null
+  license: string | null
+  phone: string | null
+  bio: string | null
+  verified: boolean
+  created_at: string
+}
+
+export type BidJob = {
+  id: string
+  project_id: string
+  owner_id: string
+  labor_ceiling: number
+  deadline: string
+  status: 'open' | 'closed' | 'awarded'
+  winner_id: string | null
+  created_at: string
+}
+
+export type Bid = {
+  id: string
+  job_id: string
+  electrician_id: string
+  amount: number
+  submitted_at: string
 }
