@@ -330,7 +330,7 @@ export default function MapClient({ projectId }: { projectId: string }) {
             if (zoneFeatures.length > 0) {
               const zoneId = zoneFeatures[0].properties?.zoneId as string
               const zoneData = projectRef.current?.zones?.find((z: Zone) => z.id === zoneId)
-              if (zoneData) setZonePopup({ ...zoneData })
+              if (zoneData) { setZonePopup({ ...zoneData }); setGroupingMode(false); setGroupTargets([]) }
             }
             return
           }
@@ -502,6 +502,8 @@ export default function MapClient({ projectId }: { projectId: string }) {
     ;(mapRef.current?.getSource('zone-labels') as mapboxgl.GeoJSONSource)?.setData(zonesToLabelGeoJSON(zones))
     setProject(p => p ? { ...p, zones } : p)
     setZonePopup(null)
+    setGroupingMode(false)
+    setGroupTargets([])
   }
 
   async function finishWire() {
