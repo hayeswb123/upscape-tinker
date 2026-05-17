@@ -165,6 +165,8 @@ export default function MapClient({ projectId }: { projectId: string }) {
   const [zoneColor, setZoneColor] = useState(ZONE_COLORS[0])
   const zoneColorRef = useRef(ZONE_COLORS[0])
   const [zonePopup, setZonePopup] = useState<Zone | null>(null)
+  const [groupingMode, setGroupingMode] = useState(false)
+  const [groupTargets, setGroupTargets] = useState<string[]>([])
 
   useEffect(() => { wireRef.current = wirePoints }, [wirePoints])
   useEffect(() => { projectRef.current = project }, [project])
@@ -482,6 +484,19 @@ export default function MapClient({ projectId }: { projectId: string }) {
     const { data: proj } = await supabase.from('projects').select('zones').eq('id', projectId).single()
     if (!proj) return
     const zones = (proj.zones as Zone[]).map(z => z.id === updated.id ? updated : z)
+    await supabase.from('projects').update({ zones }).eq('id', projectId)
+    ;(mapRef.current?.getSource('zones') as mapboxgl.GeoJSONSource)?.setData(zonesToGeoJSON(zones))
+    ;(mapRef.current?.getSource('zone-labels') as mapboxgl.GeoJSONSource)?.setData(zonesToLabelGeoJSON(zones))
+    setProject(p => p ? { ...p, zones } : p)
+    setZonePopup(null)
+  }
+
+  async function groupZones(sourceZone: Zone, targetIds: string[]) {
+    const { data: proj } = await supabase.from('projects').select('zones').eq('id', projectId).single()
+    if (!proj) return
+    const zones = (proj.zones as Zone[]).map(z =>
+      targetIds.includes(z.id) ? { ...z, label: sourceZone.label, color: sourceZone.color } : z
+    )
     await supabase.from('projects').update({ zones }).eq('id', projectId)
     ;(mapRef.current?.getSource('zones') as mapboxgl.GeoJSONSource)?.setData(zonesToGeoJSON(zones))
     ;(mapRef.current?.getSource('zone-labels') as mapboxgl.GeoJSONSource)?.setData(zonesToLabelGeoJSON(zones))
@@ -1166,25 +1181,71 @@ export default function MapClient({ projectId }: { projectId: string }) {
         <div style={{ position: 'absolute', bottom: 96, left: 14, right: 14, zIndex: 30, background: 'rgba(12,12,12,0.96)', backdropFilter: 'blur(24px)', borderRadius: 12, boxShadow: '0 12px 48px rgba(0,0,0,0.65)', overflow: 'hidden' }}>
           <div style={{ padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ width: 14, height: 14, borderRadius: 3, background: zonePopup.color, flexShrink: 0 }} />
-            <span style={{ fontWeight: 500, fontSize: 13, color: 'rgba(255,255,255,0.88)' }}>Zone</span>
-            <button onClick={() => setZonePopup(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', cursor: 'pointer', fontSize: 18, padding: 4 }}>✕</button>
+            <span style={{ fontWeight: 500, fontSize: 13, color: 'rgba(255,255,255,0.88)' }}>{groupingMode ? 'Group zones' : 'Zone'}</span>
+            <button onClick={() => { setZonePopup(null); setGroupingMode(false); setGroupTargets([]) }} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', cursor: 'pointer', fontSize: 18, padding: 4 }}>✕</button>
           </div>
-          <div style={{ padding: '12px 16px' }}>
-            <label style={labelSt}>Label</label>
-            <input style={inputSt} value={zonePopup.label} onChange={e => setZonePopup({ ...zonePopup, label: e.target.value })} placeholder="e.g. Front yard, Pool area…" />
-            <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-              {ZONE_COLORS.map(c => (
-                <button key={c} onClick={() => setZonePopup({ ...zonePopup, color: c })} style={{
-                  width: 20, height: 20, borderRadius: '50%', background: c, border: `2px solid ${c === zonePopup.color ? '#fff' : 'transparent'}`,
-                  cursor: 'pointer', padding: 0,
-                }} />
-              ))}
+
+          {groupingMode ? (
+            <div style={{ padding: '12px 16px' }}>
+              <p style={{ margin: '0 0 10px', fontSize: 12, color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
+                Select zones to share the label <strong style={{ color: zonePopup.color }}>{zonePopup.label || 'this zone'}</strong> and color:
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
+                {(project?.zones || []).filter(z => z.id !== zonePopup.id).map(z => {
+                  const checked = groupTargets.includes(z.id)
+                  return (
+                    <button
+                      key={z.id}
+                      onClick={() => setGroupTargets(prev => checked ? prev.filter(id => id !== z.id) : [...prev, z.id])}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, background: checked ? 'rgba(255,255,255,0.07)' : 'transparent', border: `1px solid ${checked ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 8, padding: '8px 10px', cursor: 'pointer', textAlign: 'left' }}
+                    >
+                      <div style={{ width: 12, height: 12, borderRadius: 3, background: z.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', flex: 1 }}>{z.label || 'Unlabeled zone'}</span>
+                      {checked && <span style={{ fontSize: 14, color: '#22c55e' }}>✓</span>}
+                    </button>
+                  )
+                })}
+                {(project?.zones || []).filter(z => z.id !== zonePopup.id).length === 0 && (
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', margin: 0 }}>No other zones to group with.</p>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                <button onClick={() => { setGroupingMode(false); setGroupTargets([]) }} style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 500, padding: 10, cursor: 'pointer' }}>Cancel</button>
+                <button
+                  onClick={() => groupZones(zonePopup, [zonePopup.id, ...groupTargets])}
+                  disabled={groupTargets.length === 0}
+                  style={{ flex: 2, background: groupTargets.length > 0 ? '#F4884A' : 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 8, color: groupTargets.length > 0 ? '#fff' : 'rgba(255,255,255,0.25)', fontSize: 12, fontWeight: 600, padding: 10, cursor: groupTargets.length > 0 ? 'pointer' : 'default' }}
+                >
+                  Group {groupTargets.length > 0 ? `${groupTargets.length + 1} zones` : 'zones'}
+                </button>
+              </div>
             </div>
-          </div>
-          <div style={{ padding: '0 16px 14px', display: 'flex', gap: 8 }}>
-            <button onClick={() => deleteZone(zonePopup.id)} style={{ flex: 1, background: 'transparent', border: 'none', borderRadius: 8, color: 'rgba(239,68,68,0.7)', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer' }}>Remove zone</button>
-            <button onClick={() => saveZone(zonePopup)} style={{ flex: 2, background: '#F4884A', border: 'none', borderRadius: 8, color: '#fff', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer' }}>Save</button>
-          </div>
+          ) : (
+            <>
+              <div style={{ padding: '12px 16px' }}>
+                <label style={labelSt}>Label</label>
+                <input style={inputSt} value={zonePopup.label} onChange={e => setZonePopup({ ...zonePopup, label: e.target.value })} placeholder="e.g. Front yard, Pool area…" />
+                <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                  {ZONE_COLORS.map(c => (
+                    <button key={c} onClick={() => setZonePopup({ ...zonePopup, color: c })} style={{
+                      width: 20, height: 20, borderRadius: '50%', background: c, border: `2px solid ${c === zonePopup.color ? '#fff' : 'transparent'}`,
+                      cursor: 'pointer', padding: 0,
+                    }} />
+                  ))}
+                </div>
+              </div>
+              <div style={{ padding: '0 16px 14px', display: 'flex', gap: 8 }}>
+                <button onClick={() => deleteZone(zonePopup.id)} style={{ flex: 1, background: 'transparent', border: 'none', borderRadius: 8, color: 'rgba(239,68,68,0.7)', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer' }}>Remove</button>
+                <button
+                  onClick={() => { setGroupingMode(true); setGroupTargets([]) }}
+                  style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer' }}
+                >
+                  Group…
+                </button>
+                <button onClick={() => saveZone(zonePopup)} style={{ flex: 2, background: '#F4884A', border: 'none', borderRadius: 8, color: '#fff', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer' }}>Save</button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
