@@ -1259,14 +1259,35 @@ export default function MapClient({ projectId }: { projectId: string }) {
                   ))}
                 </div>
               </div>
-              <div style={{ padding: '0 16px 14px', display: 'flex', gap: 8 }}>
+              <div style={{ padding: '0 16px 14px', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <button onClick={() => deleteZone(zonePopup.id)} style={{ flex: 1, background: 'transparent', border: 'none', borderRadius: 8, color: 'rgba(239,68,68,0.7)', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer' }}>Remove</button>
-                <button
-                  onClick={() => { setGroupingMode(true); setGroupTargets([]) }}
-                  style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer' }}
-                >
-                  Group…
-                </button>
+                {zonePopup.pointSets && zonePopup.pointSets.length > 1 ? (
+                  <button
+                    onClick={async () => {
+                      const rings = zonePopup.pointSets!
+                      const newZones = rings.map((ring, i) => ({
+                        id: i === 0 ? zonePopup.id : crypto.randomUUID(),
+                        label: i === 0 ? zonePopup.label : '',
+                        color: zonePopup.color,
+                        points: ring,
+                      }))
+                      const zones = (project!.zones || []).filter(z => z.id !== zonePopup.id).concat(newZones)
+                      await supabase.from('projects').update({ zones }).eq('id', projectId)
+                      setProject(p => p ? { ...p, zones } : p)
+                      setZonePopup(null)
+                    }}
+                    style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer' }}
+                  >
+                    Ungroup
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { setGroupingMode(true); setGroupTargets([]) }}
+                    style={{ flex: 1, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer' }}
+                  >
+                    Group…
+                  </button>
+                )}
                 <button onClick={() => saveZone(zonePopup)} style={{ flex: 2, background: '#F4884A', border: 'none', borderRadius: 8, color: '#fff', fontSize: 12, fontWeight: 500, padding: 11, cursor: 'pointer' }}>Save</button>
               </div>
             </>
