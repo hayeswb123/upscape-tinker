@@ -6,7 +6,7 @@ import Link from 'next/link'
 
 export default function ElectricianSignup() {
   const router = useRouter()
-  const [form, setForm] = useState({ email: '', password: '', name: '', company: '', license: '', phone: '' })
+  const [form, setForm] = useState({ email: '', password: '', name: '', license: '', phone: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -26,7 +26,6 @@ export default function ElectricianSignup() {
       const { error: profileErr } = await supabase.from('electrician_profiles').insert({
         user_id: userId,
         name: form.name,
-        company: form.company || null,
         license: form.license || null,
         phone: form.phone || null,
       })
@@ -62,7 +61,6 @@ export default function ElectricianSignup() {
           {field('name', 'Full name', 'text', true)}
           {field('email', 'Email', 'email', true)}
           {field('password', 'Password', 'password', true)}
-          {field('company', 'Company name')}
           {field('license', 'License number')}
           {field('phone', 'Phone')}
           {error && <p className="text-red-400 text-sm">{error}</p>}
