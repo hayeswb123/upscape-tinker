@@ -117,10 +117,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) { router.replace('/'); return }
-      setUserEmail(data.user.email || '')
-      fetchProjects()
+      if (data.user) setUserEmail(data.user.email || '')
     })
+    fetchProjects()
   }, [])
 
   async function fetchProjects() {
